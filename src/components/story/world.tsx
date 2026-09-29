@@ -2,13 +2,15 @@
 
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, SoftShadows } from "@react-three/drei";
+import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, outside, PATH_LENGTH } from "@/lib/story";
 import type { Lang } from "@/lib/content";
 import { Character } from "./character";
 import { Mountains, PhysicalSky } from "./backdrop";
+import { GradientSky } from "./materials";
+import { useQuality } from "@/lib/quality";
 import { Diorama } from "./rooms";
 import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 import { Grass } from "./grass";
@@ -26,6 +28,7 @@ export function buildPath() {
 }
 
 export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boolean; lang: Lang }) {
+  const q = useQuality();
   const curve = useMemo(buildPath, []);
   const L = useMemo(() => curve.getLength(), [curve]);
   const dist = useRef(0);
@@ -177,9 +180,9 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
 
   return (
     <>
-      {/* Décor lointain réaliste : ciel physique avec nuages, chaîne de montagnes en relief */}
-      <PhysicalSky sunset={sunset} mobile={mobile} />
-      <Mountains sunset={sunset} mobile={mobile} />
+      {/* Décor lointain réaliste : ciel physique avec nuages, chaîne de montagnes en relief (allégés selon l'appareil) */}
+      {q.sky === "simple" ? <GradientSky top={o.sky} bottom={o.fog} /> : <PhysicalSky sunset={sunset} clouds={q.sky === "clouds" && !mobile} />}
+      <Mountains sunset={sunset} detail={q.mountains} />
       {/* Éclairage d'ambiance synthétique (studio) : reflets doux sur les matières plates, sans HDRI */}
       <Environment resolution={128} frames={1}>
         <Lightformer intensity={sunset ? 2.2 : 1.6} color={sunset ? "#FFB27A" : "#FFFFFF"} position={[0, 8, -6]} scale={[14, 6, 1]} />
@@ -190,15 +193,14 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
       {/* Éclairage trois points : ciel froid, soleil chaud, contour opposé pour détacher les silhouettes */}
       <hemisphereLight ref={hemi} args={[sunset ? "#FFB98E" : "#D6E6FF", sunset ? "#4E3F4A" : "#6F7F66", sunset ? 0.75 : 0.85]} />
       <directionalLight position={[-8, 6, -10]} intensity={sunset ? 0.9 : 0.55} color={sunset ? "#B79CFF" : "#CFE3FF"} />
-      <directionalLight ref={sun} intensity={sunset ? 2.5 : 2.9} color={sunset ? "#FFA56A" : "#FFF0D8"} castShadow={!mobile}
-        shadow-mapSize={mobile ? 512 : 1024} shadow-bias={-0.0004} shadow-normalBias={0.04}
+      <directionalLight ref={sun} intensity={sunset ? 2.5 : 2.9} color={sunset ? "#FFA56A" : "#FFF0D8"} castShadow={q.shadows && !mobile}
+        shadow-mapSize={q.shadowMap || 512} shadow-bias={-0.0004} shadow-normalBias={0.04}
         shadow-camera-near={1} shadow-camera-far={45} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} />
-      {!mobile && <SoftShadows size={16} samples={6} focus={0.6} />}
       <pointLight ref={roomLight} intensity={0} distance={15} decay={2} color={sunset ? "#FFE0B8" : "#FFF8EE"} />
 
       {/* L'île : une dalle qui suit le chemin, bords doux, rien au-delà */}
       <Island curve={curve} ground={o.ground} path={o.path} />
-      <Lawn sunset={sunset} mobile={mobile} />
+      {q.grass > 0 && <Lawn sunset={sunset} count={mobile ? Math.min(3000, q.grass) : q.grass} />}
       <Scenery curve={curve} sunset={sunset} />
 
       {chapters.map((c) => (
@@ -308,11 +310,11 @@ const Scenery = memo(function Scenery({ curve, sunset }: { curve: THREE.Curve<TH
  * Herbe animée : uniquement le gazon court du terrain de foot (le reste du sol reste une pelouse dessinée, plus calme).
  * Coordonnées monde : le chemin suit -z ; les pièces sont côté +x, la caméra côté -x.
  */
-const Lawn = memo(function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
+const Lawn = memo(function Lawn({ sunset, count }: { sunset: boolean; count: number }) {
   const pitch = useMemo(() => {
     const foot = chapters.find((c) => c.id === "foot")!;
     return [[-2.5, 9.8, -(foot.at + foot.length + 0.5), -(foot.at - 0.5)]] as [number, number, number, number][];
   }, []);
   const pitchEx = useMemo(() => [[-0.75, 0.75, -200, 10]] as [number, number, number, number][], []);
-  return <Grass areas={pitch} exclude={pitchEx} count={mobile ? 3000 : 12000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />;
+  return <Grass areas={pitch} exclude={pitchEx} count={count} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />;
 });

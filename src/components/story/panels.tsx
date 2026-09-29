@@ -8,6 +8,7 @@ import { useApp } from "@/components/providers";
 import { scroll, INTRO_VH, END_VH, TOTAL_VH } from "@/lib/scroll-progress";
 import { chapters, PATH_LENGTH, storyUi, t } from "@/lib/story";
 import { SITE } from "@/lib/content";
+import { switchView } from "@/lib/view";
 import { ambience } from "@/lib/ambience";
 
 /**
@@ -17,7 +18,9 @@ import { ambience } from "@/lib/ambience";
 export function Panels() {
   const { lang, theme } = useApp();
   const [chapter, setChapter] = useState(-1);
-  const [progress, setProgress] = useState(0);
+  // Chapitres déjà traversés (entier : ne change que quelques fois, pas à chaque image)
+  const [passed, setPassed] = useState(0);
+  const bar = useRef<HTMLDivElement>(null);
   const [endO, setEndO] = useState(0);
   const [hotspot, setHotspot] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -46,7 +49,11 @@ export function Panels() {
     let raf = 0;
     const loop = () => {
       setChapter((c) => (c === scroll.chapter ? c : scroll.chapter));
-      setProgress((p) => (Math.abs(p - scroll.progress) > 0.002 ? scroll.progress : p));
+      // Barre de progression : mise à jour directe du style, sans refaire le rendu des panneaux à chaque image
+      if (bar.current) bar.current.style.transform = `scaleX(${scroll.progress})`;
+      const d = scroll.progress * PATH_LENGTH;
+      const n = chapters.filter((ch) => d > ch.at + ch.length).length;
+      setPassed((v) => (v === n ? v : n));
       setEndO((o) => (Math.abs(o - scroll.end) > 0.01 || (scroll.end === 0 && o !== 0) ? scroll.end : o));
       setHotspot((h) => (h === scroll.hotspot ? h : scroll.hotspot));
       raf = requestAnimationFrame(loop);
@@ -88,14 +95,14 @@ export function Panels() {
       </div>
       {/* Barre fine (mobile) */}
       <div className="absolute left-5 right-5 top-[62px] h-[2px] overflow-hidden rounded-full bg-white/25 md:hidden">
-        <div className="h-full origin-left rounded-full" style={{ transform: `scaleX(${progress})`, background: "var(--story-accent, rgb(var(--accent)))" }} />
+        <div ref={bar} className="h-full origin-left rounded-full" style={{ transform: "scaleX(0)", background: "var(--story-accent, rgb(var(--accent)))" }} />
       </div>
       {/* Rail des chapitres (desktop) : colonne de numéros, nom au survol */}
       <nav aria-label={lang === "fr" ? "Chapitres" : "Chapters"} className="pointer-events-auto absolute left-6 top-1/2 hidden -translate-y-1/2 md:block">
         <div className="relative flex flex-col items-center gap-1 rounded-full border border-white/10 bg-[rgba(14,14,20,0.42)] px-1.5 py-3 backdrop-blur-md" style={{ boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}>
           {chapters.map((ch, i) => {
             const on = i === chapter;
-            const done = progress * PATH_LENGTH > ch.at + ch.length;
+            const done = i < passed;
             return (
               <button key={ch.id} type="button" onClick={() => goTo(i)} aria-label={t(ch.title, lang)} aria-current={on ? "step" : undefined}
                 className="group relative flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/10">
@@ -191,23 +198,27 @@ export function Panels() {
 
       <AnimatePresence>
         {atEnd && (
-          <motion.div key="end" initial={false} exit={{ opacity: 0 }} style={{ opacity: endO }} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col">
-            <div className="px-5 pt-5 sm:px-8"><span className="font-display text-lg font-bold">IF<span className="text-accent">.</span></span></div>
-            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 sm:px-8">
-              <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="label mb-6 text-accent">{t(storyUi.endKicker, lang)}</motion.p>
+          <motion.div key="end" initial={false} exit={{ opacity: 0 }} style={{ opacity: endO }} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col overflow-y-auto overscroll-contain" data-lenis-prevent>
+            {/* Bandeau haut aussi haut que la pastille langue/son/thème ; si l'écran est trop court, la page défile */}
+            <div className="flex min-h-[68px] shrink-0 items-start px-5 pt-5 sm:px-8"><span className="font-display text-lg font-bold">IF<span className="text-accent">.</span></span></div>
+            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 sm:px-8">
+              <div className="my-auto py-2">
+              <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="label mb-4 text-accent sm:mb-6">{t(storyUi.endKicker, lang)}</motion.p>
               <motion.h2 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.8 }} className="font-display text-[clamp(1.8rem,4.4vw,3.2rem)] font-bold leading-[1.1] tracking-tight text-ink">{t(storyUi.endTitle, lang)}</motion.h2>
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-6 max-w-xl font-serif text-xl italic text-mute">{t(storyUi.endText, lang)}</motion.p>
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-10 flex flex-wrap gap-3">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-4 max-w-xl font-serif text-xl italic text-mute sm:mt-6">{t(storyUi.endText, lang)}</motion.p>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-6 flex flex-wrap gap-3 sm:mt-10">
                 <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} /> {SITE.email}</a>
                 <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost"><Download size={18} /> {t(storyUi.cv, lang)}</a>
                 <button type="button" onClick={() => scroll.lenis ? scroll.lenis.scrollTo(0, { immediate: true }) : window.scrollTo({ top: 0 })} className="btn-ghost"><RotateCcw size={18} /> {t(storyUi.replay, lang)}</button>
               </motion.div>
-              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-8 flex flex-wrap gap-x-5 font-mono text-xs text-mute">
+              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-5 flex flex-wrap gap-x-5 font-mono text-xs text-mute sm:mt-8">
                 <li><a href={`tel:${SITE.phoneHref}`} className="inline-flex min-h-[44px] items-center hover:text-ink">{SITE.phone}</a></li>
                 <li><a href={SITE.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center hover:text-ink">LinkedIn</a></li>
                 <li><a href={SITE.github} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center hover:text-ink">GitHub</a></li>
                 <li><a href="/mentions-legales/" className="inline-flex min-h-[44px] items-center hover:text-ink">{lang === "fr" ? "Mentions légales" : "Legal"}</a></li>
+                <li><button type="button" onClick={() => switchView("simple")} className="inline-flex min-h-[44px] items-center hover:text-ink">{lang === "fr" ? "Version simple" : "Simple version"}</button></li>
               </motion.ul>
+              </div>
             </div>
             <p className="px-5 pb-6 font-mono text-xs text-mute sm:px-8">Indy François · Mines Paris-PSL × Albert School · indyfrancois.com</p>
           </motion.div>

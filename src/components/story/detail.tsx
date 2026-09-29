@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { Flat } from "./materials";
+import { Label } from "./label";
 import {
   badgeTex, beamTex, blobTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, pipelineTex, plasterTex, posterTex, spreadsheetTex, woodTex,
 } from "./textures";
@@ -13,8 +13,16 @@ type V3 = [number, number, number];
 /* ─────────────────────────── Matières et finitions ─────────────────────────── */
 
 /** Matériau texturé : la texture donne le détail, `color` la teinte ; la même texture sert de relief. */
+const texCache = new Map<string, THREE.MeshStandardMaterial>();
+/** Matériau texturé (couleur + relief tirés de la même image), partagé entre objets identiques. */
 export function TexMat({ tex, color, bump = 0.012, rough = 0.85, metal = 0 }: { tex: THREE.Texture; color: string; bump?: number; rough?: number; metal?: number }) {
-  return <meshStandardMaterial map={tex} bumpMap={tex} bumpScale={bump} color={color} roughness={rough} metalness={metal} />;
+  const key = `${tex.uuid}|${color}|${bump}|${rough}|${metal}`;
+  let m = texCache.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({ map: tex, bumpMap: tex, bumpScale: bump, color, roughness: rough, metalness: metal });
+    texCache.set(key, m);
+  }
+  return <primitive object={m} attach="material" />;
 }
 
 /** Ombre de contact douce, posée au sol sous un objet. */
@@ -277,7 +285,7 @@ export function CourtFence({ position, rotationY = 0, length, sunset, label }: {
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh position={[0, 1.5, 0]}><planeGeometry args={[length, 3]} /><meshStandardMaterial color="#2C3A33" alphaMap={m} transparent side={THREE.DoubleSide} depthWrite={false} roughness={1} /></mesh>
       <mesh position={[0, 0.7, 0.01]} receiveShadow><planeGeometry args={[length, 1.4]} /><Flat color={sunset ? "#1E3A2C" : "#24503A"} roughness={1} /></mesh>
-      {label && <Text position={[0, 0.72, 0.02]} fontSize={0.26} color="#F4F1EA" letterSpacing={0.3} anchorX="center" anchorY="middle">{label}</Text>}
+      {label && <Label position={[0, 0.72, 0.02]} fontSize={0.26} color="#F4F1EA" letterSpacing={0.3}>{label}</Label>}
       {/* Poteaux répartis sur la longueur exacte du grillage (jamais au-delà de ses extrémités) */}
       {Array.from({ length: Math.max(1, Math.round(length / 2.5)) + 1 }).map((_, i, all) => <mesh key={i} position={[-length / 2 + (i * length) / (all.length - 1), 1.5, 0]} castShadow><cylinderGeometry args={[0.035, 0.035, 3, 8]} /><Flat color="#2C3A33" /></mesh>)}
       <mesh position={[0, 3, 0]}><boxGeometry args={[length, 0.04, 0.04]} /><Flat color="#2C3A33" /></mesh>

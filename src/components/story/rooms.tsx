@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Billboard, Html, Text, useTexture } from "@react-three/drei";
+import { Billboard, Html, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import type { Chapter, Palette } from "@/lib/story";
 import { hotspots } from "@/lib/hotspots";
@@ -17,6 +17,7 @@ import {
   Football, GoalHD, Lockers, Monitor, PipelineBoard, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens,
 } from "./detail";
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
+import { Label } from "./label";
 
 const up = new THREE.Vector3(0, 1, 0);
 export const ROOM_W = 11;
@@ -73,7 +74,7 @@ function DoorFrame({ z, out, accent, label, at, distanceRef }: { z: number; out:
       {label && (
         <group position={[0, 2.95, out * 0.24]}>
           <mesh castShadow material={frame}><boxGeometry args={[Math.max(DOOR_W + 0.16, label.length * 0.13 + 0.45), 0.4, 0.1]} /></mesh>
-          <Text position={[0, -0.005, out * 0.055]} rotation={[0, out < 0 ? Math.PI : 0, 0]} fontSize={0.18} letterSpacing={0.14} color={inkOn(accent)} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
+          <Label position={[0, -0.005, out * 0.055]} rotation={[0, out < 0 ? Math.PI : 0, 0]} fontSize={0.18} letterSpacing={0.14} color={inkOn(accent)} side={THREE.FrontSide}>{label}</Label>
         </group>
       )}
     </group>
@@ -106,7 +107,7 @@ function Sign({ image, text, position, rotation, width = 2.4, color = "#F5F1EA",
   return (
     <group position={position} rotation={rotation}>
       {image ? <LogoPlane url={image} width={width} bg={bg} /> : (
-        <Text fontSize={0.28} color={color} anchorX="center" anchorY="middle" maxWidth={width} textAlign="center" letterSpacing={0.08}>{text}</Text>
+        <Label fontSize={0.28} color={color} maxWidth={width} letterSpacing={0.08}>{text ?? ""}</Label>
       )}
     </group>
   );
@@ -307,7 +308,7 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
       return (
         <group>
           {carpet}
-          <Text position={[L + 0.03, 2.66, 0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.22} color="#1E2F55" anchorX="center" anchorY="middle" letterSpacing={0.18}>LYCÉE SIMONE VEIL</Text>
+          <Label position={[L + 0.03, 2.66, 0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.22} color="#1E2F55" letterSpacing={0.18}>LYCÉE SIMONE VEIL</Label>
           <ChalkboardHD position={[L + 0.03, 0, 0]} rotationY={Math.PI / 2} />
           <Clock position={[L + 0.04, 2.5, -2.2]} rotationY={Math.PI / 2} />
           {[-3.3, 3.3].map((z) => (

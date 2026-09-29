@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 
+
 /**
  * Arrière-plan réaliste : ciel physique (diffusion atmosphérique de Preetham, nuages procéduraux) et
  * chaîne de montagnes en relief (crêtes fractales, forêts, roche, neige, voile atmosphérique).
@@ -35,7 +36,7 @@ function makeNoise(seed: number) {
 const smooth = (x: number, a: number, b: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 /** Chaîne de montagnes : anneau de relief autour de la caméra (rayon 44 → 77 m, sous le plan lointain de 80 m). */
-function buildMountains(mobile: boolean) {
+function buildMountains(detail: [number, number]) {
   const n1 = makeNoise(11), n2 = makeNoise(29), n3 = makeNoise(47);
   const fbm = (x: number, y: number, oct = 4) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < oct; i++) { s += a * n1(x * f, y * f); f *= 2.03; a *= 0.5; } return s; };
   const ridged = (x: number, y: number, oct = 5) => {
@@ -43,7 +44,7 @@ function buildMountains(mobile: boolean) {
     for (let i = 0; i < oct; i++) { let r = 1 - Math.abs(n2(x * f, y * f)); r *= r; s += r * a * prev; prev = r; f *= 2.1; a *= 0.5; }
     return s;
   };
-  const A = mobile ? 360 : 720, R = mobile ? 34 : 60, R0 = 44, R1 = 77;
+  const [A, R] = detail, R0 = 44, R1 = 77;
   const pos = new Float32Array((A + 1) * (R + 1) * 3), haze = new Float32Array((A + 1) * (R + 1)), hts = new Float32Array((A + 1) * (R + 1));
   const idx: number[] = [];
   for (let i = 0; i <= A; i++) {
@@ -93,10 +94,11 @@ function buildMountains(mobile: boolean) {
   return g;
 }
 
-export const Mountains = memo(function Mountains({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
+export const Mountains = memo(function Mountains({ sunset, detail }: { sunset: boolean; detail: [number, number] }) {
   const g = useRef<THREE.Group>(null);
   const { camera, scene } = useThree();
-  const geo = useMemo(() => buildMountains(mobile), [mobile]);
+  const [A, R] = detail;
+  const geo = useMemo(() => buildMountains([A, R]), [A, R]);
   const uni = useMemo(() => ({ uHaze: { value: new THREE.Color() }, uHazeK: { value: 1 } }), []);
   const mat = useMemo(() => {
     const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0, envMapIntensity: 0.35, fog: false });
@@ -124,7 +126,7 @@ export const Mountains = memo(function Mountains({ sunset, mobile }: { sunset: b
 });
 
 /** Ciel physique (Preetham) avec nuages, intensité dosée pour notre exposition ; il suit la caméra. */
-export const PhysicalSky = memo(function PhysicalSky({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
+export const PhysicalSky = memo(function PhysicalSky({ sunset, clouds }: { sunset: boolean; clouds: boolean }) {
   const { camera } = useThree();
   const sky = useMemo(() => {
     const s = new Sky();
@@ -151,12 +153,12 @@ export const PhysicalSky = memo(function PhysicalSky({ sunset, mobile }: { sunse
     u.rayleigh.value = sunset ? 4.2 : 2.4;
     u.mieCoefficient.value = sunset ? 0.004 : 0.003;
     u.mieDirectionalG.value = sunset ? 0.82 : 0.8;
-    u.cloudCoverage.value = mobile ? 0 : 0.3;
+    u.cloudCoverage.value = clouds ? 0.3 : 0; // sans nuages, le calcul par pixel est bien plus léger
     u.cloudDensity.value = 0.5;
     u.cloudElevation.value = 0.6;
     u.uGain.value = sunset ? 0.6 : 0.3;
     u.uSat.value = sunset ? 1.0 : 2.6;
-  }, [sky, sunset, mobile]);
+  }, [sky, sunset, clouds]);
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") (window as unknown as { __sky: Sky }).__sky = sky;
   }, [sky]);

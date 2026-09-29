@@ -8,9 +8,10 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { Clip } from "@/lib/story";
 import { scroll } from "@/lib/scroll-progress";
-import { newArmPose, spreadArm } from "./character";
+import { MODEL, newArmPose, spreadArm } from "./character";
+import { useQuality } from "@/lib/quality";
 
-const MODEL = "/models/indy.glb";
+
 
 /**
  * Figurants : les gens croisés dans chaque lieu, rendus comme des « souvenirs » en argile claire.
@@ -93,6 +94,28 @@ function buildKit(scene: THREE.Object3D) {
   return { geometry, hairMap: hairMap as THREE.Texture | null };
 }
 
+/**
+ * Une seule géométrie pour tous les figurants (et un jeu de matériaux par teinte) : la construire coûte cher
+ * (des dizaines de milliers de sommets recopiés et fusionnés) et chaque copie occupait ~2 Mo de mémoire graphique.
+ */
+type Kit = ReturnType<typeof buildKit>;
+const kits = new WeakMap<THREE.Object3D, Kit>();
+function kitFor(scene: THREE.Object3D) {
+  let k = kits.get(scene);
+  if (!k) { k = buildKit(scene); kits.set(scene, k); }
+  return k;
+}
+const materialSets = new Map<string, THREE.Material[]>();
+function materialsFor(tint: FigureTint, kit: Kit) {
+  const key = `${Object.values(tint).join("|")}|${kit.hairMap?.uuid ?? ""}`;
+  let m = materialSets.get(key);
+  if (!m) {
+    m = [clay(tint.skin, tint.rim), clay(tint.top, tint.rim), clay(tint.sleeve, tint.rim), clay(tint.bottom, tint.rim), clay(tint.hair, tint.rim, { alphaMap: kit.hairMap })];
+    materialSets.set(key, m);
+  }
+  return m;
+}
+
 /** Argile mate + liseré (fresnel) : la silhouette se détache sans éclairage supplémentaire. */
 function clay(color: string, rim: string, opts: { alphaMap?: THREE.Texture | null } = {}) {
   const m = new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, envMapIntensity: 0.5 });
@@ -124,7 +147,8 @@ const LITE = typeof window !== "undefined" && window.matchMedia("(max-width: 768
 
 /** Un figurant : clone du squelette, géométrie partagée, sa propre animation (décalée pour ne pas être synchrone). */
 export function Figure(props: React.ComponentProps<typeof FigureBody>) {
-  if (LITE && !props.essential) return null;
+  const q = useQuality();
+  if (q.figures === "none" || ((q.figures === "essential" || LITE) && !props.essential)) return null;
   return <FigureBody {...props} />;
 }
 
@@ -145,8 +169,8 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
   children?: React.ReactNode;
 }) {
   const { scene, animations } = useGLTF(MODEL);
-  const kit = useMemo(() => buildKit(scene), [scene]);
-  const mats = useMemo(() => [clay(tint.skin, tint.rim), clay(tint.top, tint.rim), clay(tint.sleeve, tint.rim), clay(tint.bottom, tint.rim), clay(tint.hair, tint.rim, { alphaMap: kit.hairMap })], [tint, kit]);
+  const kit = useMemo(() => kitFor(scene), [scene]);
+  const mats = useMemo(() => materialsFor(tint, kit), [tint, kit]);
   const root = useMemo(() => {
     const r = cloneSkinned(scene);
     const skinned: THREE.SkinnedMesh[] = [];

@@ -2,6 +2,7 @@
 
 import * as THREE from "three";
 
+
 /**
  * Matières dessinées dans le code (canvas) : même langage visuel partout, aucun fichier à charger.
  * Les textures « de surface » sont en niveaux de clair autour du blanc : la couleur finale vient
@@ -33,14 +34,29 @@ function make(key: string, size: number, draw: (g: CanvasRenderingContext2D, s: 
   return t;
 }
 
-/** Bruit fin : n points de luminosité aléatoire. */
+/**
+ * Bruit fin : n points de luminosité aléatoire.
+ * Les points sont regroupés par teinte (32 niveaux) et dessinés d'un seul trait par teinte :
+ * même aspect, mais des dizaines de fois plus rapide que 26 000 changements de couleur un par un.
+ */
 function speckle(g: CanvasRenderingContext2D, s: number, r: () => number, n: number, min: number, max: number, size = 1.4, alpha = 1) {
+  const LEVELS = 32;
+  const buckets: number[][] = Array.from({ length: LEVELS }, () => []);
   for (let i = 0; i < n; i++) {
-    const v = Math.round(min + r() * (max - min));
-    g.fillStyle = `rgba(${v},${v},${v},${alpha})`;
+    const t = r();
     const w = size * (0.5 + r());
-    g.fillRect(r() * s, r() * s, w, w);
+    const x = r() * s, y = r() * s;
+    buckets[Math.min(LEVELS - 1, Math.floor(t * LEVELS))].push(x, y, w);
   }
+  buckets.forEach((b, k) => {
+    if (!b.length) return;
+    const v = Math.round(min + ((k + 0.5) / LEVELS) * (max - min));
+    g.fillStyle = `rgba(${v},${v},${v},${alpha})`;
+    if (alpha < 1) { for (let i = 0; i < b.length; i += 3) g.fillRect(b[i], b[i + 1], b[i + 2], b[i + 2]); return; }
+    g.beginPath();
+    for (let i = 0; i < b.length; i += 3) g.rect(b[i], b[i + 1], b[i + 2], b[i + 2]);
+    g.fill();
+  });
 }
 
 /** Terre battue : grain, gravillons, traces de balayage. */

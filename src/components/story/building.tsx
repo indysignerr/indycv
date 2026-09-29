@@ -2,10 +2,11 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, useTexture } from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { Flat } from "./materials";
 import { brickTex, renderTex, romanTileTex, slateTex, stoneBaseTex } from "./textures";
+import { Label } from "./label";
 
 /**
  * Bâtiments des pièces fermées : un vrai volume vu de dehors (façades texturées, fenêtres, toit, auvent, portes
@@ -277,7 +278,7 @@ export function Building({ id, len, mid, distanceRef, sunset, interior, backInte
       {/* Enseignes et abords, propres à chaque lieu */}
       {id === "lycee" && (
         <>
-          <Text position={[-5.6, 3.05, -Zo - 0.04]} rotation={[0, Math.PI, 0]} fontSize={0.38} letterSpacing={0.12} color="#1E2F55" anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>LYCÉE SIMONE VEIL</Text>
+          <Label position={[-5.6, 3.05, -Zo - 0.04]} rotation={[0, Math.PI, 0]} fontSize={0.38} letterSpacing={0.12} color="#1E2F55" side={THREE.FrontSide}>LYCÉE SIMONE VEIL</Label>
           <Flag position={[-2.6, 0, -Zo - 1.1]} />
         </>
       )}
@@ -299,7 +300,7 @@ export function Building({ id, len, mid, distanceRef, sunset, interior, backInte
         </>
       )}
       {id === "albert" && (
-        <Text position={[-4.2, WH + 0.55, -Zo - 0.02]} rotation={[0, Math.PI, 0]} fontSize={0.5} letterSpacing={0.16} color="#FFFFFF" anchorX="center" anchorY="middle" material-side={THREE.FrontSide} outlineWidth={0.012} outlineColor="#1E2F55">ALBERT SCHOOL</Text>
+        <Label position={[-4.2, WH + 0.55, -Zo - 0.02]} rotation={[0, Math.PI, 0]} fontSize={0.5} letterSpacing={0.16} color="#FFFFFF" side={THREE.FrontSide} outlineWidth={0.012} outlineColor="#1E2F55">ALBERT SCHOOL</Label>
       )}
       {sign && null}
     </group>

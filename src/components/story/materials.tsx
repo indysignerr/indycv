@@ -4,9 +4,25 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-/** Matériau plat, doux, cohérent partout : la signature visuelle du diorama. */
+/**
+ * Matériau plat, doux, cohérent partout : la signature visuelle du diorama.
+ * Matériaux unis partagés : un seul matériau par combinaison (couleur, rugosité, émission…), réutilisé par
+ * tous les objets qui l'emploient. Des centaines d'objets pour quelques dizaines de matériaux : moins de mémoire,
+ * moins de changements d'état à chaque image, démarrage plus rapide.
+ */
+const flatCache = new Map<string, THREE.MeshStandardMaterial>();
+export function flatMaterial(color: string, roughness = 0.8, emissive = "#000000", emissiveIntensity = 0, flat = false) {
+  const key = `${color}|${roughness}|${emissive}|${emissiveIntensity}|${flat}`;
+  let m = flatCache.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0, envMapIntensity: 0.55, emissive, emissiveIntensity, flatShading: flat });
+    flatCache.set(key, m);
+  }
+  return m;
+}
+
 export function Flat({ color, emissive, emissiveIntensity = 0, roughness = 0.8, flat = false }: { color: string; emissive?: string; emissiveIntensity?: number; roughness?: number; flat?: boolean }) {
-  return <meshStandardMaterial color={color} roughness={roughness} metalness={0} envMapIntensity={0.55} emissive={emissive ?? "#000000"} emissiveIntensity={emissiveIntensity} flatShading={flat} />;
+  return <primitive object={flatMaterial(color, roughness, emissive ?? "#000000", emissiveIntensity, flat)} attach="material" />;
 }
 
 /** Nuages plats et lents, très loin, pour donner de la vie au ciel. */

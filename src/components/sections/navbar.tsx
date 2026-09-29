@@ -3,6 +3,7 @@
 import { Moon, Sun } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { tr, ui } from "@/lib/content";
+import { switchView } from "@/lib/view";
 
 const links = ["about", "projects", "skills", "hobbies", "contact"] as const;
 
@@ -27,6 +28,9 @@ export function Navbar() {
           ))}
         </ul>
         <div className="flex items-center gap-1">
+          <button type="button" onClick={() => switchView("full")} className="hidden min-h-[44px] items-center rounded-full px-3 font-mono text-xs uppercase tracking-widest text-mute transition-colors hover:text-ink sm:flex">
+            {tr(ui.view.full, lang)}
+          </button>
           <button
             type="button"
             onClick={() => setLang(lang === "fr" ? "en" : "fr")}

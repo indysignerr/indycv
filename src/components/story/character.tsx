@@ -7,7 +7,8 @@ import * as THREE from "three";
 import type { Clip } from "@/lib/story";
 import { scroll } from "@/lib/scroll-progress";
 
-const MODEL = "/models/indy.glb";
+export { MODEL_URL as MODEL } from "@/lib/assets";
+import { MODEL_URL as MODEL } from "@/lib/assets";
 const FADE = 0.35;
 /**
  * Applique l'écart au bras SANS l'empiler : le mélangeur d'animation ne réécrit un os que si sa valeur animée a changé
