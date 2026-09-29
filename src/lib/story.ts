@@ -79,7 +79,7 @@ export const chapters: Chapter[] = [
   },
   {
     id: "albert", at: 90, length: 8, clip: "idle",
-    day:    { accent: "#2A4BD7", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#B9B7B2", wall: "#F6F4EF", sky: "#CADFF5", fog: "#E1ECF8" },
+    day:    { accent: "#6D8BFF", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#B9B7B2", wall: "#F6F4EF", sky: "#CADFF5", fog: "#E1ECF8" },
     sunset: { accent: "#9DB0FF", panel: "rgba(14,16,32,0.86)", ink: "#F2F4FF", floor: "#8E8B85", wall: "#CFC9C0", sky: "#E6926B", fog: "#EFBE9F" },
     label: b("Chapitre 6 · Aujourd'hui", "Chapter 6 · Today"),
     title: b("Albert School × Mines Paris-PSL", "Albert School × Mines Paris-PSL"),
