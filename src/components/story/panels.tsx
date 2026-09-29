@@ -66,13 +66,6 @@ export function Panels() {
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
       </div>
-      <AnimatePresence>
-        {chapter < 0 && progress < 0.02 && (
-          <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ delay: 1 }} className="label absolute bottom-8 left-1/2 -translate-x-1/2 animate-pulse text-white drop-shadow">
-            {t(storyUi.scrollHint, lang)} ↓
-          </motion.p>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {hs && (
@@ -139,7 +132,7 @@ export function Panels() {
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-10 flex flex-wrap gap-3">
                 <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} /> {SITE.email}</a>
                 <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost"><Download size={18} /> {t(storyUi.cv, lang)}</a>
-                <button type="button" onClick={() => scroll.lenis ? scroll.lenis.scrollTo(0, { duration: 2.5 }) : window.scrollTo({ top: 0, behavior: "smooth" })} className="btn-ghost"><RotateCcw size={18} /> {t(storyUi.replay, lang)}</button>
+                <button type="button" onClick={() => scroll.lenis ? scroll.lenis.scrollTo(0, { immediate: true }) : window.scrollTo({ top: 0 })} className="btn-ghost"><RotateCcw size={18} /> {t(storyUi.replay, lang)}</button>
               </motion.div>
               <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-10 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs text-mute">
                 <li>{SITE.phone}</li>

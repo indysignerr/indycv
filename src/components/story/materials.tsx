@@ -32,12 +32,17 @@ export function Clouds({ sunset }: { sunset: boolean }) {
 export function GradientSky({ top, bottom }: { top: string; bottom: string }) {
   const uniforms = useMemo(() => ({ top: { value: new THREE.Color(top) }, bottom: { value: new THREE.Color(bottom) } }), []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { uniforms.top.value.set(top); uniforms.bottom.value.set(bottom); }, [top, bottom, uniforms]);
+  // La sphère suit la caméra : elle ne doit jamais traverser la scène
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(({ camera }) => { if (ref.current) ref.current.position.copy(camera.position); });
   return (
-    <mesh scale={[70, 70, 70]} frustumCulled={false}>
+    <mesh ref={ref} scale={[70, 70, 70]} frustumCulled={false} renderOrder={-10}>
       <sphereGeometry args={[1, 24, 16]} />
       <shaderMaterial
         side={THREE.BackSide}
         depthWrite={false}
+        depthTest={false}
+        fog={false}
         uniforms={uniforms}
         vertexShader={`varying float vY; void main(){ vY = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`}
         fragmentShader={`uniform vec3 top; uniform vec3 bottom; varying float vY; void main(){ float t = smoothstep(-0.1, 0.6, vY); gl_FragColor = vec4(mix(bottom, top, t), 1.0); }`}

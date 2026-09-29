@@ -23,6 +23,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
   const curve = useMemo(buildPath, []);
   const L = useMemo(() => curve.getLength(), [curve]);
   const dist = useRef(0);
+  const snap = useRef(true);
   const speed = useRef(0);
   const [state, setState] = useState<{ walking: boolean; action: Clip; chapter: number }>({ walking: false, action: "idle", chapter: -1 });
   const { camera } = useThree();
@@ -33,6 +34,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
 
   useFrame((_, dt) => {
     const target = scroll.progress * L;
+    if (Math.abs(target - dist.current) > L * 0.5) { dist.current = target; snap.current = true; }
     const prev = dist.current;
     dist.current += (target - dist.current) * Math.min(1, dt * 3.5);
     speed.current = (dist.current - prev) / Math.max(dt, 1e-3);
@@ -70,10 +72,11 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     tmp.cam.copy(anchor).addScaledVector(anchorT, inRoom ? (dist.current - roomMid) * 0.35 - back : -back).addScaledVector(anchorS, lat).setY(h);
     if (inRoom) tmp.look.copy(tmp.p).lerp(anchor, 0.6).addScaledVector(anchorT, 1.2).addScaledVector(anchorS, -2.8).setY(mobile ? 0.5 : 1.2);
     else tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
-    camera.position.lerp(tmp.cam, Math.min(1, dt * 1.5));
+    camera.position.lerp(tmp.cam, snap.current ? 1 : Math.min(1, dt * 1.5));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
-    camera.quaternion.slerp(tmp.q, Math.min(1, dt * 1.8));
+    camera.quaternion.slerp(tmp.q, snap.current ? 1 : Math.min(1, dt * 1.8));
+    snap.current = false;
 
     if (sun.current) {
       sun.current.position.copy(tmp.p).add(sunset ? new THREE.Vector3(-10, 6, 8) : new THREE.Vector3(6, 14, 5));
@@ -114,32 +117,9 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
         <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} distanceRef={dist} />
       ))}
 
-      <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} racket={state.chapter === 0} />
+      <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} />
     </>
   );
-}
-
-/** Bande de sol suivant la courbe (largeur w), avec le sentier au centre. */
-function Ribbon({ curve, w, y, color, uvScale = 1 }: { curve: THREE.Curve<THREE.Vector3>; w: number; y: number; color: string; uvScale?: number }) {
-  const geo = useMemo(() => {
-    const n = 200;
-    const pos: number[] = [], idx: number[] = [], uv: number[] = [];
-    const up = new THREE.Vector3(0, 1, 0);
-    for (let i = 0; i <= n; i++) {
-      const u = i / n;
-      const p = curve.getPointAt(u), t = curve.getTangentAt(u);
-      const s = new THREE.Vector3().crossVectors(up, t).normalize().multiplyScalar(w / 2);
-      pos.push(p.x - s.x, y, p.z - s.z, p.x + s.x, y, p.z + s.z);
-      uv.push(0, u * uvScale, 1, u * uvScale);
-      if (i < n) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } // normales vers le haut
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
-    g.setIndex(idx); g.computeVertexNormals();
-    return g;
-  }, [curve, w, y, uvScale]);
-  return <mesh geometry={geo} receiveShadow><meshStandardMaterial color={color} roughness={0.95} metalness={0} side={THREE.DoubleSide} /></mesh>;
 }
 
 /** Chemin de dalles : une dalle arrondie tous les 0,95 m, orientée le long de la courbe. */
@@ -168,32 +148,34 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
   );
 }
 
-/** Horizon : trois rangées de collines en silhouette (de plus en plus pâles) + soleil bas au coucher. */
+/** Horizon : trois anneaux de collines en silhouette centrés sur la caméra (jamais dans la scène). */
 function Horizon({ sunset }: { sunset: boolean }) {
-  const rows = useMemo(() => [0, 1, 2].map((r) => {
-    const pts: [number, number][] = [];
-    for (let i = 0; i <= 40; i++) {
-      const x = -140 + i * 7;
-      const y = 4 + r * 3 + Math.abs(Math.sin(i * 0.9 + r * 2.1) * 6 + Math.sin(i * 0.31 + r) * 4) * (1 + r * 0.35);
-      pts.push([x, y]);
+  const g = useRef<THREE.Group>(null);
+  const { camera } = useThree();
+  const rings = useMemo(() => [0, 1, 2].map((r) => {
+    const R = 52 + r * 8, n = 96, pos: number[] = [], idx: number[] = [];
+    for (let i = 0; i <= n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const hgt = 1 + r * 1.6 + Math.abs(Math.sin(a * 5 + r * 2.1) * 2.2 + Math.sin(a * 13 + r) * 1.1) * (1 + r * 0.35);
+      const x = Math.cos(a) * R, z = Math.sin(a) * R;
+      pos.push(x, -8, z, x, hgt, z);
+      if (i < n) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
     }
-    const shape = new THREE.Shape();
-    shape.moveTo(-140, -10);
-    pts.forEach(([x, y]) => shape.lineTo(x, y));
-    shape.lineTo(140, -10);
-    return { geo: new THREE.ShapeGeometry(shape), z: -58 - r * 8, r };
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(idx);
+    return { geo, r };
   }), []);
-  const cols = sunset ? ["#8A5E58", "#B07A6A", "#D49A80"] : ["#7FA38C", "#9DBBA6", "#BCD3C2"];
+  useFrame(() => { if (g.current) g.current.position.set(camera.position.x, 0, camera.position.z); });
+  const cols = sunset ? ["#D49A80", "#B07A6A", "#8A5E58"] : ["#BCD3C2", "#9DBBA6", "#7FA38C"];
   return (
-    <group>
-      {rows.map(({ geo, z, r }) => (
-        <mesh key={r} geometry={geo} position={[0, -6, z]} frustumCulled={false}>
-          <meshBasicMaterial color={cols[r]} fog={false} toneMapped={false} />
+    <group ref={g}>
+      {rings.map(({ geo, r }) => (
+        <mesh key={r} geometry={geo} frustumCulled={false}>
+          <meshBasicMaterial color={cols[r]} fog={false} toneMapped={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      {sunset && (
-        <mesh position={[18, 9, -75]}><circleGeometry args={[5.5, 40]} /><meshBasicMaterial color="#FFD5A0" fog={false} toneMapped={false} /></mesh>
-      )}
+      {sunset && <mesh position={[30, 16, -66]}><circleGeometry args={[5, 40]} /><meshBasicMaterial color="#FFD5A0" fog={false} toneMapped={false} /></mesh>}
     </group>
   );
 }
@@ -201,10 +183,12 @@ function Horizon({ sunset }: { sunset: boolean }) {
 function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; ground: string; path: string }) {
   return (
     <group>
-      <Ribbon curve={curve} w={30} y={-0.02} color={ground} />
+      {/* Sol immense : ses bords se perdent dans la brume, jamais visibles */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, -PATH_LENGTH / 2]} receiveShadow>
+        <planeGeometry args={[260, 320]} />
+        <Flat color={ground} roughness={0.95} />
+      </mesh>
       <Tiles curve={curve} color={path} />
-      {/* Épaisseur de l'île (bord visible en contrebas) */}
-      <Ribbon curve={curve} w={30} y={-1.4} color="#5A6A52" />
     </group>
   );
 }
@@ -229,11 +213,11 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
       }
       // Lampadaire tous les ~6 m, banc de temps en temps, le reste : arbres, buissons, rochers des deux côtés
       const r = rnd();
-      if (Math.round(d) % 6 === 0) { const q = p.clone().addScaledVector(side, 1.4); out.push({ kind: "lamp", pos: [q.x, 0, q.z], s: 1, rot: yaw }); }
-      if (Math.round(d) % 11 === 0) { const q = p.clone().addScaledVector(side, -1.6); out.push({ kind: "bench", pos: [q.x, 0, q.z], s: 1, rot: yaw }); }
+      if (Math.round(d) % 6 === 0) { const q = p.clone().addScaledVector(side, -1.4); out.push({ kind: "lamp", pos: [q.x, 0, q.z], s: 1, rot: yaw }); }
+      if (Math.round(d) % 11 === 0) { const q = p.clone().addScaledVector(side, -2.0); out.push({ kind: "bench", pos: [q.x, 0, q.z], s: 1, rot: yaw }); }
       for (let k = 0; k < 2; k++) {
         const sgn = k === 0 ? -1 : 1;
-        const off = 2.4 + rnd() * 7;
+        const off = sgn < 0 ? 2.6 + rnd() * 8 : 7.5 + rnd() * 7; // côté caméra : loin, pour ne jamais masquer le perso
         const q = p.clone().addScaledVector(side, sgn * off);
         const rr = rnd();
         out.push({ kind: rr > 0.55 ? "tree" : rr > 0.25 ? "bush" : "rock", pos: [q.x, 0, q.z], s: 0.6 + rnd() * 0.9, rot: rnd() * 6.28 });

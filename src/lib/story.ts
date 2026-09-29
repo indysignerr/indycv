@@ -98,10 +98,10 @@ export const outside = {
 export const storyUi = {
   introKicker: b("Une histoire animée", "An animated story"),
   introTitle: b("Vous allez découvrir, au fil d'une histoire animée, la vie et les expériences d'Indy François.", "You're about to discover, through an animated story, the life and experiences of Indy François."),
-  introHint: b("Faites défiler pour avancer. Chaque étape ouvre une expérience.", "Scroll to move forward. Each step opens an experience."),
+  introHint: b("Faites défiler pour avancer. Chaque pièce ouvre une expérience.", "Scroll to move forward. Each room opens an experience."),
   start: b("Commencer l'histoire", "Start the story"),
   cv: b("Télécharger le CV", "Download the CV"),
-  scrollHint: b("Défilez pour marcher", "Scroll to walk"),
+  scrollHint: b("Défilez pour commencer", "Scroll to begin"),
   loading: b("Chargement du monde…", "Loading the world…"),
   end: b("Fin de l'histoire. Écrivons la suite ensemble.", "End of the story. Let's write the next one together."),
   endKicker: b("Merci d'être arrivé jusqu'ici", "Thanks for making it this far"),

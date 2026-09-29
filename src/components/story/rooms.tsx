@@ -67,9 +67,9 @@ function LogoPlane({ url, width, bg }: { url: string; width: number; bg?: string
   return (
     <group>
       {/* Affiche : fond papier + cadre fin, image non éclairée pour garder les couleurs du logo */}
-      <mesh position={[0, 0, -0.035]}><boxGeometry args={[width + 0.36, h + 0.36, 0.05]} /><Flat color="#1F1E24" roughness={0.6} /></mesh>
-      <mesh position={[0, 0, -0.005]}><planeGeometry args={[width + 0.2, h + 0.2]} /><meshBasicMaterial color={bg ?? "#F7F3EC"} toneMapped={false} /></mesh>
-      <mesh><planeGeometry args={[width, h]} /><meshBasicMaterial map={tex} toneMapped={false} /></mesh>
+      <mesh position={[0, 0, -0.05]}><boxGeometry args={[width + 0.36, h + 0.36, 0.05]} /><Flat color="#1F1E24" roughness={0.6} /></mesh>
+      <mesh position={[0, 0, -0.015]}><planeGeometry args={[width + 0.2, h + 0.2]} /><meshBasicMaterial color={bg ?? "#F7F3EC"} toneMapped={false} /></mesh>
+      <mesh position={[0, 0, 0.01]}><planeGeometry args={[width, h]} /><meshBasicMaterial map={tex} transparent alphaTest={0.02} toneMapped={false} /></mesh>
     </group>
   );
 }

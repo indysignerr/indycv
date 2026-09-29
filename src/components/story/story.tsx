@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters } from "@/lib/story";
 import { Intro } from "./intro";
@@ -13,8 +12,6 @@ const StoryCanvas = dynamic(() => import("./story-canvas").then((m) => m.StoryCa
 /** Orchestration : intro → scroll débloqué → canvas + panneaux. Fallback = page classique si pas de WebGL / reduced-motion. */
 export function Story({ fallback }: { fallback: React.ReactNode }) {
   const [mode, setMode] = useState<"unknown" | "story" | "fallback">("unknown");
-  const [ready, setReady] = useState(false);
-  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -23,22 +20,23 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
     setMode(!calm && gl ? "story" : "fallback");
   }, []);
 
-  // Scroll verrouillé tant que l'histoire n'a pas commencé
+  // Défilement infini : après la page de fin, on revient au début
   useEffect(() => {
     if (mode !== "story") return;
-    document.documentElement.classList.toggle("story-locked", !started);
-    if (started) scroll.lenis?.start(); else scroll.lenis?.stop();
-    scroll.started = started;
-  }, [mode, started]);
+    const l = scroll.lenis;
+    if (l) { (l.options as { infinite: boolean }).infinite = true; (l.options as { syncTouch: boolean }).syncTouch = true; }
+    scroll.started = true;
+    return () => { if (l) (l.options as { infinite: boolean }).infinite = false; };
+  }, [mode]);
 
   if (mode === "fallback") return <>{fallback}</>;
   if (mode === "unknown") return <div className="min-h-screen" />;
 
   return (
     <>
-      <StoryCanvas onReady={() => setReady(true)} />
-      <AnimatePresence>{!started && <Intro ready={ready} onStart={() => { window.scrollTo(0, 0); setStarted(true); }} />}</AnimatePresence>
-      {started && <Panels />}
+      <StoryCanvas />
+      <Intro />
+      <Panels />
       {/* Longueur de scroll = longueur de l'histoire (texte sémantique pour SEO / lecteurs d'écran) */}
       <main className="pointer-events-none relative z-10">
         <div className="sr-only">
