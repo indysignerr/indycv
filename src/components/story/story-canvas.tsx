@@ -39,7 +39,7 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
   return (
     <div className="fixed inset-0 z-0">
       <Canvas
-        dpr={[1, mobile ? 1.5 : 1.75]}
+        dpr={[1, mobile ? 1.5 : 1.5]}
         shadows={!mobile}
         camera={{ fov: mobile ? 50 : 36, near: 0.1, far: 80, position: [4, 3, 6] }}
         gl={{ antialias: true, powerPreference: "high-performance" }}

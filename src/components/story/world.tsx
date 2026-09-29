@@ -108,9 +108,9 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       <fog ref={fogRef} attach="fog" args={[o.fog, 14, 46]} />
       <hemisphereLight args={[sunset ? "#FFC79A" : "#DCEBFF", sunset ? "#6B5A4A" : "#7A8F6A", sunset ? 0.9 : 1.1]} />
       <directionalLight ref={sun} intensity={sunset ? 2.2 : 2.6} color={sunset ? "#FFB27A" : "#FFF6E8"} castShadow={!mobile}
-        shadow-mapSize={mobile ? 512 : 1536} shadow-bias={-0.0004} shadow-normalBias={0.04}
+        shadow-mapSize={mobile ? 512 : 1024} shadow-bias={-0.0004} shadow-normalBias={0.04}
         shadow-camera-near={1} shadow-camera-far={45} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} />
-      {!mobile && <SoftShadows size={18} samples={10} focus={0.6} />}
+      {!mobile && <SoftShadows size={16} samples={6} focus={0.6} />}
 
       {/* L'île : une dalle qui suit le chemin, bords doux, rien au-delà */}
       <Island curve={curve} ground={o.ground} path={o.path} />
@@ -264,8 +264,8 @@ function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
   const pitchEx = useMemo(() => [[-0.75, 0.75, -200, 10]] as [number, number, number, number][], []);
   return (
     <group>
-      <Grass areas={areas} exclude={exclude} count={mobile ? 9000 : 42000} base={sunset ? "#557A45" : "#6A9E57"} tip={sunset ? "#B7BE78" : "#BFDD8C"} height={0.17} />
-      <Grass areas={pitch} exclude={pitchEx} count={mobile ? 4000 : 20000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />
+      <Grass areas={areas} exclude={exclude} count={mobile ? 7000 : 28000} base={sunset ? "#557A45" : "#6A9E57"} tip={sunset ? "#B7BE78" : "#BFDD8C"} height={0.17} />
+      <Grass areas={pitch} exclude={pitchEx} count={mobile ? 3000 : 12000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />
     </group>
   );
 }
