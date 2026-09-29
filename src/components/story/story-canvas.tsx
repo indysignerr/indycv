@@ -10,7 +10,7 @@ import { scroll, splitProgress } from "@/lib/scroll-progress";
 import { World } from "./world";
 
 export function StoryCanvas({ onReady }: { onReady?: () => void }) {
-  const { theme } = useApp();
+  const { theme, lang } = useApp();
   const [mobile, setMobile] = useState(false);
   const [dpr, setDpr] = useState(1.5);
 
@@ -43,12 +43,12 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
         dpr={dpr}
         shadows={!mobile}
         camera={{ fov: mobile ? 50 : 36, near: 0.1, far: 80, position: [4, 3, 6] }}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
-        onCreated={({ gl }) => { (window as unknown as { __gl: unknown }).__gl = gl; onReady?.(); }}
+        gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.06 }}
+        onCreated={() => onReady?.()}
       >
         <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(1, d - 0.25))} onIncline={() => setDpr((d) => Math.min(mobile ? 1.5 : 1.75, d + 0.25))} flipflops={3} onFallback={() => setDpr(1)} />
         <Suspense fallback={null}>
-          <World sunset={theme === "dark"} mobile={mobile} />
+          <World sunset={theme === "dark"} mobile={mobile} lang={lang} />
           <Preload all />
         </Suspense>
       </Canvas>

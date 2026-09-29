@@ -5,8 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, ChevronDown, Download, Mail, Moon, RotateCcw, Sun, X } from "lucide-react";
 import { hotspots } from "@/lib/hotspots";
 import { useApp } from "@/components/providers";
-import { scroll } from "@/lib/scroll-progress";
-import { chapters, storyUi, t } from "@/lib/story";
+import { scroll, INTRO_VH, END_VH, TOTAL_VH } from "@/lib/scroll-progress";
+import { chapters, PATH_LENGTH, storyUi, t } from "@/lib/story";
 import { SITE, tr, ui } from "@/lib/content";
 
 /**
@@ -20,7 +20,24 @@ export function Panels() {
   const [endO, setEndO] = useState(0);
   const [hotspot, setHotspot] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  useEffect(() => { setOpen(false); }, [chapter]);
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    setOpen(false);
+    if (chapter < 0) { setFlash(false); return; }
+    setFlash(true);
+    const id = setTimeout(() => setFlash(false), 3200);
+    return () => clearTimeout(id);
+  }, [chapter]);
+  // Aller au milieu d'un chapitre (scroll animé)
+  const goTo = (i: number) => {
+    const ch = chapters[i];
+    const story = (ch.at + ch.length / 2) / PATH_LENGTH;
+    const a = INTRO_VH / TOTAL_VH, b = END_VH / TOTAL_VH;
+    const raw = a + story * (1 - a - b);
+    const y = raw * (document.documentElement.scrollHeight - window.innerHeight);
+    if (scroll.lenis) scroll.lenis.scrollTo(y, { duration: 2.4, easing: (x: number) => 1 - Math.pow(1 - x, 3) });
+    else window.scrollTo({ top: y, behavior: "smooth" });
+  };
 
   useEffect(() => {
     let raf = 0;
@@ -52,13 +69,49 @@ export function Panels() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20">
-      {/* Barre de progression + rappel scroll */}
-      <div className="absolute left-5 top-5 flex items-center gap-3 sm:left-8 sm:top-6">
-        <span className="font-display text-lg font-bold" style={{ color: "var(--story-ink, rgb(var(--ink)))" }}>IF<span style={{ color: "var(--story-accent, rgb(var(--accent)))" }}>.</span></span>
-        <div className="h-1 w-32 overflow-hidden rounded-full bg-white/25">
-          <div className="h-full rounded-full transition-[width] duration-200" style={{ width: `${progress * 100}%`, background: "var(--story-accent, rgb(var(--accent)))" }} />
-        </div>
+      {/* Marque + compteur de chapitre */}
+      <div className="absolute left-5 top-5 flex items-center gap-4 sm:left-8 sm:top-6" style={{ color: "var(--story-ink, #fff)" }}>
+        <span className="font-display text-lg font-bold drop-shadow-sm">IF<span style={{ color: "var(--story-accent, rgb(var(--accent)))" }}>.</span></span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] opacity-80 drop-shadow-sm">
+          {c ? `${String(chapter + 1).padStart(2, "0")} / ${String(chapters.length).padStart(2, "0")}` : lang === "fr" ? "En chemin" : "On the way"}
+        </span>
       </div>
+      {/* Barre fine (mobile) */}
+      <div className="absolute left-5 right-5 top-14 h-[2px] overflow-hidden rounded-full bg-white/25 md:hidden">
+        <div className="h-full origin-left rounded-full" style={{ transform: `scaleX(${progress})`, background: "var(--story-accent, rgb(var(--accent)))" }} />
+      </div>
+      {/* Rail des chapitres (desktop) : colonne de numéros, nom au survol */}
+      <nav aria-label={lang === "fr" ? "Chapitres" : "Chapters"} className="pointer-events-auto absolute left-6 top-1/2 hidden -translate-y-1/2 md:block">
+        <div className="relative flex flex-col items-center gap-1 rounded-full border border-white/10 bg-[rgba(14,14,20,0.42)] px-1.5 py-3 backdrop-blur-md" style={{ boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}>
+          {chapters.map((ch, i) => {
+            const on = i === chapter;
+            const done = progress * PATH_LENGTH > ch.at + ch.length;
+            return (
+              <button key={ch.id} type="button" onClick={() => goTo(i)} aria-label={t(ch.title, lang)} aria-current={on ? "step" : undefined}
+                className="group relative flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/10">
+                <span className="font-mono text-[10px] tracking-[0.12em] transition-all duration-300"
+                  style={{ color: on ? "var(--story-accent)" : "#fff", opacity: on ? 1 : done ? 0.85 : 0.5, transform: on ? "scale(1.15)" : "none" }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {on && <span className="absolute -left-[5px] h-4 w-[2px] rounded-full" style={{ background: "var(--story-accent)" }} />}
+                <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-full bg-[rgba(14,14,20,0.78)] px-3 py-1.5 font-display text-xs font-semibold text-white opacity-0 backdrop-blur-md transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" style={{ transform: "translateX(-4px)" }}>
+                  {t(ch.title, lang)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+      {/* Titre cinématique à l'entrée d'une pièce */}
+      <AnimatePresence>
+        {c && flash && (
+          <motion.div key={`t-${c.id}`} className="absolute left-1/2 top-20 max-w-[88vw] -translate-x-1/2 rounded-2xl border border-white/10 px-7 py-5 text-center backdrop-blur-xl sm:top-24" style={{ background: "var(--story-panel)", boxShadow: "0 24px 70px rgba(0,0,0,0.3)" }} initial="hide" animate="show" exit="hide" variants={{ show: { opacity: 1, transition: { staggerChildren: 0.08 } }, hide: { opacity: 0, transition: { staggerChildren: 0.04, staggerDirection: -1, delay: 0.25 } } }}>
+            <div className="overflow-hidden"><motion.p variants={{ hide: { y: "110%" }, show: { y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } } }} className="font-mono text-xs uppercase tracking-[0.3em]" style={{ color: "var(--story-accent)" }}>{t(c.label, lang)}</motion.p></div>
+            <div className="overflow-hidden pb-1"><motion.h2 variants={{ hide: { y: "110%" }, show: { y: 0, transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } } }} className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] font-extrabold leading-none tracking-tight text-white">{t(c.title, lang)}</motion.h2></div>
+            <div className="overflow-hidden"><motion.p variants={{ hide: { y: "110%" }, show: { y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } } }} className="mt-2 font-serif text-xl italic text-white/85">{t(c.quality, lang)}</motion.p></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Langue + jour/soir, toujours accessibles */}
       <div className="pointer-events-auto absolute right-4 top-3 flex items-center gap-1 rounded-full bg-black/25 px-1 backdrop-blur-md sm:right-8 sm:top-5">
         <button type="button" onClick={() => setLang(lang === "fr" ? "en" : "fr")} aria-label={tr(ui.langSwitch, lang)} className="flex h-11 min-w-[44px] items-center justify-center rounded-full px-3 font-mono text-xs uppercase tracking-widest text-white/90 hover:text-white">
@@ -89,15 +142,15 @@ export function Panels() {
         )}
       </AnimatePresence>
       <AnimatePresence mode="wait">
-        {c && !hs && (
+        {c && !hs && !flash && (
           <motion.aside
             key={c.id}
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40, transition: { duration: 0.35 } }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto absolute bottom-3 left-3 right-3 max-h-[38vh] overflow-y-auto rounded-2xl p-4 backdrop-blur-xl sm:bottom-8 sm:left-auto sm:right-8 sm:max-h-none sm:w-[340px] sm:p-5"
-            style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}
+            className="pointer-events-auto absolute bottom-3 left-3 right-3 max-h-[38vh] overflow-y-auto rounded-2xl border border-white/10 p-4 backdrop-blur-xl sm:bottom-8 sm:left-auto sm:right-8 sm:max-h-none sm:w-[340px] sm:p-5"
+            style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 24px 70px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08)" }}
           >
             <p className="label" style={{ color: "var(--story-accent)" }}>{t(c.label, lang)}</p>
             <h2 className="mt-1.5 font-display text-xl font-bold leading-tight sm:text-2xl">{t(c.title, lang)}</h2>

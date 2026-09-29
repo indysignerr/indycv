@@ -2,11 +2,12 @@
 
 import { memo, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, useTexture } from "@react-three/drei";
+import { Billboard, Html, Text, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import type { Chapter, Palette } from "@/lib/story";
 import { hotspots } from "@/lib/hotspots";
 import { scroll } from "@/lib/scroll-progress";
+import type { Lang } from "@/lib/content";
 import { Flat } from "./materials";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
@@ -31,7 +32,7 @@ export function frameAt(curve: THREE.Curve<THREE.Vector3>, d: number) {
 const CLOSED = new Set(["lycee", "concertae", "indysigner", "albert"]);
 
 /** Mur transversal percé d'une porte (le chemin passe en x=0), avec deux battants qui s'ouvrent à l'approche. */
-function DoorWall({ z, wid, h, color, accent }: { z: number; wid: number; h: number; color: string; accent: string; distanceRef?: React.MutableRefObject<number>; doorAt?: number }) {
+function DoorWall({ z, wid, h, color, accent, label }: { z: number; wid: number; h: number; color: string; accent: string; label?: string }) {
   // Mur transversal qui s'arrête 1,6 m avant le chemin + portique coloré centré sur le chemin
   const end = -1.6;
   const start = -wid + DOOR_W / 2 + 0.75 - 0.0;
@@ -47,6 +48,9 @@ function DoorWall({ z, wid, h, color, accent }: { z: number; wid: number; h: num
         <mesh key={sx} position={[sx * (DOOR_W / 2), 1.3, 0]} castShadow><boxGeometry args={[0.16, 2.6, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
       ))}
       <mesh position={[0, 2.6, 0]} castShadow><boxGeometry args={[DOOR_W + 0.16, 0.16, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
+      {label && (
+        <Text position={[0, 2.97, -0.16]} rotation={[0, Math.PI, 0]} fontSize={0.17} letterSpacing={0.24} color={accent} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
+      )}
     </group>
   );
 }
@@ -79,31 +83,40 @@ function LogoPlane({ url, width, bg }: { url: string; width: number; bg?: string
   );
 }
 
-/** Point cliquable : anneau qui pulse, ouvre une fiche HTML. */
-export function HotspotMarker({ id, position, accent }: { id: string; position: [number, number, number]; accent: string }) {
+/** Point cliquable : noyau blanc, halo à la couleur du chapitre qui respire, étiquette au survol. */
+export function HotspotMarker({ id, position, accent, label }: { id: string; position: [number, number, number]; accent: string; label: string }) {
+  const halo = useRef<THREE.Mesh>(null);
   const ring = useRef<THREE.Mesh>(null);
   const [hover, setHover] = useState(false);
   useFrame(({ clock }) => {
-    if (!ring.current) return;
-    const s = 1 + Math.sin(clock.elapsedTime * 3) * 0.12 + (hover ? 0.25 : 0);
-    ring.current.scale.setScalar(s);
-    ring.current.lookAt(ring.current.position.clone().add(new THREE.Vector3(1, 0.3, 0.6)));
+    const t = clock.elapsedTime + position[2];
+    if (halo.current) {
+      const s = 1 + Math.sin(t * 2.4) * 0.12 + (hover ? 0.35 : 0);
+      halo.current.scale.setScalar(s);
+    }
+    if (ring.current) {
+      const k = (t * 0.6) % 1;
+      ring.current.scale.setScalar(1 + k * 1.6);
+      (ring.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.55;
+    }
   });
+  const toggle = (e: { stopPropagation: () => void }) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; };
   return (
     <group position={position}>
-      <mesh ref={ring}
-        onClick={(e) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; }}
-        onPointerOver={() => { setHover(true); document.body.style.cursor = "pointer"; }}
-        onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}>
-        <ringGeometry args={[0.13, 0.19, 32]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.95} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh><sphereGeometry args={[0.07, 12, 12]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>
-      {/* Zone de clic large */}
-      <mesh onClick={(e) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; }} onPointerOver={() => { setHover(true); document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}>
-        <sphereGeometry args={[0.7, 8, 8]} />
+      <Billboard>
+        <mesh ref={ring} renderOrder={5}><ringGeometry args={[0.14, 0.16, 40]} /><meshBasicMaterial color="#FFFFFF" transparent depthWrite={false} toneMapped={false} /></mesh>
+        <mesh ref={halo} renderOrder={5}><circleGeometry args={[0.2, 40]} /><meshBasicMaterial color={accent} transparent opacity={0.75} depthWrite={false} toneMapped={false} /></mesh>
+      </Billboard>
+      <mesh renderOrder={6}><sphereGeometry args={[0.07, 16, 16]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>
+      <mesh onClick={toggle} onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}>
+        <sphereGeometry args={[0.6, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
+      {hover && (
+        <Html center position={[0, 0.34, 0]} style={{ pointerEvents: "none" }} zIndexRange={[15, 0]}>
+          <span className="hotspot-tip">{label}</span>
+        </Html>
+      )}
     </group>
   );
 }
@@ -124,7 +137,7 @@ function floorTex(id: string, wid: number, len: number) {
  * murs d'entrée et de sortie percés d'un portique, plafond avec dalles lumineuses, plinthes et ombres d'angle.
  * Ouvert côté droit (caméra). Le chemin passe en x=0, la pièce s'étend vers -x.
  */
-export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, distanceRef }: { curve: THREE.Curve<THREE.Vector3>; chapter: Chapter; palette: Palette; sunset: boolean; distanceRef: React.MutableRefObject<number> }) {
+export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, distanceRef, lang }: { curve: THREE.Curve<THREE.Vector3>; chapter: Chapter; palette: Palette; sunset: boolean; distanceRef: React.MutableRefObject<number>; lang: Lang }) {
   const root = useRef<THREE.Group>(null);
   // Hors champ : la pièce n'est plus dessinée (ni ses ombres) quand le personnage est loin
   useFrame(() => {
@@ -163,7 +176,7 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
           <Baseboard position={[Lx + 0.02, 0, 0]} length={len + 0.6} rotationY={Math.PI / 2} color={chapter.id === "indysigner" ? "#163A2B" : "#FFFFFF"} />
           <WallAO position={[Lx, 0, 0]} length={len + 0.6} rotationY={-Math.PI / 2} />
           {/* Murs d'entrée et de sortie */}
-          <DoorWall z={-(len + 1.2) / 2 + 0.15} wid={wid} h={h} color={palette.wall} accent={a} />
+          <DoorWall z={-(len + 1.2) / 2 + 0.15} wid={wid} h={h} color={palette.wall} accent={a} label={signOf(chapter)} />
           <DoorWall z={(len + 1.2) / 2 - 0.15} wid={wid} h={h} color={palette.wall} accent={a} />
           <WallAO position={[(Lx - 1.6) / 2, 0, -(len + 1.2) / 2 + 0.3]} length={-1.6 - Lx} />
           <WallAO position={[(Lx - 1.6) / 2, 0, (len + 1.2) / 2 - 0.3]} length={-1.6 - Lx} rotationY={Math.PI} />
@@ -177,7 +190,7 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
       )}
       <Contents chapter={chapter} palette={palette} sunset={sunset} len={len} wid={wid} />
       {hotspots.filter((hs) => hs.chapter === chapter.id).map((hs) => (
-        <HotspotMarker key={hs.id} id={hs.id} position={hs.position} accent={a} />
+        <HotspotMarker key={hs.id} id={hs.id} position={hs.position} accent={a} label={hs.title[lang]} />
       ))}
     </group>
   );
@@ -351,5 +364,8 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
 }
 
 const cxOf = (wid: number) => -wid / 2 + DOOR_W / 2 + 0.75;
+
+const SIGNS: Record<string, string> = { lycee: "03 · LYCÉE", concertae: "04 · CONCERTAE", indysigner: "05 · INDYSIGNER", albert: "06 · ALBERT SCHOOL" };
+const signOf = (c: Chapter) => SIGNS[c.id];
 
 export { Blob };

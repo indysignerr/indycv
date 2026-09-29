@@ -6,6 +6,7 @@ import { Environment, Lightformer, SoftShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, outside, PATH_LENGTH } from "@/lib/story";
+import type { Lang } from "@/lib/content";
 import { Character } from "./character";
 import { Diorama } from "./rooms";
 import { Clouds, Flat, GradientSky } from "./materials";
@@ -22,7 +23,7 @@ export function buildPath() {
   return new THREE.CatmullRomCurve3(pts, false, "centripetal");
 }
 
-export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
+export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boolean; lang: Lang }) {
   const curve = useMemo(buildPath, []);
   const L = useMemo(() => curve.getLength(), [curve]);
   const dist = useRef(0);
@@ -77,6 +78,13 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       tmp.cam.lerp(faceCam, k);
       tmp.look.lerp(faceLook, k);
     }
+    // Respiration de caméra (très légère) : l'image n'est jamais figée
+    const tt = performance.now() / 1000;
+    tmp.cam.x += Math.sin(tt * 0.31) * 0.05; tmp.cam.y += Math.sin(tt * 0.47) * 0.035;
+    // Objectif : 36° en suivi, 30° de face (effet maquette)
+    const pc = camera as THREE.PerspectiveCamera;
+    const fovT = (mobile ? 50 : 36) - k * (mobile ? 4 : 6);
+    if (Math.abs(pc.fov - fovT) > 0.01) { pc.fov += (fovT - pc.fov) * Math.min(1, dt * 2); pc.updateProjectionMatrix(); }
     camera.position.lerp(tmp.cam, snap.current ? 1 : Math.min(1, dt * 1.5));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
@@ -123,8 +131,10 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
         <Lightformer intensity={0.4} color={sunset ? "#8A5A4A" : "#BFD7A8"} position={[0, -5, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[20, 20, 1]} />
       </Environment>
       <fog ref={fogRef} attach="fog" args={[o.fog, 14, 46]} />
-      <hemisphereLight args={[sunset ? "#FFC79A" : "#DCEBFF", sunset ? "#6B5A4A" : "#7A8F6A", sunset ? 0.9 : 1.1]} />
-      <directionalLight ref={sun} intensity={sunset ? 2.2 : 2.6} color={sunset ? "#FFB27A" : "#FFF6E8"} castShadow={!mobile}
+      {/* Éclairage trois points : ciel froid, soleil chaud, contour opposé pour détacher les silhouettes */}
+      <hemisphereLight args={[sunset ? "#FFB98E" : "#D6E6FF", sunset ? "#4E3F4A" : "#6F7F66", sunset ? 0.75 : 0.85]} />
+      <directionalLight position={[-8, 6, -10]} intensity={sunset ? 0.9 : 0.55} color={sunset ? "#B79CFF" : "#CFE3FF"} />
+      <directionalLight ref={sun} intensity={sunset ? 2.5 : 2.9} color={sunset ? "#FFA56A" : "#FFF0D8"} castShadow={!mobile}
         shadow-mapSize={mobile ? 512 : 1024} shadow-bias={-0.0004} shadow-normalBias={0.04}
         shadow-camera-near={1} shadow-camera-far={45} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} />
       {!mobile && <SoftShadows size={16} samples={6} focus={0.6} />}
@@ -136,7 +146,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       <Scenery curve={curve} sunset={sunset} />
 
       {chapters.map((c) => (
-        <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} sunset={sunset} distanceRef={dist} />
+        <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} sunset={sunset} distanceRef={dist} lang={lang} />
       ))}
 
       <Character curve={curve} distanceRef={dist} speedRef={speed} walkingRef={walkingRef} />
@@ -203,7 +213,14 @@ const Horizon = memo(function Horizon({ sunset }: { sunset: boolean }) {
           <meshBasicMaterial color={cols[r]} fog={false} toneMapped={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      {sunset && <mesh position={[30, 16, -66]}><circleGeometry args={[5, 40]} /><meshBasicMaterial color="#FFD5A0" fog={false} toneMapped={false} /></mesh>}
+      <mesh position={sunset ? [30, 14, -66] : [-26, 34, -58]}>
+        <circleGeometry args={[sunset ? 5 : 3.2, 48]} />
+        <meshBasicMaterial color={sunset ? "#FFD5A0" : "#FFFBEF"} fog={false} toneMapped={false} />
+      </mesh>
+      <mesh position={sunset ? [30, 14, -66.1] : [-26, 34, -58.1]}>
+        <circleGeometry args={[sunset ? 11 : 8, 48]} />
+        <meshBasicMaterial color={sunset ? "#FFC08A" : "#FFFFFF"} transparent opacity={sunset ? 0.35 : 0.28} fog={false} toneMapped={false} depthWrite={false} />
+      </mesh>
     </group>
   );
 });
