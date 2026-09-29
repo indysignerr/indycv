@@ -28,8 +28,8 @@ export const PATH_LENGTH = 100;
 export const chapters: Chapter[] = [
   {
     id: "tennis", at: 8, length: 10, clip: "idle",
-    day:    { accent: "#D6E23A", panel: "rgba(23,52,40,0.78)", ink: "#F3F7EA", floor: "#3F8F63", wall: "#2E6B4B", sky: "#BFE3F5", fog: "#DDF0F8" },
-    sunset: { accent: "#F0F05A", panel: "rgba(30,26,40,0.82)", ink: "#F3F7EA", floor: "#2E6A4A", wall: "#234E39", sky: "#F2A26B", fog: "#F6C79A" },
+    day:    { accent: "#D6E23A", panel: "rgba(23,52,40,0.78)", ink: "#F3F7EA", floor: "#C2673B", wall: "#E8DED2", sky: "#BFE3F5", fog: "#DDF0F8" },
+    sunset: { accent: "#F0F05A", panel: "rgba(30,26,40,0.82)", ink: "#F3F7EA", floor: "#9E4F2C", wall: "#B9AE9E", sky: "#F2A26B", fog: "#F6C79A" },
     label: b("Chapitre 1 · Enfance", "Chapter 1 · Childhood"),
     title: b("Le court de tennis", "The tennis court"),
     quality: b("Endurance & précision", "Stamina & precision"),
@@ -46,8 +46,8 @@ export const chapters: Chapter[] = [
   },
   {
     id: "lycee", at: 44, length: 9, clip: "idle",
-    day:    { accent: "#F5B942", panel: "rgba(40,34,26,0.8)", ink: "#FFF7E6", floor: "#C9A97A", wall: "#F4EBDD", sky: "#CFE3F2", fog: "#E4EFF6" },
-    sunset: { accent: "#FFC85C", panel: "rgba(30,24,22,0.84)", ink: "#FFF7E6", floor: "#9E8560", wall: "#C9B8A3", sky: "#EE9C6C", fog: "#F3C4A0" },
+    day:    { accent: "#F5B942", panel: "rgba(40,34,26,0.8)", ink: "#FFF7E6", floor: "#B9B7B2", wall: "#F6F4EF", sky: "#CFE3F2", fog: "#E4EFF6" },
+    sunset: { accent: "#FFC85C", panel: "rgba(30,24,22,0.84)", ink: "#FFF7E6", floor: "#8E8B85", wall: "#CFC9C0", sky: "#EE9C6C", fog: "#F3C4A0" },
     label: b("Chapitre 3 · Le lycée", "Chapter 3 · High school"),
     title: b("Maths & physique", "Maths & physics"),
     quality: b("Méthode & rigueur", "Method & rigour"),
@@ -55,8 +55,8 @@ export const chapters: Chapter[] = [
   },
   {
     id: "concertae", at: 60, length: 9, clip: "idle",
-    day:    { accent: "#4D86FF", panel: "rgba(24,30,46,0.8)", ink: "#EEF3FF", floor: "#B79A7C", wall: "#F2EFE8", sky: "#CFE0F2", fog: "#E3EDF6" },
-    sunset: { accent: "#8FB0FF", panel: "rgba(18,20,32,0.84)", ink: "#EEF3FF", floor: "#8C7458", wall: "#C4BDB0", sky: "#EA986C", fog: "#F1C2A0" },
+    day:    { accent: "#4D86FF", panel: "rgba(24,30,46,0.8)", ink: "#EEF3FF", floor: "#C9A57A", wall: "#F2EFE8", sky: "#CFE0F2", fog: "#E3EDF6" },
+    sunset: { accent: "#8FB0FF", panel: "rgba(18,20,32,0.84)", ink: "#EEF3FF", floor: "#9A7A56", wall: "#C4BDB0", sky: "#EA986C", fog: "#F1C2A0" },
     label: b("Chapitre 4 · Concertae", "Chapter 4 · Concertae"),
     title: b("Le cabinet comptable", "The accounting firm"),
     quality: b("Fiabilité & échéances", "Reliability & deadlines"),
@@ -64,8 +64,8 @@ export const chapters: Chapter[] = [
   },
   {
     id: "indysigner", at: 76, length: 10, clip: "idle",
-    day:    { accent: "#FF5A36", panel: "rgba(22,20,28,0.82)", ink: "#F5F1EA", floor: "#3B3944", wall: "#4A4654", sky: "#D8D3E6", fog: "#E7E3EF" },
-    sunset: { accent: "#FF6B47", panel: "rgba(14,12,18,0.86)", ink: "#F5F1EA", floor: "#2C2A33", wall: "#38343F", sky: "#D98A6E", fog: "#E9B49A" },
+    day:    { accent: "#FF5A36", panel: "rgba(24,46,38,0.84)", ink: "#F5F1EA", floor: "#D9BE94", wall: "#F4F1EA", sky: "#D8D3E6", fog: "#E7E3EF" },
+    sunset: { accent: "#FF6B47", panel: "rgba(14,12,18,0.86)", ink: "#F5F1EA", floor: "#A88E6A", wall: "#C9C2B6", sky: "#D98A6E", fog: "#E9B49A" },
     label: b("Chapitre 5 · Indysigner", "Chapter 5 · Indysigner"),
     title: b("L'atelier", "The studio"),
     quality: b("Autonomie & livraison", "Autonomy & delivery"),
@@ -79,8 +79,8 @@ export const chapters: Chapter[] = [
   },
   {
     id: "albert", at: 90, length: 8, clip: "idle",
-    day:    { accent: "#2A4BD7", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#DCD6CA", wall: "#F4F1EA", sky: "#CADFF5", fog: "#E1ECF8" },
-    sunset: { accent: "#9DB0FF", panel: "rgba(14,16,32,0.86)", ink: "#F2F4FF", floor: "#A79E90", wall: "#C7C1B5", sky: "#E6926B", fog: "#EFBE9F" },
+    day:    { accent: "#2A4BD7", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#B9B7B2", wall: "#F6F4EF", sky: "#CADFF5", fog: "#E1ECF8" },
+    sunset: { accent: "#9DB0FF", panel: "rgba(14,16,32,0.86)", ink: "#F2F4FF", floor: "#8E8B85", wall: "#CFC9C0", sky: "#E6926B", fog: "#EFBE9F" },
     label: b("Chapitre 6 · Aujourd'hui", "Chapter 6 · Today"),
     title: b("Albert School × Mines Paris-PSL", "Albert School × Mines Paris-PSL"),
     quality: b("Business, data & code", "Business, data & code"),

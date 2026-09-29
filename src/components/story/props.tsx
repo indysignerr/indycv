@@ -194,3 +194,79 @@ export function Bench({ position, rotation = 0 }: { position: [number, number, n
     </group>
   );
 }
+
+/** Parquet : lames légèrement plus foncées posées sur la dalle. */
+export function Parquet({ width, length, color = "#C9A57A", dark = "#B08D63" }: { width: number; length: number; color?: string; dark?: string }) {
+  const rows = Math.floor(width / 0.26);
+  return (
+    <group>
+      {Array.from({ length: rows }).map((_, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-width / 2 + 0.13 + i * 0.26, 0.008, 0]} receiveShadow>
+          <planeGeometry args={[0.24, length]} /><Flat color={i % 3 === 1 ? dark : color} roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Moquette bleue le long du chemin. */
+export function Carpet({ length, color = "#2F4FB5", width = 1.9 }: { length: number; color?: string; width?: number }) {
+  return <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} receiveShadow><planeGeometry args={[width, length]} /><Flat color={color} roughness={1} /></mesh>;
+}
+
+/** Grand lit double. */
+export function Bed({ position, rotation = [0, 0, 0], accent = "#FF5A36", frame = "#8A6A48" }: { position: [number, number, number]; rotation?: [number, number, number]; accent?: string; frame?: string }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.22, 0]} castShadow receiveShadow><boxGeometry args={[1.8, 0.44, 2.1]} /><Flat color={frame} /></mesh>
+      <mesh position={[0, 0.52, 0.05]} castShadow><boxGeometry args={[1.72, 0.18, 1.95]} /><Flat color="#F5F1EA" /></mesh>
+      <mesh position={[0, 0.64, 0.25]} castShadow><boxGeometry args={[1.72, 0.08, 1.4]} /><Flat color={accent} /></mesh>
+      {[-0.42, 0.42].map((x) => <mesh key={x} position={[x, 0.68, -0.72]} castShadow><boxGeometry args={[0.7, 0.14, 0.45]} /><Flat color="#FFFFFF" /></mesh>)}
+      <mesh position={[0, 0.75, -1.02]} castShadow><boxGeometry args={[1.8, 0.9, 0.08]} /><Flat color={frame} /></mesh>
+    </group>
+  );
+}
+
+/** Placard ouvert rempli de Legos (petites briques colorées). */
+export function LegoShelf({ position, rotation = [0, 0, 0] }: { position: [number, number, number]; rotation?: [number, number, number] }) {
+  const colors = ["#E3352B", "#2E63D6", "#F2C01E", "#3AA95A", "#FFFFFF", "#111111", "#F27E2B"];
+  let seed = 3;
+  const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 1.1, 0]} castShadow receiveShadow><boxGeometry args={[1.3, 2.2, 0.5]} /><Flat color="#F4F1EA" /></mesh>
+      {[0.45, 0.95, 1.45, 1.95].map((y, r) => (
+        <group key={r}>
+          <mesh position={[0, y - 0.03, 0.05]}><boxGeometry args={[1.2, 0.04, 0.46]} /><Flat color="#DDD8CF" /></mesh>
+          {Array.from({ length: 14 }).map((_, i) => {
+            const w = 0.08 + rnd() * 0.12, h = 0.06 + rnd() * 0.1, d = 0.08 + rnd() * 0.14;
+            return (
+              <mesh key={i} position={[-0.55 + (i / 13) * 1.1, y + h / 2, -0.1 + rnd() * 0.25]} rotation={[0, rnd() * 0.6, 0]} castShadow>
+                <boxGeometry args={[w, h, d]} /><Flat color={colors[Math.floor(rnd() * colors.length)]} roughness={0.5} />
+              </mesh>
+            );
+          })}
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/** Grand bureau avec trois écrans. */
+export function BigDesk({ position, rotation = [0, 0, 0], accent = "#FF5A36", top = "#D9BE94" }: { position: [number, number, number]; rotation?: [number, number, number]; accent?: string; top?: string }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.74, 0]} castShadow receiveShadow><boxGeometry args={[2.4, 0.05, 0.8]} /><Flat color={top} /></mesh>
+      {[-1.1, 1.1].map((x) => <mesh key={x} position={[x, 0.36, 0]} castShadow><boxGeometry args={[0.08, 0.72, 0.7]} /><Flat color="#2A2A2E" /></mesh>)}
+      {[-0.78, 0, 0.78].map((x, i) => (
+        <group key={i} position={[x, 0.77, -0.22]} rotation={[0, (1 - i) * 0.25, 0]}>
+          <mesh position={[0, 0.3, 0]} castShadow><boxGeometry args={[0.7, 0.42, 0.03]} /><Flat color="#1B1A22" roughness={0.4} /></mesh>
+          <mesh position={[0, 0.3, 0.017]}><planeGeometry args={[0.64, 0.36]} /><Flat color={i === 1 ? accent : "#3B4C6B"} emissive={i === 1 ? accent : "#3B4C6B"} emissiveIntensity={0.9} /></mesh>
+          <mesh position={[0, 0.05, 0]}><cylinderGeometry args={[0.03, 0.06, 0.1, 8]} /><Flat color="#1B1A22" /></mesh>
+        </group>
+      ))}
+      <mesh position={[0, 0.775, 0.2]}><boxGeometry args={[0.5, 0.015, 0.16]} /><Flat color="#E6E2DA" /></mesh>
+      <mesh position={[0.45, 0.775, 0.2]}><boxGeometry args={[0.07, 0.02, 0.11]} /><Flat color="#E6E2DA" /></mesh>
+    </group>
+  );
+}

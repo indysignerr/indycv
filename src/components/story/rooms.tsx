@@ -8,7 +8,7 @@ import type { Chapter, Palette } from "@/lib/story";
 import { hotspots } from "@/lib/hotspots";
 import { scroll } from "@/lib/scroll-progress";
 import { Flat } from "./materials";
-import { Bookshelf, Chair, Chalkboard, Desk, Goal, Lamp, Laptop, ProjectCard, SoccerBall, TennisBall, TennisCourt, Tree } from "./props";
+import { Bed, BigDesk, Bookshelf, Carpet, Chair, Chalkboard, Desk, Goal, Lamp, Laptop, LegoShelf, Parquet, ProjectCard, SoccerBall, TennisBall, TennisCourt, Tree } from "./props";
 
 const up = new THREE.Vector3(0, 1, 0);
 export const DOOR_W = 2.2;
@@ -141,7 +141,7 @@ export function Diorama({ curve, chapter, palette, active, sunset, distanceRef }
           {/* Mur gauche */}
           <mesh position={[-wid + DOOR_W / 2 + 0.15, h / 2, 0]} castShadow receiveShadow>
             <boxGeometry args={[0.3, h, len + 1.2]} />
-            <Flat color={palette.wall} />
+            <Flat color={chapter.id === "indysigner" ? (sunset ? "#1B3E30" : "#1F4D3A") : palette.wall} roughness={chapter.id === "lycee" ? 1 : 0.85} />
           </mesh>
           <mesh position={[-wid + DOOR_W / 2 + 0.32, h - 0.35, 0]}>
             <boxGeometry args={[0.04, 0.1, len + 1.0]} />
@@ -173,7 +173,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "tennis":
       return (
         <group>
-          <group position={[-3.8, 0, 0]}><TennisCourt width={5.5} length={len - 1} color={sunset ? "#2E6A4A" : "#3F8F63"} /></group>
+          <group position={[-3.8, 0, 0]}><TennisCourt width={5.5} length={len - 1} color={sunset ? "#9E4F2C" : "#C2673B"} /></group>
           <TennisBall position={[-0.9, 0.07, 1.6]} />
           <mesh position={[-3.8, 0.55, len / 2 + 0.2]}><boxGeometry args={[6.5, 1.1, 0.04]} /><meshStandardMaterial color="#DDE6DF" transparent opacity={0.35} roughness={1} /></mesh>
           <Tree position={[L + 1.4, 0, -len / 2 + 1]} scale={1.2} color={sunset ? "#4C8A5A" : "#5FA86A"} />
@@ -194,6 +194,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "lycee":
       return (
         <group>
+          <Carpet length={len + 0.9} color={sunset ? "#26407F" : "#2F4FB5"} />
           <Sign text="LYCÉE SIMONE VEIL" position={[L + 0.02, 2.66, 0.4]} rotation={[0, Math.PI / 2, 0]} width={5} color={a} />
           <Chalkboard position={[L + 0.25, 0, 0.4]} rotation={[0, Math.PI / 2, 0]} accent={a} />
           {[-2.4, -0.8, 0.8].map((z, i) => (
@@ -208,6 +209,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "concertae":
       return (
         <group>
+          <group position={[cxOf(wid), 0, 0]}><Parquet width={wid + 1.2} length={len + 0.9} color={sunset ? "#9A7A56" : "#C9A57A"} dark={sunset ? "#80654A" : "#B08D63"} /></group>
           <Sign image="/logos/concertae.png" position={[L + 0.06, 2.3, 0.2]} rotation={[0, Math.PI / 2, 0]} width={2.8} bg="#FFFFFF" />
           <Desk position={[-4.4, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
           <Chair position={[-3.5, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} />
@@ -220,26 +222,26 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "indysigner":
       return (
         <group>
+          <group position={[cxOf(wid), 0, 0]}><Parquet width={wid + 1.2} length={len + 0.9} color={sunset ? "#A88E6A" : "#E2CBA4"} dark={sunset ? "#957C5C" : "#CDB48C"} /></group>
           <Sign image="/logos/indysigner.webp" position={[L + 0.06, 2.3, 0.4]} rotation={[0, Math.PI / 2, 0]} width={2.6} bg="#F4EFE6" />
-          <Desk position={[-4.4, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} top="#2A2830" legs="#15141B" />
-          <Laptop position={[-4.4, 0.78, 1.0]} rotation={[0, Math.PI / 2 + 0.3, 0]} accent={a} />
-          <Chair position={[-3.5, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} color="#15141B" />
-          {/* Lit */}
-          <mesh position={[L + 1.1, 0.25, -2.6]} castShadow receiveShadow><boxGeometry args={[1.6, 0.5, 2.2]} /><Flat color="#3B3944" /></mesh>
-          <mesh position={[L + 1.1, 0.56, -2.6]} castShadow><boxGeometry args={[1.5, 0.12, 2.0]} /><Flat color={a} /></mesh>
-          <mesh position={[L + 1.1, 0.62, -3.4]}><boxGeometry args={[1.2, 0.14, 0.5]} /><Flat color="#F5F1EA" /></mesh>
+          <BigDesk position={[L + 0.55, 0, -2.6]} rotation={[0, Math.PI / 2, 0]} accent={a} top={sunset ? "#8E7658" : "#D9BE94"} />
+          <Chair position={[L + 1.4, 0, -2.6]} rotation={[0, Math.PI / 2, 0]} color="#15141B" />
+          <Laptop position={[L + 0.55, 0.78, -1.5]} rotation={[0, Math.PI / 2 + 0.4, 0]} accent={a} />
+          <Bed position={[-2.6, 0, F - 1.25]} rotation={[0, 0, 0]} accent={a} frame={sunset ? "#6E5640" : "#8A6A48"} />
+          <LegoShelf position={[L + 0.3, 0, 3.2]} rotation={[0, Math.PI / 2, 0]} />
           {["indysigner.fr", "lovive.fr", "manikalab.com", "nayumatea.com"].map((s, i) => (
-            <ProjectCard key={s} position={[-3.2 + (i % 2) * 1.2, 1.6 + Math.floor(i / 2) * 0.9, -3.2 + (i % 2) * 0.5]} label={s} accent={a} active={active} />
+            <ProjectCard key={s} position={[-3.6 + i * 0.9, 1.9 + (i % 2) * 0.45, 1.2 + (i % 2) * 0.6]} label={s} accent={a} active={active} />
           ))}
-          {/* Affiche prospection sur le mur gauche */}
-          <mesh position={[L + 0.03, 1.9, 3.6]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.3, 0.9]} /><Flat color="#15141B" emissive={a} emissiveIntensity={0.15} /></mesh>
-          <Text position={[L + 0.05, 1.9, 3.6]} rotation={[0, Math.PI / 2, 0]} fontSize={0.12} color={a} anchorX="center" anchorY="middle" maxWidth={1.1} textAlign="center">n8n · Shopify · Klaviyo</Text>
+          {/* Affiche prospection au-dessus du bureau */}
+          <mesh position={[L + 0.03, 2.35, -2.6]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.3, 0.8]} /><Flat color="#15141B" emissive={a} emissiveIntensity={0.15} /></mesh>
+          <Text position={[L + 0.05, 2.35, -2.6]} rotation={[0, Math.PI / 2, 0]} fontSize={0.12} color={a} anchorX="center" anchorY="middle" maxWidth={1.1} textAlign="center">n8n · Shopify · Klaviyo</Text>
           <Lamp position={[-4.0, 2.9, 0.4]} color={a} intensity={active ? 12 : 4} />
         </group>
       );
     case "albert":
       return (
         <group>
+          <Carpet length={len + 0.9} color={sunset ? "#26407F" : "#2F4FB5"} />
           <Sign image="/logos/albert-x-mines.webp" position={[L + 0.06, 2.3, 1.0]} rotation={[0, Math.PI / 2, 0]} width={2.6} bg="#FFFFFF" />
           {[-3.0, -1.6].map((z, i) => <Bookshelf key={i} position={[L + 0.2, 0, z]} rotation={[0, Math.PI / 2, 0]} books={[a, "#E9E4D6", "#FF5A36", "#F5B942", "#5FA86A"]} />)}
           <Desk position={[-4.2, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#A79E90" : "#DCD6CA"} />
