@@ -260,6 +260,19 @@ export const pipelineTex = () =>
     });
   }, { repeat: [1, 0.5], offset: [0, 0.5] });
 
+/** Plaque de marque (logiciels du cabinet) : le nom en gros, qui remplit la plaque, lisible de loin. */
+export const badgeTex = (title: string, fg: string, bg: string) =>
+  make(`badge${title}${fg}${bg}`, 512, (g, s) => {
+    const H = s / 2;
+    g.fillStyle = bg; g.fillRect(0, 0, s, H);
+    let size = 150;
+    g.font = `800 ${size}px Helvetica, Arial`;
+    while (g.measureText(title).width > s - 70 && size > 40) { size -= 4; g.font = `800 ${size}px Helvetica, Arial`; }
+    g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(title, s / 2, H / 2 - 8);
+    g.fillRect(s / 2 - 40, H - 44, 80, 8);
+  }, { repeat: [1, 0.5], offset: [0, 0.5] });
+
 /** Affiche générique : aplat de couleur + formes + titre. */
 export const posterTex = (bg: string, fg: string, title: string, sub = "") =>
   make(`poster${bg}${fg}${title}`, 512, (g, s, r) => {

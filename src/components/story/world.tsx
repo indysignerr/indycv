@@ -96,8 +96,9 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
       const ap = curve.getPointAt(um), at = curve.getTangentAt(um);
       const as = new THREE.Vector3().crossVectors(tmp.up, at).normalize();
       const drift = (dist.current - faceMid) * 0.25; // léger suivi latéral du personnage
-      const faceCam = ap.clone().addScaledVector(at, drift).addScaledVector(as, mobile ? 13 : 8.8).setY(mobile ? 3.4 : 2.7);
-      const faceLook = ap.clone().addScaledVector(at, drift * 0.6).addScaledVector(as, -4.6).setY(mobile ? 1.0 : 1.35);
+      // Mobile (portrait) : caméra un peu plus proche, la pièce remplit mieux l'écran au-dessus du panneau
+      const faceCam = ap.clone().addScaledVector(at, drift).addScaledVector(as, mobile ? 11.2 : 8.8).setY(mobile ? 3.3 : 2.7);
+      const faceLook = ap.clone().addScaledVector(at, drift * 0.6).addScaledVector(as, -4.6).setY(mobile ? -0.9 : 1.35);
       tmp.cam.lerp(faceCam, k);
       tmp.look.lerp(faceLook, k);
     }

@@ -12,7 +12,7 @@ import { Flat } from "./materials";
 import { CLAY_COOL, CLAY_WARM, Figure, Racket } from "./figures";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
-  BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
+  Badge, BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
   Football, GoalHD, Lockers, Monitor, PipelineBoard, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens,
 } from "./detail";
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
@@ -369,8 +369,9 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <WaterCooler position={[-1.5, 0, -F + 0.3]} />
           <Plant position={[L + 0.45, 0, -F + 0.4]} kind="leafy" scale={1.3} />
           <Plant position={[L + 0.45, 0, F - 0.4]} kind="tall" scale={1.2} />
-          <Poster position={[L + 0.03, 1.7, -1.7]} rotationY={Math.PI / 2} w={0.55} h={0.4} bg="#FFFFFF" fg="#2E5FA8" title="Cegid" />
-          <Poster position={[L + 0.03, 1.7, 1.7]} rotationY={Math.PI / 2} w={0.55} h={0.4} bg="#FFFFFF" fg="#1E2F55" title="Pennylane" />
+          {/* Les deux logiciels du quotidien, en plaques lisibles de part et d'autre du logo */}
+          <Badge position={[L + 0.03, 2.2, -2.08]} rotationY={Math.PI / 2} w={0.84} title="Cegid" fg="#2E5FA8" />
+          <Badge position={[L + 0.03, 2.2, 2.08]} rotationY={Math.PI / 2} w={0.84} title="Pennylane" fg="#12325B" />
         </group>
       );
     case "indysigner":

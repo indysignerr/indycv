@@ -22,6 +22,8 @@ export function Panels() {
   const [hotspot, setHotspot] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [touch, setTouch] = useState(false);
+  useEffect(() => { setTouch(window.matchMedia("(pointer: coarse)").matches); }, []);
   useEffect(() => {
     setOpen(false);
     if (chapter < 0) { setFlash(false); return; }
@@ -78,14 +80,14 @@ export function Panels() {
   return (
     <div className="pointer-events-none fixed inset-0 z-20">
       {/* Marque + compteur de chapitre */}
-      <div className="absolute left-5 top-5 flex items-center gap-4 sm:left-8 sm:top-6" style={{ color: "var(--story-ink, #fff)" }}>
-        <span className="font-display text-lg font-bold drop-shadow-sm">IF<span style={{ color: "var(--story-accent, rgb(var(--accent)))" }}>.</span></span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.22em] opacity-80 drop-shadow-sm">
+      <div className="absolute left-4 top-3 flex h-11 items-center gap-3 rounded-full border border-white/10 bg-[rgba(14,14,20,0.5)] px-4 text-white backdrop-blur-md sm:left-8 sm:top-5">
+        <span className="font-display text-lg font-bold">IF<span style={{ color: "var(--story-accent, rgb(var(--accent)))" }}>.</span></span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] opacity-85">
           {c ? `${String(chapter + 1).padStart(2, "0")} / ${String(chapters.length).padStart(2, "0")}` : lang === "fr" ? "En chemin" : "On the way"}
         </span>
       </div>
       {/* Barre fine (mobile) */}
-      <div className="absolute left-5 right-5 top-14 h-[2px] overflow-hidden rounded-full bg-white/25 md:hidden">
+      <div className="absolute left-5 right-5 top-[62px] h-[2px] overflow-hidden rounded-full bg-white/25 md:hidden">
         <div className="h-full origin-left rounded-full" style={{ transform: `scaleX(${progress})`, background: "var(--story-accent, rgb(var(--accent)))" }} />
       </div>
       {/* Rail des chapitres (desktop) : colonne de numéros, nom au survol */}
@@ -125,7 +127,7 @@ export function Panels() {
           <motion.aside key={hs.id} initial={{ opacity: 0, y: 24, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, transition: { duration: 0.25 } }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="pointer-events-auto absolute bottom-3 left-3 right-3 z-10 max-h-[70vh] overflow-y-auto rounded-3xl p-6 backdrop-blur-xl sm:bottom-auto sm:left-auto sm:right-8 sm:top-1/2 sm:w-[420px] sm:-translate-y-1/2 sm:p-8"
             style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 30px 80px rgba(0,0,0,0.4)" }}>
-            <button type="button" onClick={() => { scroll.hotspot = null; }} aria-label="Fermer" className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10"><X size={18} /></button>
+            <button type="button" onClick={() => { scroll.hotspot = null; }} aria-label={t(storyUi.close, lang)} className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10"><X size={18} /></button>
             <p className="label pr-12" style={{ color: "var(--story-accent)" }}>{t(hs.kicker, lang)}</p>
             <h3 className="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">{t(hs.title, lang)}</h3>
             <ul className="mt-4 space-y-2 text-[15px] leading-relaxed opacity-90">
@@ -147,7 +149,7 @@ export function Panels() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40, transition: { duration: 0.35 } }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto absolute bottom-3 left-3 right-3 max-h-[38vh] overflow-y-auto rounded-2xl border border-white/10 p-4 backdrop-blur-xl sm:bottom-8 sm:left-auto sm:right-8 sm:max-h-none sm:w-[340px] sm:p-5"
+            className="pointer-events-auto absolute bottom-3 left-3 right-3 max-h-[36vh] overflow-y-auto rounded-2xl border border-white/10 px-4 py-3 backdrop-blur-xl sm:bottom-8 sm:left-auto sm:right-8 sm:max-h-none sm:w-[340px] sm:p-5"
             style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 24px 70px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08)" }}
           >
             <p className="label" style={{ color: "var(--story-accent)" }}>{t(c.label, lang)}</p>
@@ -158,7 +160,19 @@ export function Panels() {
             </button>
             {open && <p className="mt-2 text-[14px] leading-relaxed opacity-90">{t(c.text, lang)}</p>}
             {hotspots.some((h) => h.chapter === c.id) && (
-              <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em] opacity-60">{lang === "fr" ? "Cliquez sur les points lumineux" : "Click the glowing dots"}</p>
+              <div className="mt-3">
+                <p className="hidden font-mono text-[11px] uppercase tracking-[0.18em] opacity-60 sm:block">{touch ? t(storyUi.tapHint, lang) : lang === "fr" ? "Cliquez sur les points lumineux" : "Click the glowing dots"}</p>
+                {/* Mobile : une seule ligne qui défile, pour garder le panneau bas (jamais devant le personnage) */}
+                <ul className="-mx-1 mt-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:mt-2 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0" aria-label={t(storyUi.explore, lang)}>
+                  {hotspots.filter((h) => h.chapter === c.id).map((h) => (
+                    <li key={h.id}>
+                      <button type="button" onClick={() => { scroll.hotspot = h.id; }} className="inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/15 px-3 text-[13px] font-medium transition-colors hover:bg-white/10 sm:min-h-[36px]">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--story-accent)" }} aria-hidden />{t(h.title, lang)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             {c.links && open && (
               <ul className="mt-4 flex flex-wrap gap-2">
@@ -178,20 +192,21 @@ export function Panels() {
       <AnimatePresence>
         {atEnd && (
           <motion.div key="end" initial={false} exit={{ opacity: 0 }} style={{ opacity: endO }} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col">
+            <div className="px-5 pt-5 sm:px-8"><span className="font-display text-lg font-bold">IF<span className="text-accent">.</span></span></div>
             <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 sm:px-8">
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="label mb-6 text-accent">{t(storyUi.endKicker, lang)}</motion.p>
-              <motion.h2 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.8 }} className="font-display text-[clamp(1.9rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-tight text-ink">{t(storyUi.endTitle, lang)}</motion.h2>
+              <motion.h2 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.8 }} className="font-display text-[clamp(1.8rem,4.4vw,3.2rem)] font-bold leading-[1.1] tracking-tight text-ink">{t(storyUi.endTitle, lang)}</motion.h2>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-6 max-w-xl font-serif text-xl italic text-mute">{t(storyUi.endText, lang)}</motion.p>
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-10 flex flex-wrap gap-3">
                 <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} /> {SITE.email}</a>
                 <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost"><Download size={18} /> {t(storyUi.cv, lang)}</a>
                 <button type="button" onClick={() => scroll.lenis ? scroll.lenis.scrollTo(0, { immediate: true }) : window.scrollTo({ top: 0 })} className="btn-ghost"><RotateCcw size={18} /> {t(storyUi.replay, lang)}</button>
               </motion.div>
-              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-10 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs text-mute">
-                <li>{SITE.phone}</li>
-                <li><a href={SITE.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-ink">LinkedIn</a></li>
-                <li><a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">GitHub</a></li>
-                <li><a href="/mentions-legales/" className="hover:text-ink">{lang === "fr" ? "Mentions légales" : "Legal"}</a></li>
+              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-8 flex flex-wrap gap-x-5 font-mono text-xs text-mute">
+                <li><a href={`tel:${SITE.phoneHref}`} className="inline-flex min-h-[44px] items-center hover:text-ink">{SITE.phone}</a></li>
+                <li><a href={SITE.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center hover:text-ink">LinkedIn</a></li>
+                <li><a href={SITE.github} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center hover:text-ink">GitHub</a></li>
+                <li><a href="/mentions-legales/" className="inline-flex min-h-[44px] items-center hover:text-ink">{lang === "fr" ? "Mentions légales" : "Legal"}</a></li>
               </motion.ul>
             </div>
             <p className="px-5 pb-6 font-mono text-xs text-mute sm:px-8">Indy François · Mines Paris-PSL × Albert School · indyfrancois.com</p>

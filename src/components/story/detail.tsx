@@ -5,7 +5,7 @@ import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { Flat } from "./materials";
 import {
-  beamTex, blobTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, pipelineTex, plasterTex, posterTex, spreadsheetTex, woodTex,
+  badgeTex, beamTex, blobTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, pipelineTex, plasterTex, posterTex, spreadsheetTex, woodTex,
 } from "./textures";
 
 type V3 = [number, number, number];
@@ -89,6 +89,17 @@ export function Poster({ position, rotationY = 0, w = 0.7, h = 0.95, bg, fg, tit
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh position={[0, 0, -0.012]}><boxGeometry args={[w + 0.06, h + 0.06, 0.02]} /><Flat color="#22222A" roughness={0.5} /></mesh>
       <mesh><planeGeometry args={[w, h]} /><meshStandardMaterial map={t} roughness={0.6} /></mesh>
+    </group>
+  );
+}
+
+/** Plaque de marque murale (nom de logiciel en grand). */
+export function Badge({ position, rotationY = 0, w = 0.9, title, fg, bg = "#FFFFFF" }: { position: V3; rotationY?: number; w?: number; title: string; fg: string; bg?: string }) {
+  const t = useMemo(() => badgeTex(title, fg, bg), [title, fg, bg]);
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, 0, -0.012]}><boxGeometry args={[w + 0.06, w / 2 + 0.06, 0.02]} /><Flat color="#22222A" roughness={0.5} /></mesh>
+      <mesh><planeGeometry args={[w, w / 2]} /><meshBasicMaterial map={t} toneMapped={false} /></mesh>
     </group>
   );
 }
