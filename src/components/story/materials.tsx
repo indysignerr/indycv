@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 
 /** Matériau plat, doux, cohérent partout : la signature visuelle du diorama. */
@@ -9,10 +10,10 @@ export function Flat({ color, emissive, emissiveIntensity = 0, roughness = 0.95,
 
 /** Ciel en dégradé : grande sphère inversée, couleur haut/bas interpolée. */
 export function GradientSky({ top, bottom }: { top: string; bottom: string }) {
-  const uniforms = { top: { value: new THREE.Color(top) }, bottom: { value: new THREE.Color(bottom) } };
-  uniforms.top.value.set(top); uniforms.bottom.value.set(bottom);
+  const uniforms = useMemo(() => ({ top: { value: new THREE.Color(top) }, bottom: { value: new THREE.Color(bottom) } }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { uniforms.top.value.set(top); uniforms.bottom.value.set(bottom); }, [top, bottom, uniforms]);
   return (
-    <mesh scale={[400, 400, 400]} frustumCulled={false}>
+    <mesh scale={[70, 70, 70]} frustumCulled={false}>
       <sphereGeometry args={[1, 24, 16]} />
       <shaderMaterial
         side={THREE.BackSide}
