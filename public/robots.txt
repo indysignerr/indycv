@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /cv/
+
+Sitemap: https://indyfrancois.com/sitemap.xml
