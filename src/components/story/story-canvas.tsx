@@ -6,7 +6,7 @@ import { Preload } from "@react-three/drei";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useApp } from "@/components/providers";
-import { scroll } from "@/lib/scroll-progress";
+import { scroll, splitProgress } from "@/lib/scroll-progress";
 import { World } from "./world";
 
 export function StoryCanvas({ onReady }: { onReady?: () => void }) {
@@ -20,7 +20,11 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
       start: 0,
       end: () => document.documentElement.scrollHeight - window.innerHeight,
       onUpdate: (self) => {
-        scroll.progress = self.progress;
+        const sp = splitProgress(self.progress);
+        scroll.raw = self.progress;
+        scroll.progress = sp.story;
+        scroll.intro = sp.intro;
+        scroll.end = sp.end;
         scroll.velocity = self.getVelocity();
       },
     });

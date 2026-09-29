@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { scroll } from "@/lib/scroll-progress";
+import { scroll, TOTAL_VH } from "@/lib/scroll-progress";
 import { chapters } from "@/lib/story";
 import { Intro } from "./intro";
 import { Panels } from "./panels";
@@ -45,7 +45,7 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
             <section key={c.id}><h2>{c.title.fr}</h2><p>{c.text.fr}</p></section>
           ))}
         </div>
-        <div aria-hidden style={{ height: `${chapters.length * 220 + 120}vh` }} />
+        <div aria-hidden style={{ height: `${TOTAL_VH}vh` }} />
       </main>
     </>
   );

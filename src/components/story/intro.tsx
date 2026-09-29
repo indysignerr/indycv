@@ -16,7 +16,7 @@ export function Intro() {
     const loop = () => {
       const el = ref.current;
       if (el) {
-        const o = Math.max(0, 1 - scroll.progress / 0.025);
+        const o = scroll.intro;
         el.style.opacity = String(o);
         el.style.visibility = o < 0.01 ? "hidden" : "visible";
         el.style.transform = `translateY(${(1 - o) * -24}px)`;

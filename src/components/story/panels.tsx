@@ -17,6 +17,7 @@ export function Panels() {
   const { lang, theme, setLang, toggleTheme } = useApp();
   const [chapter, setChapter] = useState(-1);
   const [progress, setProgress] = useState(0);
+  const [endO, setEndO] = useState(0);
   const [hotspot, setHotspot] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   useEffect(() => { setOpen(false); }, [chapter]);
@@ -26,6 +27,7 @@ export function Panels() {
     const loop = () => {
       setChapter((c) => (c === scroll.chapter ? c : scroll.chapter));
       setProgress((p) => (Math.abs(p - scroll.progress) > 0.002 ? scroll.progress : p));
+      setEndO((o) => (Math.abs(o - scroll.end) > 0.01 || (scroll.end === 0 && o !== 0) ? scroll.end : o));
       setHotspot((h) => (h === scroll.hotspot ? h : scroll.hotspot));
       raf = requestAnimationFrame(loop);
     };
@@ -46,7 +48,7 @@ export function Panels() {
   const c = chapter >= 0 ? chapters[chapter] : null;
   const hs = hotspot ? hotspots.find((h) => h.id === hotspot) ?? null : null;
   useEffect(() => { if (hs && hs.chapter !== c?.id) scroll.hotspot = null; }, [hs, c]);
-  const atEnd = progress > 0.975;
+  const atEnd = endO > 0.01;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20">
@@ -124,7 +126,7 @@ export function Panels() {
 
       <AnimatePresence>
         {atEnd && (
-          <motion.div key="end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: "easeInOut" }} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col">
+          <motion.div key="end" initial={false} exit={{ opacity: 0 }} style={{ opacity: endO }} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col">
             <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 sm:px-8">
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="label mb-6 text-accent">{t(storyUi.endKicker, lang)}</motion.p>
               <motion.h2 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.8 }} className="font-display text-[clamp(1.9rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-tight text-ink">{t(storyUi.endTitle, lang)}</motion.h2>
