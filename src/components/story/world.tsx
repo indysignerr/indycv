@@ -49,6 +49,7 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
     dist.current += (target - dist.current) * Math.min(1, dt * 3.5);
     speed.current = (dist.current - prev) / Math.max(dt, 1e-3);
     walkingRef.current = Math.abs(speed.current) > 0.12;
+    scroll.dist = dist.current; scroll.walking = walkingRef.current; scroll.speed = speed.current;
 
     let chapter = -1;
     for (let i = 0; i < chapters.length; i++) {
@@ -61,7 +62,7 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
     let pulse = 0, inside = 0;
     for (const pt of portals) {
       const x = (dist.current - pt.d) / 0.7, v = Math.exp(-x * x);
-      if (v > pulse) { pulse = v; scroll.portalAccent = (sunset ? pt.c.sunset : pt.c.day).accent; }
+      if (v > pulse) { pulse = v; scroll.portalAccent = (sunset ? pt.c.sunset : pt.c.day).accent; scroll.portalRoom = pt.c.id; }
     }
     for (let i = 0; i < portals.length; i += 2) {
       const a0 = portals[i].d, a1 = portals[i + 1].d;

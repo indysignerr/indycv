@@ -71,6 +71,7 @@ export const ui = {
   },
   theme: { toDark: b("Passer en mode sombre", "Switch to dark mode"), toLight: b("Passer en mode clair", "Switch to light mode") },
   langSwitch: b("Switch to English", "Passer en français"),
+  sound: { on: b("Activer le son", "Turn sound on"), off: b("Couper le son", "Turn sound off"), hint: b("Avec le son", "With sound") },
   skip: b("Aller au contenu", "Skip to content"),
 };
 

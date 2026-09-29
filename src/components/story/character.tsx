@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Clip } from "@/lib/story";
+import { scroll } from "@/lib/scroll-progress";
 
 const MODEL = "/models/indy.glb";
 const FADE = 0.35;
@@ -64,6 +65,8 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
     // Vitesse de la marche proportionnelle à la vitesse de scroll
     const w = actions["walk"];
     if (w && walkingRef.current) w.timeScale = THREE.MathUtils.clamp(Math.abs(speedRef.current) / 1.4, 0.6, 1.8) * Math.sign(speedRef.current || 1);
+    // Phase du pas, pour caler le bruit des pas (son d'ambiance)
+    if (w) { const d = w.getClip().duration; scroll.walkPhase = (((w.time % d) + d) % d) / d; }
   });
 
   return (

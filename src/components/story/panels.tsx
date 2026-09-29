@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, ChevronDown, Download, Mail, RotateCcw, X } from "lucide-react";
 import { hotspots } from "@/lib/hotspots";
@@ -8,6 +8,7 @@ import { useApp } from "@/components/providers";
 import { scroll, INTRO_VH, END_VH, TOTAL_VH } from "@/lib/scroll-progress";
 import { chapters, PATH_LENGTH, storyUi, t } from "@/lib/story";
 import { SITE } from "@/lib/content";
+import { ambience } from "@/lib/ambience";
 
 /**
  * Panneaux latéraux : un par chapitre, affiché seulement quand le personnage est dans la pièce.
@@ -65,6 +66,13 @@ export function Panels() {
   const c = chapter >= 0 ? chapters[chapter] : null;
   const hs = hotspot ? hotspots.find((h) => h.id === hotspot) ?? null : null;
   useEffect(() => { if (hs && hs.chapter !== c?.id) scroll.hotspot = null; }, [hs, c]);
+  // Petit son à l'ouverture / fermeture d'une fiche (si le son est activé)
+  const prevHotspot = useRef<string | null>(null);
+  useEffect(() => {
+    if (hotspot && !prevHotspot.current) ambience.ui("open");
+    else if (!hotspot && prevHotspot.current) ambience.ui("close");
+    prevHotspot.current = hotspot;
+  }, [hotspot]);
   const atEnd = endO > 0.01;
 
   return (

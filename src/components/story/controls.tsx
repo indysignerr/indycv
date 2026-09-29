@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
 import { tr, ui } from "@/lib/content";
+import { ambience } from "@/lib/ambience";
 
 /**
  * Langue + jour/soir : au-dessus de tout (accueil, histoire, page de fin), toujours cliquables.
@@ -13,6 +14,7 @@ import { tr, ui } from "@/lib/content";
 export function Controls() {
   const { lang, theme, setLang, toggleTheme } = useApp();
   const [cover, setCover] = useState(true);
+  const sound = useSyncExternalStore(ambience.subscribe, ambience.getSnapshot, ambience.getServerSnapshot);
 
   useEffect(() => {
     let raf = 0;
@@ -33,6 +35,9 @@ export function Controls() {
     >
       <button type="button" onClick={() => setLang(lang === "fr" ? "en" : "fr")} aria-label={tr(ui.langSwitch, lang)} className="flex h-11 min-w-[44px] items-center justify-center rounded-full px-3 font-mono text-xs uppercase tracking-widest opacity-90 hover:opacity-100">
         {lang === "fr" ? "EN" : "FR"}
+      </button>
+      <button type="button" onClick={() => ambience.toggle()} aria-pressed={sound} aria-label={tr(sound ? ui.sound.off : ui.sound.on, lang)} className="flex h-11 w-11 items-center justify-center rounded-full opacity-90 hover:opacity-100">
+        {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
       </button>
       <button type="button" onClick={toggleTheme} aria-label={tr(theme === "dark" ? ui.theme.toLight : ui.theme.toDark, lang)} className="flex h-11 w-11 items-center justify-center rounded-full opacity-90 hover:opacity-100">
         {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}

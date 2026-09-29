@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { Clip } from "@/lib/story";
+import { scroll } from "@/lib/scroll-progress";
 
 const MODEL = "/models/indy.glb";
 
@@ -88,8 +89,10 @@ export type FigureTint = { skin: string; top: string; bottom: string; hair: stri
 export const CLAY: FigureTint = { skin: "#EFE6DA", top: "#F7F2EA", bottom: "#B9AE9F", hair: "#8C7E6E", rim: "#FFF6E8" };
 
 /** Un figurant : clone du squelette, géométrie partagée, sa propre animation (décalée pour ne pas être synchrone). */
-export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, offset = 0, speed = 1, children, hand }: {
+export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, offset = 0, speed = 1, children, hand, clockId }: {
   clip: Clip;
+  /** Publie la phase de l'animation (0..1) dans `scroll.clocks[clockId]` (synchronisation du son). */
+  clockId?: string;
   position: [number, number, number];
   rotationY?: number;
   scale?: number;
@@ -117,6 +120,7 @@ export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, 
     return r;
   }, [scene, kit, mats]);
   const mixer = useMemo(() => new THREE.AnimationMixer(root), [root]);
+  const action = useRef<THREE.AnimationAction | null>(null);
   useEffect(() => {
     const c = animations.find((a) => a.name === clip);
     if (!c) return;
@@ -124,7 +128,8 @@ export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, 
     a.setLoop(THREE.LoopRepeat, Infinity).play();
     a.time = offset * c.duration;
     a.timeScale = speed;
-    return () => { a.stop(); mixer.uncacheAction(c); };
+    action.current = a;
+    return () => { a.stop(); mixer.uncacheAction(c); action.current = null; };
   }, [animations, clip, mixer, offset, speed]);
 
   const holder = useRef<THREE.Group>(null);
@@ -141,6 +146,8 @@ export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, 
     // Pas d'animation quand la pièce est masquée (hors champ)
     for (let o: THREE.Object3D | null = group.current; o; o = o.parent) if (!o.visible) return;
     mixer.update(Math.min(dt, 0.1));
+    const a = action.current;
+    if (clockId && a) scroll.clocks[clockId] = (a.time % a.getClip().duration) / a.getClip().duration;
   });
 
   return (

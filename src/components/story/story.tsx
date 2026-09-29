@@ -23,6 +23,12 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
     setMode(!calm && gl ? "story" : "fallback");
   }, []);
 
+  // Outils de réglage du son (développement uniquement)
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    import("@/lib/ambience").then((m) => Object.assign(window, { __ambience: m.ambience, __renderScene: m.renderScene, __Mixer: m.Mixer }));
+  }, []);
+
   // Défilement infini : après la page de fin, on revient au début
   useEffect(() => {
     if (mode !== "story") return;

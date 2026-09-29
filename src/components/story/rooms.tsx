@@ -279,7 +279,7 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <CourtFence position={[-5, 0, -len / 2 - 0.2]} length={9.2} sunset={sunset} />
           <UmpireChair position={[-4.5, 0, 3.35]} rotationY={Math.PI} />
           {/* Figurants (scène de référence) : l'adversaire en fond de court, l'arbitre sur sa chaise */}
-          <Figure clip="tennis-forehand" position={[-7.7, 0, 0.6]} rotationY={Math.PI / 2} hand={<Racket />} />
+          <Figure clip="tennis-forehand" position={[-7.7, 0, 0.6]} rotationY={Math.PI / 2} hand={<Racket />} clockId="opponent" />
           <Figure clip="sit-idle" position={[-4.5, 1.33, 3.35]} rotationY={Math.PI} offset={0.4} />
           <CourtBench position={[-6.4, 0, 3.9]} rotationY={Math.PI} />
           <CourtBench position={[-2.6, 0, 3.9]} rotationY={Math.PI} towel="#2A4BD7" />

@@ -37,6 +37,14 @@ export const scroll = {
   portal: 0,
   inside: 0,
   portalAccent: "#FFFFFF",
+  portalRoom: "",
+  /** Position réelle du personnage sur le chemin (m), marche, vitesse, phase du cycle de marche (0..1). */
+  dist: 0,
+  walking: false,
+  speed: 0,
+  walkPhase: 0,
+  /** Phases (0..1) des animations de figurants utiles au son (ex. coup droit de l'adversaire). */
+  clocks: {} as Record<string, number>,
   /** État du curseur personnalisé ("" ou "hotspot" quand la souris survole un point cliquable en 3D). */
   cursor: "" as "" | "hotspot",
 };

@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowDown, Download } from "lucide-react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { ArrowDown, Download, Volume2, VolumeX } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
 import { storyUi, t } from "@/lib/story";
+import { ambience } from "@/lib/ambience";
+import { ui } from "@/lib/content";
 
 /** Écran d'ouverture : visible en haut de l'histoire, s'efface dès qu'on descend (pas de bouton à cliquer). */
 export function Intro() {
   const { lang, theme } = useApp();
   const ref = useRef<HTMLDivElement>(null);
+  const sound = useSyncExternalStore(ambience.subscribe, ambience.getSnapshot, ambience.getServerSnapshot);
 
   useEffect(() => {
     let raf = 0;
@@ -36,6 +39,9 @@ export function Intro() {
         <p className="mt-6 max-w-xl font-serif text-xl italic text-mute">{t(storyUi.introHint, lang)}</p>
         <div className="mt-10 flex flex-wrap items-center gap-5">
           <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost pointer-events-auto"><Download size={18} /> {t(storyUi.cv, lang)}</a>
+          <button type="button" onClick={() => ambience.toggle()} aria-pressed={sound} className="btn-ghost pointer-events-auto">
+            {sound ? <Volume2 size={18} /> : <VolumeX size={18} />} {t(sound ? ui.sound.off : ui.sound.on, lang)}
+          </button>
           <span className="label inline-flex animate-bounce items-center gap-2">{t(storyUi.scrollHint, lang)} <ArrowDown size={14} /></span>
         </div>
       </div>
