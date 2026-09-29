@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
@@ -11,6 +11,7 @@ import { Character } from "./character";
 import { Mountains, PhysicalSky } from "./backdrop";
 import { GradientSky } from "./materials";
 import { useQuality } from "@/lib/quality";
+import { loading } from "@/lib/loading";
 import { Diorama } from "./rooms";
 import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 import { Grass } from "./grass";
@@ -27,7 +28,22 @@ export function buildPath() {
   return new THREE.CatmullRomCurve3(pts, false, "centripetal");
 }
 
+/**
+ * Construction de la scène par étapes, une par image (décor, montagnes, abords, puis une pièce à la fois) :
+ * même sur un téléphone lent, la page d'accueil reste réactive pendant la préparation.
+ */
+let resolveBuilt: () => void = () => {};
+export const worldBuilt = new Promise<void>((r) => { resolveBuilt = r; });
+const STEPS = 3 + chapters.length;
+
 export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boolean; lang: Lang }) {
+  const [built, setBuilt] = useState(1);
+  useEffect(() => {
+    loading.set({ progress: Math.max(loading.get().progress, 0.7 + 0.04 * (built / STEPS)) });
+    if (built >= STEPS) { resolveBuilt(); return; }
+    const id = requestAnimationFrame(() => setBuilt((b) => b + 1));
+    return () => cancelAnimationFrame(id);
+  }, [built]);
   const q = useQuality();
   const curve = useMemo(buildPath, []);
   const L = useMemo(() => curve.getLength(), [curve]);
@@ -182,7 +198,7 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
     <>
       {/* Décor lointain réaliste : ciel physique avec nuages, chaîne de montagnes en relief (allégés selon l'appareil) */}
       {q.sky === "simple" ? <GradientSky top={o.sky} bottom={o.fog} /> : <PhysicalSky sunset={sunset} clouds={q.sky === "clouds" && !mobile} />}
-      <Mountains sunset={sunset} detail={q.mountains} />
+      {built > 1 && <Mountains sunset={sunset} detail={q.mountains} />}
       {/* Éclairage d'ambiance synthétique (studio) : reflets doux sur les matières plates, sans HDRI */}
       <Environment resolution={128} frames={1}>
         <Lightformer intensity={sunset ? 2.2 : 1.6} color={sunset ? "#FFB27A" : "#FFFFFF"} position={[0, 8, -6]} scale={[14, 6, 1]} />
@@ -200,10 +216,10 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
 
       {/* L'île : une dalle qui suit le chemin, bords doux, rien au-delà */}
       <Island curve={curve} ground={o.ground} path={o.path} />
-      {q.grass > 0 && <Lawn sunset={sunset} count={mobile ? Math.min(3000, q.grass) : q.grass} />}
-      <Scenery curve={curve} sunset={sunset} />
+      {built > 2 && q.grass > 0 && <Lawn sunset={sunset} count={mobile ? Math.min(3000, q.grass) : q.grass} />}
+      {built > 2 && <Scenery curve={curve} sunset={sunset} />}
 
-      {chapters.map((c) => (
+      {chapters.map((c, i) => built > 3 + i && (
         <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} sunset={sunset} distanceRef={dist} lang={lang} />
       ))}
 

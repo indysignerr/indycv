@@ -13,7 +13,7 @@ import { quality, qualityFor, refineTier, stepDown, useQuality } from "@/lib/qua
 import { MODEL } from "./character";
 import { labelsFont } from "./label";
 import { applySoftShadows } from "./soft-shadows";
-import { World } from "./world";
+import { World, worldBuilt } from "./world";
 
 /** Images chargées par la scène : toutes demandées d'un coup, en parallèle du modèle 3D. */
 const LOGOS = ["/logos/concertae.png", "/logos/indysigner-wordmark.webp", "/logos/indysigner.webp", "/logos/albert-x-mines.webp"];
@@ -48,6 +48,7 @@ function Warmup({ onReady }: { onReady: () => void }) {
   useEffect(() => {
     let alive = true;
     (async () => {
+      await worldBuilt;
       loading.set({ progress: Math.max(loading.get().progress, 0.74) });
       await labelsFont();
       await nextFrame();
@@ -78,10 +79,16 @@ function Warmup({ onReady }: { onReady: () => void }) {
       const shown = objects.map((o) => o.visible), culled = objects.map((o) => o.frustumCulled);
       const restore = () => objects.forEach((o, k) => { o.visible = shown[k]; o.frustumCulled = culled[k]; });
       objects.forEach((o) => { o.frustumCulled = false; });
-      const BATCH = 60;
-      for (let i = 0; i < objects.length; i += BATCH) {
-        objects.forEach((o, k) => { o.visible = shown[k] && k >= i && k < i + BATCH; });
+      // Taille des lots ajustée à l'appareil : ~12 ms de préparation par image (gros lots sur un ordinateur rapide)
+      let size = 40;
+      for (let i = 0; i < objects.length;) {
+        const end = Math.min(objects.length, i + size);
+        objects.forEach((o, k) => { o.visible = shown[k] && k >= i && k < end; });
+        const t = performance.now();
         gl.render(scene, camera);
+        const spent = performance.now() - t;
+        size = Math.max(20, Math.min(400, Math.round(size * Math.min(2, 12 / Math.max(1, spent)))));
+        i = end;
         await nextFrame();
         if (!alive) { restore(); return; }
       }
