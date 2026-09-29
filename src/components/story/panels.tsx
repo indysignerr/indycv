@@ -83,6 +83,20 @@ export function Panels() {
     prevHotspot.current = hotspot;
   }, [hotspot]);
   const atEnd = endO > 0.01;
+  // Page de fin : défilable de l'intérieur SEULEMENT si son contenu dépasse l'écran (très petits écrans).
+  // Sinon elle laisse passer les gestes au défilement de la page (on peut toujours remonter dans l'histoire).
+  const endRef = useRef<HTMLDivElement>(null);
+  const [endOverflows, setEndOverflows] = useState(false);
+  useEffect(() => {
+    const el = endRef.current;
+    if (!atEnd || !el) return;
+    const check = () => setEndOverflows(el.scrollHeight > el.clientHeight + 2);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    Array.from(el.children).forEach((c) => ro.observe(c));
+    check();
+    return () => ro.disconnect();
+  }, [atEnd]);
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20">
@@ -198,7 +212,7 @@ export function Panels() {
 
       <AnimatePresence>
         {atEnd && (
-          <motion.div key="end" initial={false} exit={{ opacity: 0 }} style={{ opacity: endO }} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col overflow-y-auto overscroll-contain" data-lenis-prevent>
+          <motion.div key="end" initial={false} exit={{ opacity: 0 }} style={{ opacity: endO }} ref={endRef} className="story-cover story-cover--end pointer-events-auto absolute inset-0 flex flex-col overflow-y-auto" data-lenis-prevent={endOverflows ? "" : undefined}>
             {/* Bandeau haut aussi haut que la pastille langue/son/thème ; si l'écran est trop court, la page défile */}
             <div className="flex min-h-[68px] shrink-0 items-start px-5 pt-5 sm:px-8"><span className="font-display text-lg font-bold">IF<span className="text-accent">.</span></span></div>
             <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 sm:px-8">
