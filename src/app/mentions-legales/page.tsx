@@ -20,6 +20,15 @@ export default function Page() {
       <p>Le site est hébergé par Cloudflare, Inc. (Cloudflare Pages), 101 Townsend St, San Francisco, CA 94107, États-Unis — cloudflare.com.</p>
       <h2>Propriété intellectuelle</h2>
       <p>Les textes, visuels, illustrations et éléments 3D de ce site sont la propriété d&apos;Indy François, sauf mention contraire. Toute reproduction sans autorisation écrite préalable est interdite. Les marques et sites cités (Indysigner, L&apos;Ovive, Manika.LAB, Nayuma Tea) appartiennent à leurs propriétaires respectifs.</p>
+      <h2>Crédits</h2>
+      <p>Expérience 3D réalisée avec Three.js, React Three Fiber et Blender. Ciels HDRI et textures : <a href="https://polyhaven.com" target="_blank" rel="noopener noreferrer">Poly Haven</a> (CC0). Animations du personnage : Adobe Mixamo. Modèles 3D sous licence CC Attribution 4.0 via <a href="https://sketchfab.com" target="_blank" rel="noopener noreferrer">Sketchfab</a> :</p>
+      <ul>
+        <li>« Free Cartoon Game Man Character (Rigged) » par Canino3d (personnage, adapté)</li>
+        <li>« Tennis court » par burunduk · « Tennis Racket &amp; Ball » par gozdemrl</li>
+        <li>« porteria futbol soccer goal » par darineroar · « Classic Soccer Ball » par elixonline</li>
+        <li>« Reversible Chalkboard » par -imai- · « School Desk and Chair » par Tian96</li>
+        <li>« Computer Desk » par CR1STALLL · « Laptop » par Aullwen · « Wooden Bookcases with Books » par mtcollings</li>
+      </ul>
       <h2>Responsabilité</h2>
       <p>Les informations présentées ont un caractère informatif et sont mises à jour régulièrement, sans garantie d&apos;exhaustivité. Les liens vers des sites tiers n&apos;engagent pas la responsabilité de l&apos;éditeur.</p>
       <h2>Droit applicable</h2>

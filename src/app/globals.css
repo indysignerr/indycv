@@ -136,3 +136,12 @@
     display: block !important;
   }
 }
+
+/* Histoire 3D */
+html.story-locked,
+html.story-locked body {
+  overflow: hidden;
+}
+:root {
+  transition: --story-accent 0.6s ease;
+}

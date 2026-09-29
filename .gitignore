@@ -48,3 +48,4 @@ next-env.d.ts
 /assets/source/*.blend
 /assets/source/*.blend1
 /assets/mixamo/
+/assets/props/
