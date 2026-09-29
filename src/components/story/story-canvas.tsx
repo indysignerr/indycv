@@ -10,7 +10,7 @@ import { scroll } from "@/lib/scroll-progress";
 import { World } from "./world";
 
 export function StoryCanvas({ onReady }: { onReady?: () => void }) {
-  const { theme, lang } = useApp();
+  const { theme } = useApp();
   const [mobile, setMobile] = useState(false);
 
   useEffect(() => {
@@ -30,14 +30,14 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
   return (
     <div className="fixed inset-0 z-0" aria-hidden>
       <Canvas
-        dpr={[1, mobile ? 1.5 : 2]}
+        dpr={[1, mobile ? 1.5 : 1.75]}
         shadows={!mobile}
-        camera={{ fov: mobile ? 55 : 42, near: 0.1, far: 120, position: [2, 2, 6] }}
-        gl={{ antialias: !mobile, powerPreference: "high-performance" }}
+        camera={{ fov: mobile ? 50 : 36, near: 0.1, far: 80, position: [4, 3, 6] }}
+        gl={{ antialias: true, powerPreference: "high-performance" }}
         onCreated={() => onReady?.()}
       >
         <Suspense fallback={null}>
-          <World sunset={theme === "dark"} mobile={mobile} lang={lang} />
+          <World sunset={theme === "dark"} mobile={mobile} />
           <Preload all />
         </Suspense>
       </Canvas>

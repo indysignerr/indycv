@@ -5,7 +5,6 @@ import { useFrame } from "@react-three/fiber";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Clip } from "@/lib/story";
-import { Prop, type PropName } from "./assets";
 
 const MODEL = "/models/indy.glb";
 const FADE = 0.35;
@@ -14,19 +13,17 @@ const FADE = 0.35;
  * Personnage rigué (Mixamo). Il marche le long de `curve` selon `distance` (m),
  * et joue `action` quand il est à l'arrêt.
  */
-export function Character({ curve, distanceRef, speedRef, action, walking, handProp }: {
+export function Character({ curve, distanceRef, speedRef, action, walking }: {
   curve: THREE.Curve<THREE.Vector3>;
   distanceRef: React.MutableRefObject<number>;
   speedRef: React.MutableRefObject<number>;
   action: Clip;
   walking: boolean;
-  handProp: PropName | null;
 }) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(MODEL);
   const { actions } = useAnimations(animations, group);
   const current = useRef<Clip | null>(null);
-  const hand = useMemo(() => scene.getObjectByName("mixamorigRightHand") as THREE.Object3D | undefined, [scene]);
   const tmp = useMemo(() => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), q: new THREE.Quaternion(), m: new THREE.Matrix4(), up: new THREE.Vector3(0, 1, 0) }), []);
 
   useEffect(() => {
@@ -37,8 +34,7 @@ export function Character({ curve, distanceRef, speedRef, action, walking, handP
         m.receiveShadow = true;
         m.frustumCulled = false;
         const mat = m.material as THREE.MeshStandardMaterial;
-        if (mat?.name?.startsWith("Std_Skin")) { mat.roughness = 0.55; }
-        if (mat?.name?.startsWith("lambert3")) { mat.roughness = 0.9; }
+        if (mat) { mat.roughness = 0.9; mat.metalness = 0; }
       }
     });
   }, [scene]);
@@ -73,23 +69,6 @@ export function Character({ curve, distanceRef, speedRef, action, walking, handP
   return (
     <group ref={group}>
       <primitive object={scene} />
-      {handProp && hand && <HandProp parent={hand} name={handProp} />}
-    </group>
-  );
-}
-
-/** Objet attaché à un os de la main (portal R3F vers l'os). */
-function HandProp({ parent, name }: { parent: THREE.Object3D; name: PropName }) {
-  const holder = useRef<THREE.Group>(null);
-  useEffect(() => {
-    const g = holder.current;
-    if (!g) return;
-    parent.add(g);
-    return () => { parent.remove(g); };
-  }, [parent]);
-  return (
-    <group ref={holder} position={[0, 0.16, 0.03]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
-      <Prop name={name} scale={1} position={[0, 0, 0]} />
     </group>
   );
 }

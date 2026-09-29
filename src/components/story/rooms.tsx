@@ -1,16 +1,14 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Float, RoundedBox, Text } from "@react-three/drei";
+import { useMemo } from "react";
 import * as THREE from "three";
 import type { Chapter, Palette } from "@/lib/story";
-import type { Lang } from "@/lib/content";
-import { Prop, usePBR, type TexName } from "./assets";
+import { Flat } from "./materials";
+import { Bookshelf, Chair, Chalkboard, Desk, Goal, Lamp, Laptop, ProjectCard, SoccerBall, TennisBall, TennisCourt, Tree } from "./props";
 
 const up = new THREE.Vector3(0, 1, 0);
 
-/** Repère local du chemin à la distance d : position, tangente, côté, quaternion (Z = tangente). */
+/** Repère local du chemin à la distance d (Z local = sens de marche, X local = droite). */
 export function frameAt(curve: THREE.Curve<THREE.Vector3>, d: number) {
   const u = THREE.MathUtils.clamp(d / curve.getLength(), 0, 1);
   const p = curve.getPointAt(u), t = curve.getTangentAt(u);
@@ -19,197 +17,116 @@ export function frameAt(curve: THREE.Curve<THREE.Vector3>, d: number) {
   return { p, t, s, q };
 }
 
-/** Porte à double battant dans un cadre bois ; s'ouvre à l'approche du personnage. */
-export function Door({ curve, at, distanceRef, palette, sunset }: { curve: THREE.Curve<THREE.Vector3>; at: number; distanceRef: React.MutableRefObject<number>; palette: Palette; sunset: boolean }) {
-  const f = useMemo(() => frameAt(curve, at), [curve, at]);
-  const left = useRef<THREE.Group>(null), right = useRef<THREE.Group>(null);
-  const wood = usePBR("wood", [1, 2]);
-  useFrame((_, dt) => {
-    const d = distanceRef.current - at;
-    const open = d > -2.6 && d < 4;
-    const target = open ? Math.PI * 0.58 : 0;
-    if (left.current) left.current.rotation.y += (-target - left.current.rotation.y) * Math.min(1, dt * 2.6);
-    if (right.current) right.current.rotation.y += (target - right.current.rotation.y) * Math.min(1, dt * 2.6);
-  });
+/**
+ * Diorama : une dalle, un mur du fond (côté gauche du chemin, loin de la caméra) et un contenu.
+ * Ouvert côté caméra, jamais de plafond : on garde la lumière et la lisibilité.
+ */
+export function Diorama({ curve, chapter, palette, active, sunset }: { curve: THREE.Curve<THREE.Vector3>; chapter: Chapter; palette: Palette; active: boolean; sunset: boolean }) {
+  const mid = chapter.at + chapter.length / 2;
+  const f = useMemo(() => frameAt(curve, mid), [curve, mid]);
+  const len = chapter.length, wid = 11;
+  const a = palette.accent;
   return (
     <group position={f.p} quaternion={f.q}>
-      {/* Montants + linteau */}
-      {[-1.15, 1.15].map((x) => (
-        <mesh key={x} position={[x, 1.2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[0.3, 2.4, 0.3]} />
-          <meshStandardMaterial {...wood} color="#8a6a48" />
-        </mesh>
-      ))}
-      <mesh position={[0, 2.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[2.6, 0.3, 0.3]} />
-        <meshStandardMaterial {...wood} color="#8a6a48" />
+      {/* Dalle du diorama (léger relief) */}
+      <mesh position={[-1.5, -0.12, 0]} receiveShadow>
+        <boxGeometry args={[wid, 0.24, len + 1.5]} />
+        <Flat color={palette.floor} />
       </mesh>
-      {/* Battants, pivot sur les bords */}
-      {[[-1, left], [1, right]].map(([s, ref]) => (
-        <group key={String(s)} ref={ref as React.RefObject<THREE.Group>} position={[(s as number) * 1.0, 0, 0]}>
-          <mesh position={[-(s as number) * 0.5, 1.2, 0]} castShadow>
-            <boxGeometry args={[1.0, 2.4, 0.06]} />
-            <meshStandardMaterial color={palette.accent} roughness={0.45} metalness={0.1} emissive={palette.accent} emissiveIntensity={sunset ? 0.08 : 0} />
+      {/* Mur du fond + retour, à gauche du chemin */}
+      {chapter.id !== "tennis" && chapter.id !== "foot" && (
+        <>
+          <mesh position={[-wid / 2 - 1.5 + 0.15, 1.6, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.3, 3.2, len + 1.5]} />
+            <Flat color={palette.wall} />
           </mesh>
-          <mesh position={[-(s as number) * 0.85, 1.15, 0.06]}>
-            <sphereGeometry args={[0.035, 12, 12]} />
-            <meshStandardMaterial color="#d9c48a" metalness={0.9} roughness={0.25} />
+          <mesh position={[-1.5, 1.6, -(len + 1.5) / 2 + 0.15]} castShadow receiveShadow>
+            <boxGeometry args={[wid, 3.2, 0.3]} />
+            <Flat color={palette.wall} />
           </mesh>
-        </group>
-      ))}
+          {/* Bandeau d'accent en haut du mur */}
+          <mesh position={[-wid / 2 - 1.5 + 0.32, 3.0, 0]}>
+            <boxGeometry args={[0.04, 0.12, len + 1.2]} />
+            <Flat color={a} emissive={a} emissiveIntensity={0.6} />
+          </mesh>
+        </>
+      )}
+      <Contents chapter={chapter} palette={palette} active={active} sunset={sunset} len={len} wid={wid} />
     </group>
   );
 }
 
-type RoomSpec = { width: number; floor: TexName; floorRepeat: [number, number]; wall: TexName; ceiling?: boolean; wallHeight?: number; contents: (p: { len: number; wid: number; palette: Palette; active: boolean; sunset: boolean }) => React.ReactNode };
-
-/** Contenu de chaque pièce : props Sketchfab positionnés dans le repère de la pièce (Z = sens de marche, X = côté droit). */
-export const ROOMS: Record<string, RoomSpec> = {
-  tennis: {
-    width: 13, floor: "clay", floorRepeat: [6, 6], wall: "plaster", ceiling: false, wallHeight: 1.1,
-    contents: ({ len }) => (
-      <>
-        <Prop name="tennis-court" scale={0.42} position={[-1.8, 0.01, 0]} rotation={[0, Math.PI / 2, 0]} />
-        <Prop name="ball" scale={0.3} position={[1.3, 0.04, -len / 4]} />
-      </>
-    ),
-  },
-  foot: {
-    width: 12, floor: "grass", floorRepeat: [5, 5], wall: "plaster", ceiling: false, wallHeight: 1.1,
-    contents: ({ wid }) => (
-      <>
-        <Prop name="goal" position={[wid / 2 - 1.4, 0, 0.5]} rotation={[0, Math.PI, 0]} />
-        <Prop name="ball" position={[0.9, 0.11, 0.2]} />
-        {/* Ligne de but */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[wid / 2 - 2.4, 0.012, 0.5]}>
-          <planeGeometry args={[0.08, 7]} />
-          <meshStandardMaterial color="#f4f4f4" roughness={1} />
-        </mesh>
-      </>
-    ),
-  },
-  lycee: {
-    width: 9, floor: "wood", floorRepeat: [4, 4], wall: "plaster",
-    contents: ({ len, wid }) => (
-      <>
-        <Prop name="chalkboard" position={[-wid / 2 + 0.7, 0, -1.2]} rotation={[0, Math.PI / 2, 0]} />
-        {[-2.4, -0.8, 0.8, 2.4].map((z, i) => (
-          <Prop key={i} name="school-desk" position={[-wid / 2 + 2.6, 0, z]} rotation={[0, Math.PI / 2, 0]} />
-        ))}
-      </>
-    ),
-  },
-  concertae: {
-    width: 9, floor: "wood", floorRepeat: [4, 4], wall: "plaster",
-    contents: ({ len, wid }) => (
-      <>
-        <Prop name="computer-desk" position={[-wid / 2 + 1.5, 0, -1.8]} rotation={[0, Math.PI / 2, 0]} />
-        <Prop name="computer-desk" position={[-wid / 2 + 1.5, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} />
-        <Prop name="bookshelf" scale={0.9} position={[-1.2, 0, len / 2 - 0.5]} rotation={[0, 0, 0]} />
-      </>
-    ),
-  },
-  indysigner: {
-    width: 10, floor: "concrete", floorRepeat: [4, 4], wall: "brick",
-    contents: ({ wid, palette, active }) => (
-      <>
-        <Prop name="computer-desk" position={[-wid / 2 + 1.5, 0, 3.4]} rotation={[0, Math.PI / 2, 0]} />
-        <Prop name="laptop" position={[-wid / 2 + 1.8, 0.74, 0.6]} rotation={[0, Math.PI / 3, 0]} />
-        <mesh position={[-wid / 2 + 1.8, 0.36, 0.6]} castShadow receiveShadow>
-          <boxGeometry args={[1.4, 0.72, 0.7]} />
-          <meshStandardMaterial color="#2a2830" roughness={0.6} />
-        </mesh>
-        {["indysigner.fr", "lovive.fr", "manikalab.com", "nayumatea.com"].map((s, i) => (
-          <Float key={s} speed={1.2 + i * 0.25} rotationIntensity={0.5} floatIntensity={0.7}>
-            <group position={[-3.6 + i * 1.2, 1.75 + (i % 2) * 0.55, 2.2 + (i % 2) * 0.8]} rotation={[0, 0.35, 0]}>
-              <RoundedBox args={[1.0, 0.62, 0.06]} radius={0.05} castShadow>
-                <meshStandardMaterial color="#15141b" roughness={0.3} metalness={0.2} emissive={palette.accent} emissiveIntensity={active ? 0.25 : 0.05} />
-              </RoundedBox>
-              <Text position={[0, 0, 0.04]} fontSize={0.09} color={palette.accent} anchorX="center" anchorY="middle">{s}</Text>
-            </group>
-          </Float>
-        ))}
-      </>
-    ),
-  },
-  albert: {
-    width: 10, floor: "wood", floorRepeat: [4, 4], wall: "plaster",
-    contents: ({ wid, len }) => (
-      <>
-        {[-3.0, -0.4].map((z, i) => (
-          <Prop key={i} name="bookshelf" position={[-wid / 2 + 0.7, 0, z]} rotation={[0, Math.PI / 2, 0]} />
-        ))}
-        <Prop name="bookshelf" position={[-2.0, 0, len / 2 - 0.5]} rotation={[0, 0, 0]} />
-        <Prop name="school-desk" position={[-wid / 2 + 2.6, 0, 1.6]} rotation={[0, Math.PI / 2, 0]} />
-        <Prop name="school-desk" position={[-wid / 2 + 2.6, 0, 3.0]} rotation={[0, Math.PI / 2, 0]} />
-      </>
-    ),
-  },
-};
-
-/** Pièce traversée par le chemin : sol, murs, plafond avec puits de lumière, contenu. */
-export function Room({ curve, chapter, palette, sunset, active, lang }: { curve: THREE.Curve<THREE.Vector3>; chapter: Chapter; palette: Palette; sunset: boolean; active: boolean; lang: Lang }) {
-  const spec = ROOMS[chapter.id];
-  const mid = chapter.door + chapter.length / 2;
-  const f = useMemo(() => frameAt(curve, mid), [curve, mid]);
-  const len = chapter.length + 0.4, wid = spec.width, h = spec.wallHeight ?? 3.6;
-  const floor = usePBR(spec.floor, spec.floorRepeat);
-  const wall = usePBR(spec.wall, [3, 1.2]);
-  const hasCeiling = spec.ceiling !== false;
-  const light = useRef<THREE.PointLight>(null);
-  useFrame((_, dt) => {
-    const goal = hasCeiling ? (active ? (sunset ? 60 : 40) : 8) : (active ? (sunset ? 14 : 4) : 1);
-    if (light.current) light.current.intensity += (goal - light.current.intensity) * Math.min(1, dt * 2);
-  });
-  return (
-    <group position={f.p} quaternion={f.q}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]} receiveShadow>
-        <planeGeometry args={[wid, len]} />
-        <meshStandardMaterial {...floor} color={palette.floor} roughness={1} />
-      </mesh>
-      {/* Murs latéraux */}
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * wid / 2, h / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[0.25, h, len]} />
-          <meshStandardMaterial {...wall} color={palette.wall} />
-        </mesh>
-      ))}
-      {/* Murs avant/arrière avec l'ouverture de la porte (2,4 m) */}
-      {[-1, 1].map((s) => (
-        <group key={s} position={[0, 0, s * len / 2]}>
-          {[-1, 1].map((x) => (
-            <mesh key={x} position={[x * (wid / 4 + 0.6), h / 2, 0]} castShadow receiveShadow>
-              <boxGeometry args={[wid / 2 - 1.2, h, 0.25]} />
-              <meshStandardMaterial {...wall} color={palette.wall} />
-            </mesh>
-          ))}
-          {h > 2.6 && (
-            <mesh position={[0, (h + 2.6) / 2, 0]} castShadow receiveShadow>
-              <boxGeometry args={[2.4, h - 2.6, 0.25]} />
-              <meshStandardMaterial {...wall} color={palette.wall} />
-            </mesh>
-          )}
+function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Chapter; palette: Palette; active: boolean; sunset: boolean; len: number; wid: number }) {
+  const a = palette.accent;
+  const L = -wid / 2 - 1.5; // bord gauche
+  switch (chapter.id) {
+    case "tennis":
+      return (
+        <group>
+          <group position={[-3.6, 0, 0]}><TennisCourt width={5.5} length={len - 1} color={sunset ? "#2E6A4A" : "#3F8F63"} /></group>
+          <TennisBall position={[-0.9, 0.07, 1.6]} />
+          {/* Grillage bas côté fond */}
+          {[-1, 1].map((s) => <mesh key={s} position={[-3.6, 0.55, s * (len / 2 + 0.2)]}><boxGeometry args={[6.5, 1.1, 0.04]} /><meshStandardMaterial color="#DDE6DF" transparent opacity={0.35} roughness={1} /></mesh>)}
+          <Tree position={[L + 1.2, 0, -len / 2 + 1]} scale={1.2} color={sunset ? "#4C8A5A" : "#5FA86A"} />
+          <Tree position={[L + 2.4, 0, len / 2 - 0.5]} scale={0.9} color={sunset ? "#4C8A5A" : "#6DB57A"} />
         </group>
-      ))}
-      {hasCeiling && (
-        <>
-          <mesh position={[0, h, 0]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={[wid, len]} />
-            <meshStandardMaterial color={palette.wall} roughness={0.95} side={THREE.DoubleSide} />
-          </mesh>
-          {/* Puits de lumière */}
-          <mesh position={[0, h - 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[wid * 0.5, len * 0.35]} />
-            <meshStandardMaterial color="#ffffff" emissive={sunset ? "#ffb27a" : "#ffffff"} emissiveIntensity={sunset ? 1.6 : 2.4} side={THREE.DoubleSide} />
-          </mesh>
-        </>
-      )}
-      <pointLight ref={light} position={[0, 3.0, 0]} color="#fff2e0" distance={20} decay={2} intensity={2} />
-      {hasCeiling && <pointLight position={[0, 2.4, 0]} color={palette.accent} distance={12} decay={2} intensity={active ? 12 : 3} />}
-      <Text position={[-wid / 2 + 0.16, hasCeiling ? 2.6 : 0.75, 0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.42} color={palette.accent} anchorX="center" anchorY="middle" maxWidth={len - 1}>
-        {chapter.title[lang]}
-      </Text>
-      {spec.contents({ len, wid, palette, active, sunset })}
-    </group>
-  );
+      );
+    case "foot":
+      return (
+        <group>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.5, 0.01, 0]} receiveShadow><planeGeometry args={[6, len]} /><Flat color={sunset ? "#3E8546" : "#4CA455"} /></mesh>
+          {[0.25, 0.5].map((k, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-3.5 + (i ? 0 : 0), 0.02, 0]}><ringGeometry args={[1.1 - i * 0.06, 1.16 - i * 0.06, 32]} /><Flat color="#F4F4F2" /></mesh>)}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.5, 0.02, 0]}><planeGeometry args={[0.06, len]} /><Flat color="#F4F4F2" /></mesh>
+          <Goal position={[L + 1.4, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
+          <SoccerBall position={[-0.8, 0.13, 0.8]} />
+          <Tree position={[L + 0.8, 0, len / 2 + 0.2]} scale={1.1} color={sunset ? "#4C8A5A" : "#5FA86A"} />
+        </group>
+      );
+    case "lycee":
+      return (
+        <group>
+          <Chalkboard position={[L + 0.55, 0, 0.4]} rotation={[0, Math.PI / 2, 0]} accent={a} />
+          {[-2.2, -0.6, 1.0].map((z, i) => (
+            <group key={i}>
+              <Desk position={[-4.2, 0, z]} rotation={[0, Math.PI / 2, 0]} top={sunset ? "#B08E68" : "#D2B48C"} />
+              <Chair position={[-3.35, 0, z]} rotation={[0, Math.PI / 2, 0]} />
+            </group>
+          ))}
+          <Lamp position={[-3.4, 2.6, 0]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
+        </group>
+      );
+    case "concertae":
+      return (
+        <group>
+          <Desk position={[-4.4, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
+          <Chair position={[-3.5, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} />
+          <Desk position={[-4.4, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
+          <Chair position={[-3.5, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} />
+          <Bookshelf position={[-2.0, 0, -len / 2 - 0.35]} books={[a, "#E9E4D6", "#2A4BD7", "#F5B942", "#C9C4BA"]} />
+          <Lamp position={[-3.6, 2.6, -0.2]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
+        </group>
+      );
+    case "indysigner":
+      return (
+        <group>
+          <Desk position={[-4.4, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} top="#2A2830" legs="#15141B" />
+          <Laptop position={[-4.4, 0.78, 1.0]} rotation={[0, Math.PI / 2 + 0.3, 0]} accent={a} />
+          <Chair position={[-3.5, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} color="#15141B" />
+          {["indysigner.fr", "lovive.fr", "manikalab.com", "nayumatea.com"].map((s, i) => (
+            <ProjectCard key={s} position={[-5.2 + i * 1.25, 1.8 + (i % 2) * 0.5, -2.2 + (i % 2) * 0.6]} label={s} accent={a} active={active} />
+          ))}
+          <Lamp position={[-3.8, 2.6, 0.6]} color={a} intensity={active ? 12 : 4} />
+        </group>
+      );
+    case "albert":
+      return (
+        <group>
+          {[-1.8, -0.4].map((z, i) => <Bookshelf key={i} position={[L + 0.5, 0, z]} rotation={[0, Math.PI / 2, 0]} books={[a, "#E9E4D6", "#FF5A36", "#F5B942", "#5FA86A"]} />)}
+          <Desk position={[-4.2, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#A79E90" : "#DCD6CA"} />
+          <Chair position={[-3.35, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} />
+          <Lamp position={[-3.4, 2.6, 0.2]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
+        </group>
+      );
+  }
+  return null;
 }
