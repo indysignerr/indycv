@@ -7,6 +7,8 @@ import { chapters } from "@/lib/story";
 import { Intro } from "./intro";
 import { Panels } from "./panels";
 import { Controls } from "./controls";
+import { PortalGlow } from "./portal-glow";
+import { Cursor } from "./cursor";
 
 const StoryCanvas = dynamic(() => import("./story-canvas").then((m) => m.StoryCanvas), { ssr: false });
 
@@ -36,9 +38,11 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
   return (
     <>
       <StoryCanvas />
+      <PortalGlow />
       <Intro />
       <Panels />
       <Controls />
+      <Cursor />
       {/* Longueur de scroll = longueur de l'histoire (texte sémantique pour SEO / lecteurs d'écran) */}
       <main className="pointer-events-none relative z-10">
         <div className="sr-only">

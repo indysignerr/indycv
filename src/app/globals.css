@@ -201,3 +201,48 @@ html.story-locked body {
   animation: tip-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes tip-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(-4px); } }
+
+/* Halo au franchissement d'un portique (couleur du lieu, opacité pilotée par le scroll) */
+.portal-glow {
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(70% 80% at 50% 58%, color-mix(in srgb, var(--glow, #fff) 60%, white) 0%, color-mix(in srgb, var(--glow, #fff) 25%, transparent) 45%, transparent 75%);
+}
+
+/* Curseur personnalisé (souris) */
+html.has-cursor,
+html.has-cursor * {
+  cursor: none !important;
+}
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 999px;
+  will-change: transform;
+  transition: opacity 0.3s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  mix-blend-mode: difference;
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #fff;
+  mix-blend-mode: difference;
+}
+.cursor-ring[data-state="over"] {
+  background: rgba(255, 255, 255, 0.12);
+}
+.cursor-ring[data-state="hot"] {
+  mix-blend-mode: normal;
+  border-color: var(--story-accent, rgb(var(--accent)));
+  background: color-mix(in srgb, var(--story-accent, rgb(var(--accent))) 22%, transparent);
+}

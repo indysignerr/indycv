@@ -33,4 +33,10 @@ export const scroll = {
   hotspot: null as string | null,
   /** Souris normalisée (-1..1) pour la vue 360 dans la chambre. */
   mouse: { x: 0, y: 0 },
+  /** Passage d'un portique : impulsion 0..1 (max au franchissement), part « intérieur » 0..1, couleur du lieu. */
+  portal: 0,
+  inside: 0,
+  portalAccent: "#FFFFFF",
+  /** État du curseur personnalisé ("" ou "hotspot" quand la souris survole un point cliquable en 3D). */
+  cursor: "" as "" | "hotspot",
 };

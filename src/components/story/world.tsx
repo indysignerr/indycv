@@ -15,6 +15,8 @@ import { Grass } from "./grass";
 import { TexMat } from "./detail";
 import { concreteTex, grassTex } from "./textures";
 
+const CLOSED = ["lycee", "concertae", "indysigner", "albert"];
+
 /** Le chemin : un ruban en S sur l'île. */
 export function buildPath() {
   const pts: THREE.Vector3[] = [];
@@ -30,7 +32,10 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
   const snap = useRef(true);
   const speed = useRef(0);
   const walkingRef = useRef(false);
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
+  const hemi = useRef<THREE.HemisphereLight>(null);
+  // Portiques (entrée et sortie de chaque pièce fermée), repérés par leur distance le long du chemin
+  const portals = useMemo(() => chapters.filter((c) => CLOSED.includes(c.id)).flatMap((c) => [{ d: c.at - 0.45, c }, { d: c.at + c.length + 0.45, c }]), []);
   const tmp = useMemo(() => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), side: new THREE.Vector3(), cam: new THREE.Vector3(), look: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), q: new THREE.Quaternion(), m: new THREE.Matrix4() }), []);
   const sun = useRef<THREE.DirectionalLight>(null);
   const roomLight = useRef<THREE.PointLight>(null);
@@ -51,6 +56,23 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
       if (dist.current >= c.at - 0.5 && dist.current <= c.at + c.length + 0.5) chapter = i;
     }
     scroll.chapter = chapter;
+
+    // Passage d'un portique : impulsion de lumière (max au franchissement) + part « intérieur » (lumière de pièce)
+    let pulse = 0, inside = 0;
+    for (const pt of portals) {
+      const x = (dist.current - pt.d) / 0.7, v = Math.exp(-x * x);
+      if (v > pulse) { pulse = v; scroll.portalAccent = (sunset ? pt.c.sunset : pt.c.day).accent; }
+    }
+    for (let i = 0; i < portals.length; i += 2) {
+      const a0 = portals[i].d, a1 = portals[i + 1].d;
+      inside = Math.max(inside, THREE.MathUtils.smoothstep(dist.current, a0 - 0.3, a0 + 0.8) * (1 - THREE.MathUtils.smoothstep(dist.current, a1 - 0.8, a1 + 0.3)));
+    }
+    scroll.portal = pulse;
+    scroll.inside = inside;
+    // L'œil s'adapte : bref éblouissement au seuil, lumière du jour adoucie à l'intérieur
+    gl.toneMappingExposure = 1.06 + 0.05 * inside + 0.12 * pulse;
+    if (hemi.current) hemi.current.intensity = (sunset ? 0.75 : 0.85) * (1 - 0.1 * inside);
+    if (sun.current) sun.current.intensity = (sunset ? 2.5 : 2.9) * (1 - 0.3 * inside);
 
     // Caméra 3/4 : devant-droite du personnage, légèrement en hauteur ; les dioramas sont à sa gauche
     const u = THREE.MathUtils.clamp(dist.current / L, 0, 1);
@@ -94,7 +116,7 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
     // Lumière intérieure : une seule, qui se place au plafond de la pièce fermée la plus proche
     if (roomLight.current) {
       let best = 1e9, bi = -1;
-      chapters.forEach((cc, i) => { if (!["lycee", "concertae", "indysigner", "albert"].includes(cc.id)) return; const dd = Math.abs(dist.current - (cc.at + cc.length / 2)); if (dd < best) { best = dd; bi = i; } });
+      chapters.forEach((cc, i) => { if (!CLOSED.includes(cc.id)) return; const dd = Math.abs(dist.current - (cc.at + cc.length / 2)); if (dd < best) { best = dd; bi = i; } });
       if (bi >= 0) {
         const cc = chapters[bi];
         const um = THREE.MathUtils.clamp((cc.at + cc.length / 2) / L, 0, 1);
@@ -132,7 +154,7 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
       </Environment>
       <fog ref={fogRef} attach="fog" args={[o.fog, 14, 46]} />
       {/* Éclairage trois points : ciel froid, soleil chaud, contour opposé pour détacher les silhouettes */}
-      <hemisphereLight args={[sunset ? "#FFB98E" : "#D6E6FF", sunset ? "#4E3F4A" : "#6F7F66", sunset ? 0.75 : 0.85]} />
+      <hemisphereLight ref={hemi} args={[sunset ? "#FFB98E" : "#D6E6FF", sunset ? "#4E3F4A" : "#6F7F66", sunset ? 0.75 : 0.85]} />
       <directionalLight position={[-8, 6, -10]} intensity={sunset ? 0.9 : 0.55} color={sunset ? "#B79CFF" : "#CFE3FF"} />
       <directionalLight ref={sun} intensity={sunset ? 2.5 : 2.9} color={sunset ? "#FFA56A" : "#FFF0D8"} castShadow={!mobile}
         shadow-mapSize={mobile ? 512 : 1024} shadow-bias={-0.0004} shadow-normalBias={0.04}
@@ -161,7 +183,7 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
   const mats = useMemo(() => {
     const out: THREE.Matrix4[] = [];
     const Lc = curve.getLength(), up = new THREE.Vector3(0, 1, 0), o = new THREE.Object3D();
-    const closed = chapters.filter((c) => ["lycee", "concertae", "indysigner", "albert"].includes(c.id));
+    const closed = chapters.filter((c) => CLOSED.includes(c.id));
     let i = 0;
     for (let d = 0.5; d < Lc; d += 0.95, i++) {
       if (closed.some((c) => d > c.at - 0.3 && d < c.at + c.length + 0.3)) continue;

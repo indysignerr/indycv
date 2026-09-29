@@ -32,12 +32,41 @@ export function frameAt(curve: THREE.Curve<THREE.Vector3>, d: number) {
 
 const CLOSED = new Set(["lycee", "concertae", "indysigner", "albert"]);
 
-/** Mur transversal percé d'une porte (le chemin passe en x=0), avec deux battants qui s'ouvrent à l'approche. */
-function DoorWall({ z, wid, h, color, accent, label }: { z: number; wid: number; h: number; color: string; accent: string; label?: string }) {
-  // Mur transversal qui s'arrête 1,6 m avant le chemin + portique coloré centré sur le chemin
+/** Voile de lumière tendu dans l'encadrement d'un portique : rayons verticaux doux, additif, à la couleur du lieu. */
+function veilMaterial(color: string) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uIntensity: { value: 0 }, uTime: { value: 0 } },
+    vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: `uniform vec3 uColor; uniform float uIntensity; uniform float uTime; varying vec2 vUv;
+      void main(){
+        float edge = smoothstep(0.0, 0.2, vUv.x) * smoothstep(1.0, 0.8, vUv.x) * smoothstep(1.0, 0.72, vUv.y);
+        float rays = 0.62 + 0.38 * sin(vUv.x * 31.0 + uTime * 0.7) * sin(vUv.x * 11.0 - uTime * 0.45 + vUv.y * 2.0);
+        float a = edge * rays * mix(1.0, 0.45, vUv.y) * uIntensity;
+        gl_FragColor = linearToOutputTexel(vec4(mix(uColor, vec3(1.0), 0.35), a));
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false, fog: false,
+  });
+}
+
+/**
+ * Mur transversal percé d'une porte (le chemin passe en x=0) + portique coloré centré sur le chemin.
+ * À l'approche, le portique s'illumine et un voile de lumière occupe l'encadrement ; au franchissement, il culmine.
+ */
+function DoorWall({ z, wid, h, color, accent, label, at, distanceRef }: { z: number; wid: number; h: number; color: string; accent: string; label?: string; at: number; distanceRef: React.MutableRefObject<number> }) {
+  // Mur transversal qui s'arrête 1,6 m avant le chemin
   const end = -1.6;
-  const start = -wid + DOOR_W / 2 + 0.75 - 0.0;
+  const start = -wid + DOOR_W / 2 + 0.75;
   const w = end - start;
+  const frame = useMemo(() => new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.1, roughness: 0.55, metalness: 0, envMapIntensity: 0.55 }), [accent]);
+  const veil = useMemo(() => veilMaterial(accent), [accent]);
+  useFrame(({ clock }) => {
+    const x = distanceRef.current - at;
+    const near = Math.exp(-(x * x) / 9), cross = Math.exp(-(x * x) / 0.5);
+    // Le portique s'allume à l'approche ; le voile culmine juste avant le seuil puis s'efface quand on le traverse
+    frame.emissiveIntensity = 0.05 + 0.38 * near;
+    veil.uniforms.uIntensity.value = 0.42 * near * (1 - 0.85 * cross);
+    veil.uniforms.uTime.value = clock.elapsedTime;
+  });
   return (
     <group position={[0, 0, z]}>
       <mesh position={[start + w / 2, h / 2, 0]} castShadow receiveShadow>
@@ -46,13 +75,14 @@ function DoorWall({ z, wid, h, color, accent, label }: { z: number; wid: number;
       </mesh>
       {/* Portique : deux montants + linteau */}
       {[-1, 1].map((sx) => (
-        <mesh key={sx} position={[sx * (DOOR_W / 2), 1.3, 0]} castShadow><boxGeometry args={[0.16, 2.6, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
+        <mesh key={sx} position={[sx * (DOOR_W / 2), 1.3, 0]} castShadow material={frame}><boxGeometry args={[0.16, 2.6, 0.2]} /></mesh>
       ))}
-      <mesh position={[0, 2.6, 0]} castShadow><boxGeometry args={[DOOR_W + 0.16, 0.16, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
+      <mesh position={[0, 2.6, 0]} castShadow material={frame}><boxGeometry args={[DOOR_W + 0.16, 0.16, 0.2]} /></mesh>
+      <mesh position={[0, 1.26, 0]} material={veil} renderOrder={3}><planeGeometry args={[DOOR_W - 0.16, 2.5]} /></mesh>
       {/* Plaque « 0X · NOM » posée sur le linteau : fond à la couleur du lieu, texte contrasté (lisible sur n'importe quel décor) */}
       {label && (
         <group position={[0, 2.88, 0]}>
-          <mesh castShadow><boxGeometry args={[Math.max(DOOR_W + 0.16, label.length * 0.13 + 0.45), 0.42, 0.14]} /><Flat color={accent} roughness={0.5} /></mesh>
+          <mesh castShadow material={frame}><boxGeometry args={[Math.max(DOOR_W + 0.16, label.length * 0.13 + 0.45), 0.42, 0.14]} /></mesh>
           <Text position={[0, -0.005, -0.075]} rotation={[0, Math.PI, 0]} fontSize={0.18} letterSpacing={0.14} color={inkOn(accent)} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
         </group>
       )}
@@ -134,7 +164,7 @@ export function HotspotMarker({ id, position, accent, label }: { id: string; pos
         <mesh ref={halo} renderOrder={5}><circleGeometry args={[0.2, 40]} /><meshBasicMaterial color={accent} transparent opacity={0.75} depthWrite={false} toneMapped={false} /></mesh>
       </Billboard>
       <mesh renderOrder={6}><sphereGeometry args={[0.07, 16, 16]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>
-      <mesh onClick={toggle} onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}>
+      <mesh onClick={toggle} onPointerOver={(e) => { e.stopPropagation(); setHover(true); scroll.cursor = "hotspot"; document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); scroll.cursor = ""; document.body.style.cursor = ""; }}>
         <sphereGeometry args={[0.6, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
@@ -204,8 +234,8 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
           <Baseboard position={[Lx + 0.02, 0, 0]} length={len + 0.6} rotationY={Math.PI / 2} color={chapter.id === "indysigner" ? "#EFE8DC" : "#FFFFFF"} />
           <WallAO position={[Lx, 0, 0]} length={len + 0.6} rotationY={-Math.PI / 2} />
           {/* Murs d'entrée et de sortie */}
-          <DoorWall z={-(len + 1.2) / 2 + 0.15} wid={wid} h={h} color={palette.wall} accent={a} label={signOf(chapter)} />
-          <DoorWall z={(len + 1.2) / 2 - 0.15} wid={wid} h={h} color={palette.wall} accent={a} />
+          <DoorWall z={-(len + 1.2) / 2 + 0.15} at={mid - (len + 1.2) / 2 + 0.15} distanceRef={distanceRef} wid={wid} h={h} color={palette.wall} accent={a} label={signOf(chapter)} />
+          <DoorWall z={(len + 1.2) / 2 - 0.15} at={mid + (len + 1.2) / 2 - 0.15} distanceRef={distanceRef} wid={wid} h={h} color={palette.wall} accent={a} />
           <WallAO position={[(Lx - 1.6) / 2, 0, -(len + 1.2) / 2 + 0.3]} length={-1.6 - Lx} />
           <WallAO position={[(Lx - 1.6) / 2, 0, (len + 1.2) / 2 - 0.3]} length={-1.6 - Lx} rotationY={Math.PI} />
           {/* Plafond + dalles lumineuses (sans ombre portée) */}
