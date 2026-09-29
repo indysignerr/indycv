@@ -190,7 +190,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "lycee":
       return (
         <group>
-          <Sign text="LYCÉE SIMONE VEIL" position={[cxOf(wid), 2.75, F - 0.01]} rotation={[0, 0, 0]} width={6} color={a} />
+          <Sign text="LYCÉE SIMONE VEIL" position={[L + 0.02, 2.55, 1.6]} rotation={[0, Math.PI / 2, 0]} width={5} color={a} />
           <Chalkboard position={[L + 0.25, 0, 0.4]} rotation={[0, Math.PI / 2, 0]} accent={a} />
           {[-2.4, -0.8, 0.8].map((z, i) => (
             <group key={i}>
@@ -204,20 +204,20 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "concertae":
       return (
         <group>
-          <Sign image="/logos/concertae.png" position={[cxOf(wid), 2.45, F - 0.02]} rotation={[0, 0, 0]} width={3.6} bg="#FFFFFF" />
+          <Sign image="/logos/concertae.png" position={[L + 0.03, 2.35, 0.2]} rotation={[0, Math.PI / 2, 0]} width={3.2} bg="#FFFFFF" />
           <Desk position={[-4.4, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
           <Chair position={[-3.5, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} />
           <Desk position={[-4.4, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
           <Chair position={[-3.5, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} />
           <Bookshelf position={[-2.0, 0, F - 0.2]} books={[a, "#E9E4D6", "#2A4BD7", "#F5B942", "#C9C4BA"]} />
-          <Lamp position={[-4.0, 2.9, -0.2]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
+          <Lamp position={[-3.2, 2.9, -2.6]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
         </group>
       );
     case "indysigner":
       return (
         <group>
-          <Sign image="/logos/indysigner.webp" position={[cxOf(wid), 2.2, F - 0.02]} rotation={[0, 0, 0]} width={1.4} />
-          <Text position={[cxOf(wid), 1.25, F - 0.01]} fontSize={0.22} color={a} anchorX="center" anchorY="middle" letterSpacing={0.25}>INDYSIGNER</Text>
+          <Sign image="/logos/indysigner.webp" position={[L + 0.03, 2.25, 0.4]} rotation={[0, Math.PI / 2, 0]} width={1.3} />
+          <Text position={[L + 0.04, 1.35, 0.4]} rotation={[0, Math.PI / 2, 0]} fontSize={0.2} color={a} anchorX="center" anchorY="middle" letterSpacing={0.25}>INDYSIGNER</Text>
           <Desk position={[-4.4, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} top="#2A2830" legs="#15141B" />
           <Laptop position={[-4.4, 0.78, 1.0]} rotation={[0, Math.PI / 2 + 0.3, 0]} accent={a} />
           <Chair position={[-3.5, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} color="#15141B" />
@@ -229,16 +229,16 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
             <ProjectCard key={s} position={[-5.4 + i * 1.15, 1.9 + (i % 2) * 0.45, -0.6 - (i % 2) * 0.5]} label={s} accent={a} active={active} />
           ))}
           {/* Affiche prospection sur le mur gauche */}
-          <mesh position={[L + 0.03, 1.9, 3.0]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.3, 0.9]} /><Flat color="#15141B" emissive={a} emissiveIntensity={0.15} /></mesh>
-          <Text position={[L + 0.05, 1.9, 3.0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.12} color={a} anchorX="center" anchorY="middle" maxWidth={1.1} textAlign="center">n8n · Shopify · Klaviyo</Text>
+          <mesh position={[L + 0.03, 1.9, 3.6]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.3, 0.9]} /><Flat color="#15141B" emissive={a} emissiveIntensity={0.15} /></mesh>
+          <Text position={[L + 0.05, 1.9, 3.6]} rotation={[0, Math.PI / 2, 0]} fontSize={0.12} color={a} anchorX="center" anchorY="middle" maxWidth={1.1} textAlign="center">n8n · Shopify · Klaviyo</Text>
           <Lamp position={[-4.0, 2.9, 0.4]} color={a} intensity={active ? 12 : 4} />
         </group>
       );
     case "albert":
       return (
         <group>
-          <Sign image="/logos/albert-x-mines.webp" position={[cxOf(wid), 2.15, F - 0.02]} rotation={[0, 0, 0]} width={3.2} />
-          {[-1.8, -0.4].map((z, i) => <Bookshelf key={i} position={[L + 0.2, 0, z]} rotation={[0, Math.PI / 2, 0]} books={[a, "#E9E4D6", "#FF5A36", "#F5B942", "#5FA86A"]} />)}
+          <Sign image="/logos/albert-x-mines.webp" position={[L + 0.03, 2.2, 1.0]} rotation={[0, Math.PI / 2, 0]} width={2.8} bg="#FFFFFF" />
+          {[-3.0, -1.6].map((z, i) => <Bookshelf key={i} position={[L + 0.2, 0, z]} rotation={[0, Math.PI / 2, 0]} books={[a, "#E9E4D6", "#FF5A36", "#F5B942", "#5FA86A"]} />)}
           <Desk position={[-4.2, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#A79E90" : "#DCD6CA"} />
           <Chair position={[-3.35, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} />
           <Lamp position={[-4.0, 2.9, 0.2]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />

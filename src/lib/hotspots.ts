@@ -26,7 +26,7 @@ export const hotspots: Hotspot[] = [
     lines: b(["Huit ans en club, aujourd'hui en loisir, plus le padel entre amis.", "Ce que ça laisse : jouer pour l'équipe, parler sur le terrain, accepter une décision."], ["Eight years in a club, now for fun, plus padel with friends.", "What stays: playing for the team, talking on the pitch, accepting a call."]),
   },
   {
-    id: "lycee-board", chapter: "lycee", position: [-6.3, 1.55, 0.4],
+    id: "lycee-board", chapter: "lycee", position: [-9.4, 1.55, 0.4],
     kicker: b("Lycée Simone Veil", "Lycée Simone Veil"), title: b("Bac maths-physique", "Maths & physics baccalaureate"),
     lines: b(["Spécialités mathématiques et physique-chimie.", "Le goût des modèles, des démonstrations propres et des résultats qu'on peut vérifier.", "Ensuite : une année de BUT GEA à l'IUT de Nice (gestion, comptabilité, droit)."], ["Mathematics and physics-chemistry majors.", "A taste for models, clean proofs and results you can check.", "Then: one year of BUT GEA at IUT Nice (management, accounting, law)."]),
   },
@@ -36,7 +36,7 @@ export const hotspots: Hotspot[] = [
     lines: b(["Saisie comptable, lettrage et rapprochements bancaires.", "Révision des comptes et préparation des clôtures.", "Déclarations de TVA et respect des échéances.", "Relation client au quotidien : expliquer, rassurer, relancer.", "Outils : Excel avancé et le logiciel de production comptable du cabinet."], ["Bookkeeping, matching and bank reconciliations.", "Account reviews and closing preparation.", "VAT returns and deadline discipline.", "Daily client contact: explain, reassure, follow up.", "Tools: advanced Excel and the firm's accounting software."]),
   },
   {
-    id: "concertae-shelf", chapter: "concertae", position: [-2.0, 1.6, 5.1],
+    id: "concertae-shelf", chapter: "concertae", position: [-2.0, 1.6, 4.6],
     kicker: b("Compétences", "Skills"), title: b("Business", "Business"),
     lines: b(["Comptabilité générale (1 an en cabinet).", "Gestion de projet client et cadrage de devis.", "Prospection B2B et suivi commercial."], ["General accounting (1 year in a firm).", "Client project management and quote scoping.", "B2B prospecting and sales follow-up."]),
   },
@@ -53,7 +53,7 @@ export const hotspots: Hotspot[] = [
     links: [{ label: "lovive.fr", href: "https://lovive.fr" }, { label: "manikalab.com", href: "https://manikalab.com" }, { label: "nayumatea.com", href: "https://nayumatea.com" }],
   },
   {
-    id: "chambre-poster", chapter: "indysigner", position: [-6.3, 1.9, 3.0],
+    id: "chambre-poster", chapter: "indysigner", position: [-9.4, 1.9, 3.6],
     kicker: b("Data & automatisation", "Data & automation"), title: b("Prospection automatisée", "Automated prospecting"),
     lines: b(["Sourcing d'entreprises locales, mails rédigés avec l'IA, validation manuelle, envoi et suivi des réponses par n8n.", "Synchronisation et audit de catalogues Shopify, indexation de recherche au build, relances Klaviyo."], ["Local business sourcing, AI-drafted emails, manual validation, sending and reply tracking via n8n.", "Shopify catalogue sync and audits, build-time search indexing, Klaviyo flows."]),
   },
@@ -63,7 +63,7 @@ export const hotspots: Hotspot[] = [
     lines: b(["2026-2029, campus de Milan puis Paris.", "Stratégie, finance et marketing d'un côté ; mathématiques, statistiques, Python et SQL de l'autre.", "Projets en équipe avec des entreprises partenaires dès la première année."], ["2026-2029, Milan campus then Paris.", "Strategy, finance and marketing on one side; maths, statistics, Python and SQL on the other.", "Team projects with partner companies from year one."]),
   },
   {
-    id: "albert-books", chapter: "albert", position: [-6.3, 1.7, -1.1],
+    id: "albert-books", chapter: "albert", position: [-9.2, 1.7, -1.6],
     kicker: b("Et après", "Next"), title: b("Stage · été 2027", "Internship · summer 2027"),
     lines: b(["Disponible pour un stage d'environ 6 semaines à partir du 5 juin 2027.", "Business, data ou produit : un profil qui comprend les chiffres et sait livrer."], ["Available for a ~6-week internship from 5 June 2027.", "Business, data or product: a profile that understands numbers and knows how to ship."]),
     links: [{ label: "indyfrancois6@gmail.com", href: "mailto:indyfrancois6@gmail.com" }],

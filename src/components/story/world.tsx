@@ -55,14 +55,14 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     // Dehors : derrière-droite. Dans une pièce : la caméra pivote sur la droite et regarde la pièce de côté.
     const c = chapter >= 0 ? chapters[chapter] : null;
     const roomMid = c ? c.at + c.length / 2 : 0;
-    const back = inRoom ? (mobile ? 1.5 : 0.6) : mobile ? 6.5 : 5.2;
-    const lat = inRoom ? (mobile ? 9.5 : 8.2) : mobile ? 2.2 : 4.0;
-    const h = inRoom ? (mobile ? 3.6 : 2.6) : mobile ? 3.4 : 2.9;
+    const back = inRoom ? (mobile ? 4.5 : 3.6) : mobile ? 6.5 : 5.2;
+    const lat = inRoom ? (mobile ? 9.0 : 7.6) : mobile ? 2.2 : 4.0;
+    const h = inRoom ? (mobile ? 3.6 : 2.7) : mobile ? 3.4 : 2.9;
     const anchor = inRoom ? curve.getPointAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.p;
     const anchorT = inRoom ? curve.getTangentAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.t;
     const anchorS = new THREE.Vector3().crossVectors(tmp.up, anchorT).normalize();
     tmp.cam.copy(anchor).addScaledVector(anchorT, inRoom ? (dist.current - roomMid) * 0.35 - back : -back).addScaledVector(anchorS, lat).setY(h);
-    if (inRoom) tmp.look.copy(tmp.p).lerp(anchor, 0.55).addScaledVector(anchorS, -2.2).setY(mobile ? 0.5 : 1.1);
+    if (inRoom) tmp.look.copy(tmp.p).lerp(anchor, 0.6).addScaledVector(anchorT, 1.2).addScaledVector(anchorS, -2.8).setY(mobile ? 0.5 : 1.2);
     else tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
     // Chambre : vue 360 à la souris
     if (c?.id === "indysigner" && !mobile) {
@@ -147,7 +147,9 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
   const items = useMemo(() => {
     const out: { p: THREE.Vector3; q: THREE.Quaternion }[] = [];
     const L = curve.getLength(); const up = new THREE.Vector3(0, 1, 0);
+    const closed = chapters.filter((c) => ["lycee", "concertae", "indysigner", "albert"].includes(c.id));
     for (let d = 0.5; d < L; d += 0.95) {
+      if (closed.some((c) => d > c.at - 0.3 && d < c.at + c.length + 0.3)) continue;
       const u = d / L; const p = curve.getPointAt(u); const t = curve.getTangentAt(u);
       const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(t, new THREE.Vector3(), up));
       out.push({ p, q });
