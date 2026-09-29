@@ -36,7 +36,9 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
   const hemi = useRef<THREE.HemisphereLight>(null);
   // Portiques (entrée et sortie de chaque pièce fermée), repérés par leur distance le long du chemin
   const portals = useMemo(() => chapters.filter((c) => CLOSED.includes(c.id)).flatMap((c) => [{ d: c.at - 0.45, c }, { d: c.at + c.length + 0.45, c }]), []);
-  const tmp = useMemo(() => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), side: new THREE.Vector3(), cam: new THREE.Vector3(), look: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), q: new THREE.Quaternion(), m: new THREE.Matrix4() }), []);
+  const tmp = useMemo(() => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), side: new THREE.Vector3(), cam: new THREE.Vector3(), look: new THREE.Vector3(), v1: new THREE.Vector3(), v2: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), q: new THREE.Quaternion(), m: new THREE.Matrix4() }), []);
+  // Bâtiments : plans des portes d'entrée et de sortie (distance le long du chemin)
+  const buildings = useMemo(() => chapters.filter((c) => CLOSED.includes(c.id)).map((c) => ({ mid: c.at + c.length / 2, dIn: c.at - 0.45, dOut: c.at + c.length + 0.45 })), []);
   const sun = useRef<THREE.DirectionalLight>(null);
   const roomLight = useRef<THREE.PointLight>(null);
   const fogRef = useRef<THREE.Fog>(null);
@@ -83,36 +85,66 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
     // 1) Pose « suivi » : derrière-droite du personnage
     tmp.cam.copy(tmp.p).addScaledVector(tmp.t, mobile ? -6.0 : -5.0).addScaledVector(tmp.side, mobile ? 2.6 : 5.0).setY(mobile ? 3.6 : 3.4);
     tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
-    // 2) Pose « de face » : au milieu d'une pièce, la caméra pivote complètement à droite et cadre la pièce de face
+    // 2) Lieux en plein air (tennis, foot) : au milieu, la caméra pivote et cadre le lieu de face
     let k = 0, faceMid = 0;
     for (const cc of chapters) {
+      if (CLOSED.includes(cc.id)) continue;
       const mid = cc.at + cc.length / 2;
       const x = 1 - Math.abs(dist.current - mid) / (cc.length / 2 + 1.5);
       const kk = THREE.MathUtils.smoothstep(x, 0.1, 0.6);
       if (kk > k) { k = kk; faceMid = mid; }
     }
+    let fovT = mobile ? 50 : 36;
     if (k > 0) {
       const um = THREE.MathUtils.clamp(faceMid / L, 0, 1);
       const ap = curve.getPointAt(um), at = curve.getTangentAt(um);
       const as = new THREE.Vector3().crossVectors(tmp.up, at).normalize();
       const drift = (dist.current - faceMid) * 0.25; // léger suivi latéral du personnage
-      // Mobile (portrait) : caméra un peu plus proche, la pièce remplit mieux l'écran au-dessus du panneau
       const faceCam = ap.clone().addScaledVector(at, drift).addScaledVector(as, mobile ? 11.2 : 8.8).setY(mobile ? 3.3 : 2.7);
       const faceLook = ap.clone().addScaledVector(at, drift * 0.6).addScaledVector(as, -4.6).setY(mobile ? -0.9 : 1.35);
       tmp.cam.lerp(faceCam, k);
       tmp.look.lerp(faceLook, k);
+      fovT -= k * (mobile ? 4 : 6);
+    }
+    // 3) Bâtiments : la caméra se place derrière le personnage et passe la porte avec lui, puis cadre la pièce
+    //    depuis l'intérieur (plus rien de l'extérieur) ; à la sortie, elle le rattrape et ressort avec lui.
+    let wB = 0, wI = 0, inMid = 0;
+    for (const b of buildings) {
+      const s0 = dist.current - b.dIn, e0 = dist.current - b.dOut;
+      wB = Math.max(wB, THREE.MathUtils.smoothstep(s0, -6.5, -1.5) * (1 - THREE.MathUtils.smoothstep(e0, 3.2, 8)));
+      const wi = THREE.MathUtils.smoothstep(s0, 2.9, 4.6) * (1 - THREE.MathUtils.smoothstep(e0, -2.9, -0.5));
+      if (wi > wI) { wI = wi; inMid = b.mid; }
+    }
+    if (wB > 0) {
+      // Derrière le personnage, à hauteur d'épaule, décalé à droite : passe dans l'embrasure (2,2 m × 2,6 m)
+      tmp.v1.copy(tmp.p).addScaledVector(tmp.t, -2.3).addScaledVector(tmp.side, mobile ? 0.3 : 0.45).setY(mobile ? 1.95 : 2.05);
+      tmp.v2.copy(tmp.p).addScaledVector(tmp.t, 5).addScaledVector(tmp.side, -0.25).setY(1.25);
+      tmp.cam.lerp(tmp.v1, wB);
+      tmp.look.lerp(tmp.v2, wB);
+      fovT += ((mobile ? 66 : 52) - fovT) * wB;
+    }
+    if (wI > 0) {
+      // Dans la pièce, entre le chemin et la façade avant : la pièce de face, le personnage suivi
+      const um = THREE.MathUtils.clamp(inMid / L, 0, 1);
+      const ap = curve.getPointAt(um), at = curve.getTangentAt(um);
+      const as = new THREE.Vector3().crossVectors(tmp.up, at).normalize();
+      const drift = THREE.MathUtils.clamp((dist.current - inMid) * 0.5, -2.6, 2.6);
+      tmp.v1.copy(ap).addScaledVector(at, drift).addScaledVector(as, mobile ? 4.9 : 4.8).setY(mobile ? 2.9 : 2.4);
+      tmp.v2.copy(ap).addScaledVector(at, drift * 0.75).addScaledVector(as, -4.8).setY(mobile ? 0.2 : 0.6);
+      tmp.cam.lerp(tmp.v1, wI);
+      tmp.look.lerp(tmp.v2, wI);
+      fovT += ((mobile ? 64 : 46) - fovT) * wI;
     }
     // Respiration de caméra (très légère) : l'image n'est jamais figée
     const tt = performance.now() / 1000;
-    tmp.cam.x += Math.sin(tt * 0.31) * 0.05; tmp.cam.y += Math.sin(tt * 0.47) * 0.035;
-    // Objectif : 36° en suivi, 30° de face (effet maquette)
+    tmp.cam.x += Math.sin(tt * 0.31) * 0.05 * (1 - wB * 0.6); tmp.cam.y += Math.sin(tt * 0.47) * 0.035;
     const pc = camera as THREE.PerspectiveCamera;
-    const fovT = (mobile ? 50 : 36) - k * (mobile ? 4 : 6);
-    if (Math.abs(pc.fov - fovT) > 0.01) { pc.fov += (fovT - pc.fov) * Math.min(1, dt * 2); pc.updateProjectionMatrix(); }
-    camera.position.lerp(tmp.cam, snap.current ? 1 : Math.min(1, dt * 1.5));
+    if (Math.abs(pc.fov - fovT) > 0.01) { pc.fov += (fovT - pc.fov) * Math.min(1, dt * 2.5); pc.updateProjectionMatrix(); }
+    // Près des bâtiments, la caméra colle à sa trajectoire (elle doit passer par la porte, pas à travers le mur)
+    camera.position.lerp(tmp.cam, snap.current ? 1 : Math.min(1, dt * (1.5 + 5 * wB)));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
-    camera.quaternion.slerp(tmp.q, snap.current ? 1 : Math.min(1, dt * 1.8));
+    camera.quaternion.slerp(tmp.q, snap.current ? 1 : Math.min(1, dt * (1.8 + 4 * wB)));
     snap.current = false;
 
     // Lumière intérieure : une seule, qui se place au plafond de la pièce fermée la plus proche

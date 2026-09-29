@@ -9,6 +9,7 @@ import { hotspots } from "@/lib/hotspots";
 import { scroll } from "@/lib/scroll-progress";
 import type { Lang } from "@/lib/content";
 import { Flat } from "./materials";
+import { Building, DOOR_W, X0, X1 } from "./building";
 import { CLAY_COOL, CLAY_WARM, Figure, Racket } from "./figures";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
@@ -18,7 +19,6 @@ import {
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
 
 const up = new THREE.Vector3(0, 1, 0);
-export const DOOR_W = 2.2;
 export const ROOM_W = 11;
 
 /** Repère local du chemin à la distance d (Z local = sens de marche, X local = droite). */
@@ -49,41 +49,31 @@ function veilMaterial(color: string) {
 }
 
 /**
- * Mur transversal percé d'une porte (le chemin passe en x=0) + portique coloré centré sur le chemin.
- * À l'approche, le portique s'illumine et un voile de lumière occupe l'encadrement ; au franchissement, il culmine.
+ * Encadrement de porte coloré (le chemin passe en x=0) : montants et linteau qui débordent des deux faces du mur,
+ * voile de lumière dans l'ouverture, plaque « 0X · NOM » en façade (côté `out` : -1 = vers -z, +1 = vers +z).
+ * À l'approche, l'encadrement s'illumine ; le voile culmine juste avant le seuil puis s'efface quand on le traverse.
  */
-function DoorWall({ z, wid, h, color, accent, label, at, distanceRef }: { z: number; wid: number; h: number; color: string; accent: string; label?: string; at: number; distanceRef: React.MutableRefObject<number> }) {
-  // Mur transversal qui s'arrête 1,6 m avant le chemin
-  const end = -1.6;
-  const start = -wid + DOOR_W / 2 + 0.75;
-  const w = end - start;
+function DoorFrame({ z, out, accent, label, at, distanceRef }: { z: number; out: 1 | -1; accent: string; label?: string; at: number; distanceRef: React.MutableRefObject<number> }) {
   const frame = useMemo(() => new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.1, roughness: 0.55, metalness: 0, envMapIntensity: 0.55 }), [accent]);
   const veil = useMemo(() => veilMaterial(accent), [accent]);
   useFrame(({ clock }) => {
     const x = distanceRef.current - at;
     const near = Math.exp(-(x * x) / 9), cross = Math.exp(-(x * x) / 0.5);
-    // Le portique s'allume à l'approche ; le voile culmine juste avant le seuil puis s'efface quand on le traverse
     frame.emissiveIntensity = 0.05 + 0.38 * near;
     veil.uniforms.uIntensity.value = 0.42 * near * (1 - 0.85 * cross);
     veil.uniforms.uTime.value = clock.elapsedTime;
   });
   return (
     <group position={[0, 0, z]}>
-      <mesh position={[start + w / 2, h / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[w, h, 0.3]} />
-        <Flat color={color} />
-      </mesh>
-      {/* Portique : deux montants + linteau */}
       {[-1, 1].map((sx) => (
-        <mesh key={sx} position={[sx * (DOOR_W / 2), 1.3, 0]} castShadow material={frame}><boxGeometry args={[0.16, 2.6, 0.2]} /></mesh>
+        <mesh key={sx} position={[sx * (DOOR_W / 2 + 0.02), 1.3, 0]} castShadow material={frame}><boxGeometry args={[0.2, 2.6, 0.42]} /></mesh>
       ))}
-      <mesh position={[0, 2.6, 0]} castShadow material={frame}><boxGeometry args={[DOOR_W + 0.16, 0.16, 0.2]} /></mesh>
+      <mesh position={[0, 2.62, 0]} castShadow material={frame}><boxGeometry args={[DOOR_W + 0.24, 0.2, 0.42]} /></mesh>
       <mesh position={[0, 1.26, 0]} material={veil} renderOrder={3}><planeGeometry args={[DOOR_W - 0.16, 2.5]} /></mesh>
-      {/* Plaque « 0X · NOM » posée sur le linteau : fond à la couleur du lieu, texte contrasté (lisible sur n'importe quel décor) */}
       {label && (
-        <group position={[0, 2.88, 0]}>
-          <mesh castShadow material={frame}><boxGeometry args={[Math.max(DOOR_W + 0.16, label.length * 0.13 + 0.45), 0.42, 0.14]} /></mesh>
-          <Text position={[0, -0.005, -0.075]} rotation={[0, Math.PI, 0]} fontSize={0.18} letterSpacing={0.14} color={inkOn(accent)} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
+        <group position={[0, 2.95, out * 0.24]}>
+          <mesh castShadow material={frame}><boxGeometry args={[Math.max(DOOR_W + 0.16, label.length * 0.13 + 0.45), 0.4, 0.1]} /></mesh>
+          <Text position={[0, -0.005, out * 0.055]} rotation={[0, out < 0 ? Math.PI : 0, 0]} fontSize={0.18} letterSpacing={0.14} color={inkOn(accent)} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
         </group>
       )}
     </group>
@@ -207,24 +197,25 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
   const closed = CLOSED.has(chapter.id);
   const a = palette.accent;
   const cx = -wid / 2 + DOOR_W / 2 + 0.75; // centre de la dalle
-  const ft = useMemo(() => floorTex(chapter.id, wid + 1.5, len + 1.2), [chapter.id, wid, len]);
+  const ft = useMemo(() => floorTex(chapter.id, closed ? X1 - X0 + 0.6 : wid + 1.5, len + 1.2), [chapter.id, closed, wid, len]);
   const wallT = useMemo(() => plasterTex([4, 1.4], chapter.id === "lycee"), [chapter.id]);
-  const ceilT = useMemo(() => tileTex([wid / 1.2, len / 1.2]), [wid, len]);
-  const Lx = -wid + DOOR_W / 2 + 0.3; // face intérieure du mur gauche
+  const ceilT = useMemo(() => tileTex([(X1 - X0) / 1.2, len / 1.2]), [len]);
+  const Lx = X0; // face intérieure du mur du fond
   const leftColor = chapter.id === "indysigner" ? (sunset ? "#16305A" : "#1D3A66") : palette.wall;
+  // Faces intérieures des murs : enduit teinté (mur du fond : sa couleur propre, granulé au lycée)
+  const innerMat = useMemo(() => new THREE.MeshStandardMaterial({ map: plasterTex([4, 1.4]), bumpMap: plasterTex([4, 1.4]), bumpScale: 0.004, color: palette.wall, roughness: 0.95, envMapIntensity: 0.55 }), [palette.wall]);
+  const backMat = useMemo(() => new THREE.MeshStandardMaterial({ map: wallT, bumpMap: wallT, bumpScale: chapter.id === "lycee" ? 0.012 : 0.004, color: leftColor, roughness: 0.95, envMapIntensity: 0.55 }), [wallT, leftColor, chapter.id]);
   return (
     <group ref={root} position={f.p} quaternion={f.q}>
-      <mesh position={[cx, -0.12, 0]} receiveShadow>
-        <boxGeometry args={[wid + 1.5, 0.24, len + 1.2]} />
+      {/* Sol : la dalle de la pièce (étendue jusqu'au mur avant pour les pièces fermées) */}
+      <mesh position={[closed ? (X0 - 0.3 + X1 + 0.3) / 2 : cx, -0.12, 0]} receiveShadow>
+        <boxGeometry args={[closed ? X1 - X0 + 0.6 : wid + 1.5, 0.24, len + 1.2]} />
         {ft ? <TexMat tex={ft} color={palette.floor} bump={chapter.id === "tennis" ? 0.02 : 0.006} rough={chapter.id === "tennis" ? 0.95 : 0.7} /> : <Flat color={palette.floor} />}
       </mesh>
       {closed && (
         <>
-          {/* Mur gauche (enduit) */}
-          <mesh position={[-wid + DOOR_W / 2 + 0.15, h / 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[0.3, h, len + 1.2]} />
-            <TexMat tex={wallT} color={leftColor} bump={chapter.id === "lycee" ? 0.012 : 0.004} rough={0.95} />
-          </mesh>
+          {/* Le bâtiment : façades, toit, fenêtres, portes coulissantes, abords */}
+          <Building id={chapter.id} len={len} mid={mid} distanceRef={distanceRef} sunset={sunset} interior={innerMat} backInterior={backMat} />
           {chapter.id === "indysigner" ? <WaveStripe x={Lx + 0.03} y={h - 0.42} len={len + 1.0} color={a} /> : (
             <mesh position={[Lx + 0.02, h - 0.35, 0]}>
               <boxGeometry args={[0.04, 0.08, len + 1.0]} />
@@ -233,17 +224,19 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
           )}
           <Baseboard position={[Lx + 0.02, 0, 0]} length={len + 0.6} rotationY={Math.PI / 2} color={chapter.id === "indysigner" ? "#EFE8DC" : "#FFFFFF"} />
           <WallAO position={[Lx, 0, 0]} length={len + 0.6} rotationY={-Math.PI / 2} />
-          {/* Murs d'entrée et de sortie */}
-          <DoorWall z={-(len + 1.2) / 2 + 0.15} at={mid - (len + 1.2) / 2 + 0.15} distanceRef={distanceRef} wid={wid} h={h} color={palette.wall} accent={a} label={signOf(chapter)} />
-          <DoorWall z={(len + 1.2) / 2 - 0.15} at={mid + (len + 1.2) / 2 - 0.15} distanceRef={distanceRef} wid={wid} h={h} color={palette.wall} accent={a} />
-          <WallAO position={[(Lx - 1.6) / 2, 0, -(len + 1.2) / 2 + 0.3]} length={-1.6 - Lx} />
-          <WallAO position={[(Lx - 1.6) / 2, 0, (len + 1.2) / 2 - 0.3]} length={-1.6 - Lx} rotationY={Math.PI} />
+          <WallAO position={[X1, 0, 0]} length={len + 0.6} rotationY={Math.PI / 2} />
+          {/* Encadrements des portes d'entrée et de sortie */}
+          <DoorFrame z={-(len + 1.2) / 2 + 0.15} out={-1} at={mid - (len + 1.2) / 2 + 0.15} distanceRef={distanceRef} accent={a} label={signOf(chapter)} />
+          <DoorFrame z={(len + 1.2) / 2 - 0.15} out={1} at={mid + (len + 1.2) / 2 - 0.15} distanceRef={distanceRef} accent={a} />
+          {[-1, 1].map((sz) => [[X0, -DOOR_W / 2], [DOOR_W / 2, X1]].map(([xa, xb], i) => (
+            <WallAO key={`${sz}${i}`} position={[(xa + xb) / 2, 0, sz * ((len + 1.2) / 2 - 0.3)]} length={xb - xa} rotationY={sz < 0 ? 0 : Math.PI} />
+          )))}
           {/* Plafond + dalles lumineuses (sans ombre portée) */}
-          <mesh position={[cx - 0.6, h, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[wid, len + 1.2]} />
+          <mesh position={[(X0 + X1) / 2, h, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[X1 - X0, len + 0.6]} />
             <meshStandardMaterial map={ceilT} color={sunset ? "#CFC6B8" : "#E9E6E0"} emissive={sunset ? "#8A7560" : "#C9C6C0"} emissiveIntensity={0.55} roughness={1} side={THREE.DoubleSide} />
           </mesh>
-          {[-2.6, 0, 2.6].filter((z) => Math.abs(z) < len / 2).map((z) => [-7.2, -4.2].map((x) => <CeilingPanel key={`${x}${z}`} position={[x, h - 0.03, z]} sunset={sunset} />))}
+          {[-2.6, 0, 2.6].filter((z) => Math.abs(z) < len / 2).map((z) => [-7.2, -4.2, -1.2, 1.8].map((x) => <CeilingPanel key={`${x}${z}`} position={[x, h - 0.03, z]} sunset={sunset} />))}
         </>
       )}
       <Contents chapter={chapter} palette={palette} sunset={sunset} len={len} wid={wid} />

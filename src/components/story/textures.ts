@@ -260,6 +260,90 @@ export const pipelineTex = () =>
     });
   }, { repeat: [1, 0.5], offset: [0, 0.5] });
 
+/* ─────────── Façades et toitures (UV en mètres : `repeat` = 1 / taille du motif) ─────────── */
+
+/** Enduit extérieur : taloché, nuages doux et grain (teinte donnée par le matériau). Motif de 2 m. */
+export const renderTex = () =>
+  make("render", 512, (g, s, r) => {
+    g.fillStyle = "rgb(236,236,236)"; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 70; i++) {
+      const x = r() * s, y = r() * s, rad = 20 + r() * 70, v = Math.round(214 + r() * 40);
+      const grd = g.createRadialGradient(x, y, 0, x, y, rad);
+      grd.addColorStop(0, `rgba(${v},${v},${v},0.45)`); grd.addColorStop(1, `rgba(${v},${v},${v},0)`);
+      g.fillStyle = grd; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+    // traces de taloche (arcs très légers)
+    for (let i = 0; i < 160; i++) {
+      g.strokeStyle = `rgba(255,255,255,${0.05 + r() * 0.06})`; g.lineWidth = 1 + r() * 2;
+      const x = r() * s, y = r() * s, rad = 8 + r() * 26;
+      g.beginPath(); g.arc(x, y, rad, r() * 6, r() * 6 + 1.2); g.stroke();
+    }
+    speckle(g, s, r, 14000, 200, 255, 1.3);
+  }, { repeat: [0.5, 0.5] });
+
+/** Briques en appareil courant (couleur réelle, joints crème). Motif de 1 m. */
+export const brickTex = () =>
+  make("brick", 512, (g, s, r) => {
+    g.fillStyle = "#D8CDBE"; g.fillRect(0, 0, s, s);
+    const bh = s / 13, bw = s / 4.6, j = 4;
+    for (let row = 0, y = 0; y < s; row++, y += bh) {
+      for (let x = row % 2 ? -bw / 2 : 0; x < s; x += bw) {
+        const k = 0.85 + r() * 0.3, burnt = r() < 0.12;
+        const base = burnt ? [120, 58, 42] : [168, 86, 62];
+        g.fillStyle = `rgb(${Math.round(base[0] * k)},${Math.round(base[1] * k)},${Math.round(base[2] * k)})`;
+        g.fillRect(x + j / 2, y + j / 2, bw - j, bh - j);
+        g.fillStyle = `rgba(255,220,190,${0.05 + r() * 0.08})`; g.fillRect(x + j / 2, y + j / 2, bw - j, 3);
+      }
+    }
+    speckle(g, s, r, 9000, 60, 140, 1.4, 0.25);
+  }, { repeat: [1, 1] });
+
+/** Tuiles romaines (canal) : colonnes arrondies, rangs qui se recouvrent (teinte terre cuite par le matériau). Motif de 1 m. */
+export const romanTileTex = () =>
+  make("romantile", 512, (g, s, r) => {
+    g.fillStyle = "rgb(150,150,150)"; g.fillRect(0, 0, s, s);
+    const tw = s / 5, course = s / 2.6;
+    for (let row = 0, y = 0; y < s + course; row++, y += course) {
+      for (let c = 0, x = (row % 2) * tw / 2 - tw / 2; x < s + tw; c++, x += tw) {
+        const v = 200 + Math.round(r() * 45);
+        const grd = g.createLinearGradient(x, 0, x + tw, 0);
+        grd.addColorStop(0, `rgb(${v - 70},${v - 70},${v - 70})`); grd.addColorStop(0.45, `rgb(${v},${v},${v})`); grd.addColorStop(1, `rgb(${v - 80},${v - 80},${v - 80})`);
+        g.fillStyle = grd; g.fillRect(x + 2, y, tw - 4, course + 6);
+        g.fillStyle = "rgba(0,0,0,0.28)"; g.fillRect(x + 2, y + course - 2, tw - 4, 7);
+      }
+    }
+    speckle(g, s, r, 6000, 120, 255, 1.3, 0.35);
+  }, { repeat: [1, 1] });
+
+/** Ardoises en quinconce (teinte gris-bleu par le matériau). Motif de 1 m. */
+export const slateTex = () =>
+  make("slate", 512, (g, s, r) => {
+    g.fillStyle = "rgb(90,90,90)"; g.fillRect(0, 0, s, s);
+    const sw = s / 4, sh = s / 6;
+    for (let row = 0, y = 0; y < s; row++, y += sh) {
+      for (let x = (row % 2) * sw / 2 - sw; x < s + sw; x += sw) {
+        const v = 170 + Math.round(r() * 60);
+        g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(x + 2, y + 2, sw - 4, sh - 3);
+        g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(x + 2, y + sh - 5, sw - 4, 4);
+      }
+    }
+    speckle(g, s, r, 5000, 140, 255, 1.2, 0.3);
+  }, { repeat: [1, 1] });
+
+/** Soubassement en pierre : gros blocs, joints marqués (teinte par le matériau). Motif de 2 m. */
+export const stoneBaseTex = () =>
+  make("stonebase", 512, (g, s, r) => {
+    g.fillStyle = "rgb(150,150,150)"; g.fillRect(0, 0, s, s);
+    const bh = s / 6, bw = s / 3.2;
+    for (let row = 0, y = 0; y < s; row++, y += bh) {
+      for (let x = (row % 2) * bw / 2 - bw; x < s + bw; x += bw) {
+        const v = 205 + Math.round(r() * 40);
+        g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(x + 3, y + 3, bw - 6, bh - 6);
+      }
+    }
+    speckle(g, s, r, 12000, 150, 255, 1.6, 0.6);
+  }, { repeat: [0.5, 0.5] });
+
 /** Plaque de marque (logiciels du cabinet) : le nom en gros, qui remplit la plaque, lisible de loin. */
 export const badgeTex = (title: string, fg: string, bg: string) =>
   make(`badge${title}${fg}${bg}`, 512, (g, s) => {

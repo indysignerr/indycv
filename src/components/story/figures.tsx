@@ -17,8 +17,8 @@ const MODEL = "/models/indy.glb";
  * (4 appels de dessin par figurant), sans textures, avec un liseré de lumière sur la silhouette.
  */
 
-type Slot = "skin" | "top" | "bottom" | "hair";
-const SLOTS: Slot[] = ["skin", "top", "bottom", "hair"];
+type Slot = "skin" | "top" | "sleeve" | "bottom" | "hair";
+const SLOTS: Slot[] = ["skin", "top", "sleeve", "bottom", "hair"];
 const SLOT_OF: Record<string, Slot | null> = {
   Std_Skin_Head: "skin", Std_Skin_Body: "skin", Std_Skin_Arm: "skin", Std_Nails: "skin", Std_Eye_R: "skin",
   lambert3SG: "top", lambert4: "bottom", Laces: "bottom", BackShoe: "bottom", FrontShoe: "bottom",
@@ -49,9 +49,26 @@ function normalize(src: THREE.BufferGeometry) {
   return g;
 }
 
-/** Géométrie fusionnée par « emplacement » (peau, haut, bas, cheveux), partagée par tous les figurants. */
+/** Sépare les triangles d'une géométrie skinnée selon qu'ils suivent surtout les os des bras (manches) ou non (torse). */
+function splitByBones(g: THREE.BufferGeometry, arm: Set<number>) {
+  const si = g.getAttribute("skinIndex"), sw = g.getAttribute("skinWeight"), idx = g.getIndex()!;
+  const armW = (v: number) => {
+    let w = 0;
+    for (let k = 0; k < 4; k++) if (arm.has(si.getComponent(v, k))) w += sw.getComponent(v, k);
+    return w;
+  };
+  const torso: number[] = [], sleeves: number[] = [];
+  for (let i = 0; i < idx.count; i += 3) {
+    const a = idx.getX(i), b = idx.getX(i + 1), c = idx.getX(i + 2);
+    ((armW(a) + armW(b) + armW(c)) / 3 > 0.5 ? sleeves : torso).push(a, b, c);
+  }
+  const part = (tri: number[]) => { const p = new THREE.BufferGeometry(); for (const [k, v] of Object.entries(g.attributes)) p.setAttribute(k, v); p.setIndex(tri); return p; };
+  return [part(torso), part(sleeves)] as const;
+}
+
+/** Géométrie fusionnée par « emplacement » (peau, torse, manches, bas, cheveux), partagée par tous les figurants. */
 function buildKit(scene: THREE.Object3D) {
-  const bySlot: Record<Slot, THREE.BufferGeometry[]> = { skin: [], top: [], bottom: [], hair: [] };
+  const bySlot: Record<Slot, THREE.BufferGeometry[]> = { skin: [], top: [], sleeve: [], bottom: [], hair: [] };
   let hairMap: THREE.Texture | null = null;
   scene.traverse((o) => {
     const m = o as THREE.SkinnedMesh;
@@ -60,6 +77,13 @@ function buildKit(scene: THREE.Object3D) {
     const slot = SLOT_OF[mat.name];
     if (!slot) return;
     if (slot === "hair") hairMap = mat.map;
+    if (slot === "top") {
+      // Manches d'un ton plus soutenu que le torse : les bras se lisent même le long du corps
+      const arm = new Set(m.skeleton.bones.flatMap((b, i) => (/(Left|Right)(Arm|ForeArm|Hand)/.test(b.name) ? [i] : [])));
+      const [torso, sleeves] = splitByBones(normalize(m.geometry), arm);
+      bySlot.top.push(torso); bySlot.sleeve.push(sleeves);
+      return;
+    }
     bySlot[slot].push(normalize(m.geometry));
   });
   const parts = SLOTS.map((s) => mergeGeometries(bySlot[s], false)!);
@@ -85,11 +109,11 @@ function clay(color: string, rim: string, opts: { alphaMap?: THREE.Texture | nul
   return m;
 }
 
-export type FigureTint = { skin: string; top: string; bottom: string; hair: string; rim: string };
-export const CLAY: FigureTint = { skin: "#EFE6DA", top: "#F7F2EA", bottom: "#B9AE9F", hair: "#8C7E6E", rim: "#FFF6E8" };
+export type FigureTint = { skin: string; top: string; sleeve: string; bottom: string; hair: string; rim: string };
+export const CLAY: FigureTint = { skin: "#EAD9C6", top: "#F7F2EA", sleeve: "#CFC2B1", bottom: "#B3A796", hair: "#8C7E6E", rim: "#FFF6E8" };
 /** Variantes discrètes (haut plus chaud / plus froid) pour distinguer les silhouettes sans casser l'unité. */
-export const CLAY_WARM: FigureTint = { ...CLAY, top: "#EBD9C2", bottom: "#A99A88", hair: "#6F5F50" };
-export const CLAY_COOL: FigureTint = { ...CLAY, top: "#E2E6EC", bottom: "#9FA6B0", hair: "#9A8F84" };
+export const CLAY_WARM: FigureTint = { ...CLAY, top: "#EBD9C2", sleeve: "#C6AE92", bottom: "#A99A88", hair: "#6F5F50" };
+export const CLAY_COOL: FigureTint = { ...CLAY, top: "#E6EAF0", sleeve: "#B9C0CB", bottom: "#9FA6B0", hair: "#9A8F84" };
 
 /** Sur mobile, seuls les figurants « essentiels » sont dessinés (un par lieu). */
 const LITE = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
@@ -118,7 +142,7 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
 }) {
   const { scene, animations } = useGLTF(MODEL);
   const kit = useMemo(() => buildKit(scene), [scene]);
-  const mats = useMemo(() => [clay(tint.skin, tint.rim), clay(tint.top, tint.rim), clay(tint.bottom, tint.rim), clay(tint.hair, tint.rim, { alphaMap: kit.hairMap })], [tint, kit]);
+  const mats = useMemo(() => [clay(tint.skin, tint.rim), clay(tint.top, tint.rim), clay(tint.sleeve, tint.rim), clay(tint.bottom, tint.rim), clay(tint.hair, tint.rim, { alphaMap: kit.hairMap })], [tint, kit]);
   const root = useMemo(() => {
     const r = cloneSkinned(scene);
     const skinned: THREE.SkinnedMesh[] = [];
