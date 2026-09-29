@@ -278,7 +278,8 @@ export function CourtFence({ position, rotationY = 0, length, sunset, label }: {
       <mesh position={[0, 1.5, 0]}><planeGeometry args={[length, 3]} /><meshStandardMaterial color="#2C3A33" alphaMap={m} transparent side={THREE.DoubleSide} depthWrite={false} roughness={1} /></mesh>
       <mesh position={[0, 0.7, 0.01]} receiveShadow><planeGeometry args={[length, 1.4]} /><Flat color={sunset ? "#1E3A2C" : "#24503A"} roughness={1} /></mesh>
       {label && <Text position={[0, 0.72, 0.02]} fontSize={0.26} color="#F4F1EA" letterSpacing={0.3} anchorX="center" anchorY="middle">{label}</Text>}
-      {Array.from({ length: Math.round(length / 2.5) + 1 }).map((_, i) => <mesh key={i} position={[-length / 2 + i * 2.5, 1.5, 0]} castShadow><cylinderGeometry args={[0.035, 0.035, 3, 8]} /><Flat color="#2C3A33" /></mesh>)}
+      {/* Poteaux répartis sur la longueur exacte du grillage (jamais au-delà de ses extrémités) */}
+      {Array.from({ length: Math.max(1, Math.round(length / 2.5)) + 1 }).map((_, i, all) => <mesh key={i} position={[-length / 2 + (i * length) / (all.length - 1), 1.5, 0]} castShadow><cylinderGeometry args={[0.035, 0.035, 3, 8]} /><Flat color="#2C3A33" /></mesh>)}
       <mesh position={[0, 3, 0]}><boxGeometry args={[length, 0.04, 0.04]} /><Flat color="#2C3A33" /></mesh>
     </group>
   );

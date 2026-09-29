@@ -269,7 +269,8 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
             <TennisCourtHD width={5.4} length={8.4} color={sunset ? "#A5532E" : "#C8683A"} />
           </group>
           <CourtFence position={[L + 0.2, 0, 0]} rotationY={Math.PI / 2} length={len + 0.8} sunset={sunset} label="TENNIS CLUB · COURT 3" />
-          <CourtFence position={[-5, 0, -len / 2 - 0.2]} length={9.2} sunset={sunset} />
+          {/* Grillage d'entrée : il s'arrête 1,6 m avant le chemin (le personnage passe à côté, jamais au travers) */}
+          <CourtFence position={[-5.6, 0, -len / 2 - 0.2]} length={8.0} sunset={sunset} />
           <UmpireChair position={[-4.5, 0, 3.35]} rotationY={Math.PI} />
           {/* Figurants (scène de référence) : l'adversaire en fond de court, l'arbitre sur sa chaise */}
           <Figure clip="tennis-forehand" position={[-7.7, 0, 0.6]} rotationY={Math.PI / 2} hand={<Racket />} clockId="opponent" essential />
