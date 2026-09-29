@@ -64,12 +64,12 @@ export const chapters: Chapter[] = [
   },
   {
     id: "indysigner", at: 69.5, length: 10, clip: "idle",
-    day:    { accent: "#C8694F", panel: "rgba(19,41,75,0.86)", ink: "#F5F1EA", floor: "#D9BE94", wall: "#F4F1EA", sky: "#D8D3E6", fog: "#E7E3EF" },
-    sunset: { accent: "#E08A6E", panel: "rgba(14,24,46,0.88)", ink: "#F5F1EA", floor: "#A88E6A", wall: "#C9C2B6", sky: "#D98A6E", fog: "#E9B49A" },
+    day:    { accent: "#C46D56", panel: "rgba(19,41,72,0.88)", ink: "#FBF7F0", floor: "#D9BE94", wall: "#F4EFE6", sky: "#D8D3E6", fog: "#E7E3EF" },
+    sunset: { accent: "#E08A6E", panel: "rgba(15,34,61,0.9)", ink: "#FBF7F0", floor: "#A88E6A", wall: "#C9C2B6", sky: "#D98A6E", fog: "#E9B49A" },
     label: b("Chapitre 5 · Indysigner", "Chapter 5 · Indysigner"),
     title: b("L'atelier", "The studio"),
     quality: b("Autonomie & livraison", "Autonomy & delivery"),
-    text: b("Depuis avril 2026, mon studio web. Quatre sites en ligne pour de vrais clients : design, code, mise en ligne, SEO, et un système de prospection automatisé.", "Since April 2026, my web studio. Four live websites for real clients: design, code, launch, SEO, plus an automated prospecting system."),
+    text: b("Depuis avril 2026, mon studio web. Trois sites clients en ligne, plus celui du studio : design, code, mise en ligne, SEO. Et un système de prospection automatisé.", "Since April 2026, my web studio. Three client websites live, plus the studio's own: design, code, launch, SEO. And an automated prospecting system."),
     links: [
       { label: "indysigner.fr", href: "https://indysigner.fr" },
       { label: "lovive.fr", href: "https://lovive.fr" },
@@ -84,7 +84,7 @@ export const chapters: Chapter[] = [
     label: b("Chapitre 6 · Aujourd'hui", "Chapter 6 · Today"),
     title: b("Albert School × Mines Paris-PSL", "Albert School × Mines Paris-PSL"),
     quality: b("Business, data & code", "Business, data & code"),
-    text: b("Bachelor Business & Data (2026-2029). La suite de l'histoire s'écrit ici. Disponible pour un stage d'environ 6 semaines dès le 5 juin 2027.", "Bachelor in Business & Data (2026-2029). The next chapter is written here. Available for a ~6-week internship from 5 June 2027."),
+    text: b("Bachelor Business & Data (2026-2029), à Milan, Paris puis Madrid. La suite de l'histoire s'écrit ici : disponible pour un stage d'environ 6 semaines dès le 5 juin 2027.", "Bachelor in Business & Data (2026-2029), in Milan, Paris, then Madrid. The next chapter starts here: available for a ~6-week internship from 5 June 2027."),
     links: [{ label: "indyfrancois6@gmail.com", href: "mailto:indyfrancois6@gmail.com" }],
   },
 ];

@@ -13,7 +13,7 @@ export type Hotspot = {
   links?: { label: string; href: string }[];
 };
 
-/** Fiches ouvertes en cliquant sur un objet dans une pièce. À valider/corriger par Indy. */
+/** Fiches ouvertes en cliquant sur un objet dans une pièce. */
 export const hotspots: Hotspot[] = [
   {
     id: "tennis-ball", chapter: "tennis", position: [-1.2, 1.35, -2.6],
@@ -32,18 +32,18 @@ export const hotspots: Hotspot[] = [
   },
   {
     id: "concertae-pc", chapter: "concertae", position: [-3.8, 1.55, 1.6],
-    kicker: b("Concertae · Cannes · 2025-2026", "Concertae · Cannes · 2025-2026"), title: b("Ce que le cabinet m'a appris", "What the firm taught me"),
-    lines: b(["Outils : Cegid et Pennylane, au quotidien.", "Déclarations de TVA et respect des échéances.", "Bilans : de la révision des comptes à la clôture.", "Un bilan de fusion, du début à la fin.", "Relation client : expliquer, rassurer, relancer."], ["Tools: Cegid and Pennylane, daily.", "VAT returns and deadline discipline.", "Balance sheets: from account reviews to closing.", "One merger balance sheet, end to end.", "Client contact: explain, reassure, follow up."]),
+    kicker: b("Concertae · Cannes · 2025-2026", "Concertae · Cannes · 2025-2026"), title: b("Mon poste en alternance", "My apprenticeship desk"),
+    lines: b(["Saisie et révision des comptes, au quotidien sur Cegid et Pennylane.", "Déclarations de TVA, dans les délais.", "Préparation des bilans, jusqu'à la clôture.", "Et même un bilan de fusion."], ["Bookkeeping and account reviews, daily on Cegid and Pennylane.", "VAT returns, on time.", "Preparing balance sheets, through to closing.", "And even a merger balance sheet."]),
   },
   {
     id: "concertae-shelf", chapter: "concertae", position: [-6.6, 1.3, 4.2],
-    kicker: b("Compétences", "Skills"), title: b("Business", "Business"),
-    lines: b(["Comptabilité générale sur Cegid et Pennylane (1 an en cabinet).", "TVA, bilans, bilan de fusion.", "Gestion de projet client, cadrage de devis, prospection B2B."], ["General accounting on Cegid and Pennylane (1 year in a firm).", "VAT, balance sheets, merger balance sheet.", "Client project management, quote scoping, B2B prospecting."]),
+    kicker: b("Ce qui reste", "What stays"), title: b("Lire une entreprise par ses chiffres", "Reading a company through its numbers"),
+    lines: b(["Un bilan et un compte de résultat racontent une histoire : j'ai appris à la lire.", "Rigueur, confidentialité, échéances : on ne rend pas un bilan à peu près.", "Relation client : expliquer, rassurer, relancer."], ["A balance sheet and an income statement tell a story: I learned to read it.", "Rigour, confidentiality, deadlines: you don't hand in an approximate balance sheet.", "Client contact: explain, reassure, follow up."]),
   },
   {
     id: "chambre-laptop", chapter: "indysigner", position: [-8.9, 1.6, -2.2],
     kicker: b("Indysigner · depuis avril 2026", "Indysigner · since April 2026"), title: b("Le studio", "The studio"),
-    lines: b(["Sites sur mesure pour des TPE, livrés de bout en bout : design, code, mise en ligne, SEO.", "Stack : Next.js, TypeScript, Tailwind, GSAP, Three.js, Cloudflare Pages.", "Quatre sites en ligne pour de vrais clients."], ["Custom websites for small businesses, delivered end to end: design, code, launch, SEO.", "Stack: Next.js, TypeScript, Tailwind, GSAP, Three.js, Cloudflare Pages.", "Four live websites for real clients."]),
+    lines: b(["Sites sur mesure pour des TPE, livrés de bout en bout : design, code, mise en ligne, SEO.", "Stack : Next.js, TypeScript, Tailwind, GSAP, Three.js, Cloudflare Pages.", "Trois sites clients en ligne, plus celui du studio."], ["Custom websites for small businesses, delivered end to end: design, code, launch, SEO.", "Stack: Next.js, TypeScript, Tailwind, GSAP, Three.js, Cloudflare Pages.", "Three client websites live, plus the studio's own."]),
     links: [{ label: "indysigner.fr", href: "https://indysigner.fr" }],
   },
   {
@@ -53,14 +53,14 @@ export const hotspots: Hotspot[] = [
     links: [{ label: "lovive.fr", href: "https://lovive.fr" }, { label: "manikalab.com", href: "https://manikalab.com" }, { label: "nayumatea.com", href: "https://nayumatea.com" }],
   },
   {
-    id: "chambre-poster", chapter: "indysigner", position: [-1.9, 1.8, 5.0],
+    id: "chambre-pipeline", chapter: "indysigner", position: [-9.2, 2.14, -0.1],
     kicker: b("Data & automatisation", "Data & automation"), title: b("Prospection automatisée", "Automated prospecting"),
-    lines: b(["Sourcing d'entreprises locales, mails rédigés avec l'IA, validation manuelle, envoi et suivi des réponses par n8n.", "Synchronisation et audit de catalogues Shopify, indexation de recherche au build, relances Klaviyo."], ["Local business sourcing, AI-drafted emails, manual validation, sending and reply tracking via n8n.", "Shopify catalogue sync and audits, build-time search indexing, Klaviyo flows."]),
+    lines: b(["Sourcing d'entreprises locales, e-mails rédigés avec l'IA, validation manuelle, puis envoi et suivi des réponses par n8n.", "Côté boutiques : synchronisation et audit des catalogues Shopify, recherche indexée au build, relances Klaviyo."], ["Local business sourcing, AI-drafted emails, manual validation, then sending and reply tracking via n8n.", "For the shops: Shopify catalogue sync and audits, build-time search indexing, Klaviyo flows."]),
   },
   {
     id: "albert-screen", chapter: "albert", position: [-9.2, 1.7, 1.3],
     kicker: b("Albert School × Mines Paris-PSL", "Albert School × Mines Paris-PSL"), title: b("Bachelor Business & Data", "Bachelor in Business & Data"),
-    lines: b(["2026-2029, campus de Milan puis Paris.", "Stratégie, finance et marketing d'un côté ; mathématiques, statistiques, Python et SQL de l'autre.", "Projets en équipe avec des entreprises partenaires dès la première année."], ["2026-2029, Milan campus then Paris.", "Strategy, finance and marketing on one side; maths, statistics, Python and SQL on the other.", "Team projects with partner companies from year one."]),
+    lines: b(["2026-2029 : trois ans, trois campus. Milan, Paris, puis Madrid.", "Data, IA et maths (statistiques, Python, SQL, machine learning) d'un côté ; finance, comptabilité, marketing et stratégie de l'autre.", "Des missions de conseil en équipe pour de vraies entreprises, chaque année (Business Deep Dives).", "Un diplôme conjoint avec Mines Paris-PSL."], ["2026-2029: three years, three campuses. Milan, Paris, then Madrid.", "Data, AI and maths (statistics, Python, SQL, machine learning) on one side; finance, accounting, marketing and strategy on the other.", "Team consulting missions for real companies, every year (Business Deep Dives).", "A joint degree with Mines Paris-PSL."]),
   },
   {
     id: "albert-books", chapter: "albert", position: [-4.2, 1.5, 4.6],

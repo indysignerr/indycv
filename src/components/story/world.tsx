@@ -288,24 +288,14 @@ const Scenery = memo(function Scenery({ curve, sunset }: { curve: THREE.Curve<TH
 });
 
 /**
- * Herbe animée : bande de premier plan (côté caméra), abords entre les pièces, et gazon court sur le terrain de foot.
+ * Herbe animée : uniquement le gazon court du terrain de foot (le reste du sol reste une pelouse dessinée, plus calme).
  * Coordonnées monde : le chemin suit -z ; les pièces sont côté +x, la caméra côté -x.
  */
 const Lawn = memo(function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
-  const { areas, exclude, pitch } = useMemo(() => {
-    const rooms = chapters.map((c) => [-2.8, 10.2, -(c.at + c.length + 0.7), -(c.at - 0.7)] as [number, number, number, number]);
+  const pitch = useMemo(() => {
     const foot = chapters.find((c) => c.id === "foot")!;
-    return {
-      areas: [[-10, -0.75, -PATH_LENGTH - 2, 3], [0.75, 12, -PATH_LENGTH - 2, 3]] as [number, number, number, number][],
-      exclude: rooms,
-      pitch: [[-2.5, 9.8, -(foot.at + foot.length + 0.5), -(foot.at - 0.5)]] as [number, number, number, number][],
-    };
+    return [[-2.5, 9.8, -(foot.at + foot.length + 0.5), -(foot.at - 0.5)]] as [number, number, number, number][];
   }, []);
   const pitchEx = useMemo(() => [[-0.75, 0.75, -200, 10]] as [number, number, number, number][], []);
-  return (
-    <group>
-      <Grass areas={areas} exclude={exclude} count={mobile ? 7000 : 28000} base={sunset ? "#557A45" : "#6A9E57"} tip={sunset ? "#B7BE78" : "#BFDD8C"} height={0.17} />
-      <Grass areas={pitch} exclude={pitchEx} count={mobile ? 3000 : 12000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />
-    </group>
-  );
+  return <Grass areas={pitch} exclude={pitchEx} count={mobile ? 3000 : 12000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />;
 });

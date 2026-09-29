@@ -87,8 +87,8 @@ export const timeline = [
     title: b("Albert School × Mines Paris-PSL", "Albert School × Mines Paris-PSL"),
     sub: b("Bachelor Business & Data", "Bachelor in Business & Data"),
     text: b(
-      "Un cursus qui mêle stratégie, finance, mathématiques et data, adossé à Mines Paris-PSL.",
-      "A programme blending strategy, finance, maths and data, backed by Mines Paris-PSL."
+      "Data, IA et maths d'un côté, finance, marketing et stratégie de l'autre. Trois campus : Milan, Paris, puis Madrid. Diplôme conjoint avec Mines Paris-PSL.",
+      "Data, AI and maths on one side, finance, marketing and strategy on the other. Three campuses: Milan, Paris, then Madrid. Joint degree with Mines Paris-PSL."
     ),
   },
   {
@@ -105,8 +105,8 @@ export const timeline = [
     title: b("Concertae", "Concertae"),
     sub: b("Alternance en comptabilité · Cannes", "Accounting apprenticeship · Cannes"),
     text: b(
-      "Un an en cabinet : saisie, révision, rigueur des échéances, contact client.",
-      "One year in an accounting firm: bookkeeping, reviews, deadline discipline, client contact."
+      "Un an en cabinet : saisie et révision sur Cegid et Pennylane, TVA, bilans et même un bilan de fusion. Rigueur des échéances, contact client.",
+      "One year in an accounting firm: bookkeeping and reviews on Cegid and Pennylane, VAT, balance sheets and even a merger balance sheet. Deadline discipline, client contact."
     ),
   },
   {

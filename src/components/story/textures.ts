@@ -233,6 +233,33 @@ export const dashboardTex = (accent: string) =>
     }
   }, { repeat: [1, 0.5], offset: [0, 0.5] });
 
+/** Tableau « pipeline » (chambre Indysigner) : cinq étapes de la prospection reliées par une vague, aux couleurs du studio. */
+export const pipelineTex = () =>
+  make("pipeline", 1024, (g, s, r) => {
+    const H = s / 2, navy = "#132948", terra = "#C46D56", sand = "#E9D9BF", cream = "#FBF7F0";
+    g.fillStyle = cream; g.fillRect(0, 0, s, H);
+    speckle(g, s, r, 2500, 225, 250, 1.2, 0.25);
+    g.fillStyle = navy; g.font = "600 30px Helvetica, Arial"; g.fillText("PROSPECTION · PIPELINE", 44, 64);
+    g.fillStyle = terra; g.fillRect(44, 78, 120, 5);
+    const steps = [["01", "Sourcing"], ["02", "Rédaction IA"], ["03", "Validation"], ["04", "Envoi n8n"], ["05", "Suivi"]];
+    const pts = steps.map((_, i) => [110 + i * 200, 300 + Math.sin(i * 1.3 + 0.4) * 70] as const);
+    // Vague qui relie les étapes (clin d'œil au logo)
+    g.strokeStyle = navy; g.lineWidth = 4; g.setLineDash([14, 10]);
+    g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; g.bezierCurveTo(x0 + 80, y0 - 60, x1 - 80, y1 + 60, x1, y1); }
+    g.stroke(); g.setLineDash([]);
+    steps.forEach(([n, label], i) => {
+      const [x, y] = pts[i], w = 170, h = 108, bg = [terra, sand, navy, terra, sand][i], fg = bg === sand ? navy : cream;
+      g.save(); g.translate(x, y); g.rotate((r() - 0.5) * 0.08);
+      g.fillStyle = "rgba(19,41,72,0.18)"; g.fillRect(-w / 2 + 6, -h / 2 + 8, w, h);
+      g.fillStyle = bg; g.fillRect(-w / 2, -h / 2, w, h);
+      g.fillStyle = fg; g.font = "600 22px Menlo, monospace"; g.fillText(n, -w / 2 + 14, -h / 2 + 32);
+      g.font = "600 25px Helvetica, Arial"; g.fillText(label, -w / 2 + 14, h / 2 - 22);
+      g.fillStyle = "#8A8794"; g.beginPath(); g.arc(0, -h / 2 + 2, 7, 0, Math.PI * 2); g.fill();
+      g.restore();
+    });
+  }, { repeat: [1, 0.5], offset: [0, 0.5] });
+
 /** Affiche générique : aplat de couleur + formes + titre. */
 export const posterTex = (bg: string, fg: string, title: string, sub = "") =>
   make(`poster${bg}${fg}${title}`, 512, (g, s, r) => {

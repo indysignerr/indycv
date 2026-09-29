@@ -6,6 +6,7 @@ import { scroll, TOTAL_VH } from "@/lib/scroll-progress";
 import { chapters } from "@/lib/story";
 import { Intro } from "./intro";
 import { Panels } from "./panels";
+import { Controls } from "./controls";
 
 const StoryCanvas = dynamic(() => import("./story-canvas").then((m) => m.StoryCanvas), { ssr: false });
 
@@ -37,6 +38,7 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
       <StoryCanvas />
       <Intro />
       <Panels />
+      <Controls />
       {/* Longueur de scroll = longueur de l'histoire (texte sémantique pour SEO / lecteurs d'écran) */}
       <main className="pointer-events-none relative z-10">
         <div className="sr-only">

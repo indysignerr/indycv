@@ -12,7 +12,7 @@ import { Flat } from "./materials";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
   BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
-  Football, GoalHD, Lockers, Monitor, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens,
+  Football, GoalHD, Lockers, Monitor, PipelineBoard, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens,
 } from "./detail";
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
 
@@ -48,11 +48,36 @@ function DoorWall({ z, wid, h, color, accent, label }: { z: number; wid: number;
         <mesh key={sx} position={[sx * (DOOR_W / 2), 1.3, 0]} castShadow><boxGeometry args={[0.16, 2.6, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
       ))}
       <mesh position={[0, 2.6, 0]} castShadow><boxGeometry args={[DOOR_W + 0.16, 0.16, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
+      {/* Plaque « 0X · NOM » posée sur le linteau : fond à la couleur du lieu, texte contrasté (lisible sur n'importe quel décor) */}
       {label && (
-        <Text position={[0, 2.97, -0.16]} rotation={[0, Math.PI, 0]} fontSize={0.17} letterSpacing={0.24} color={accent} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
+        <group position={[0, 2.88, 0]}>
+          <mesh castShadow><boxGeometry args={[Math.max(DOOR_W + 0.16, label.length * 0.13 + 0.45), 0.42, 0.14]} /><Flat color={accent} roughness={0.5} /></mesh>
+          <Text position={[0, -0.005, -0.075]} rotation={[0, Math.PI, 0]} fontSize={0.18} letterSpacing={0.14} color={inkOn(accent)} anchorX="center" anchorY="middle" material-side={THREE.FrontSide}>{label}</Text>
+        </group>
       )}
     </group>
   );
+}
+
+/** Couleur de texte la plus lisible (encre ou blanc) sur un fond donné, au sens du contraste WCAG. */
+function inkOn(bg: string) {
+  const lum = (c: THREE.Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; // THREE.Color est linéaire
+  const L = lum(new THREE.Color(bg));
+  const dark = lum(new THREE.Color("#15141B"));
+  return (L + 0.05) / (dark + 0.05) >= 1.05 / (L + 0.05) ? "#15141B" : "#FFFFFF";
+}
+
+/** Liseré en vague (signature du logo Indysigner) : un tube fin qui ondule le long du mur. */
+function WaveStripe({ x, y, len, color }: { x: number; y: number; len: number; color: string }) {
+  const geo = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 80; i++) {
+      const z = -len / 2 + (i / 80) * len;
+      pts.push(new THREE.Vector3(x, y + Math.sin(z * 1.35 + 0.6) * 0.07 + Math.sin(z * 0.42) * 0.03, z));
+    }
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 240, 0.024, 6, false);
+  }, [x, y, len]);
+  return <mesh geometry={geo}><Flat color={color} emissive={color} emissiveIntensity={0.35} /></mesh>;
 }
 
 /** Enseigne : logo (image) ou texte, posé sur le mur du fond ou le mur gauche. */
@@ -155,7 +180,7 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
   const wallT = useMemo(() => plasterTex([4, 1.4], chapter.id === "lycee"), [chapter.id]);
   const ceilT = useMemo(() => tileTex([wid / 1.2, len / 1.2]), [wid, len]);
   const Lx = -wid + DOOR_W / 2 + 0.3; // face intérieure du mur gauche
-  const leftColor = chapter.id === "indysigner" ? (sunset ? "#1B3E30" : "#1F4D3A") : palette.wall;
+  const leftColor = chapter.id === "indysigner" ? (sunset ? "#16305A" : "#1D3A66") : palette.wall;
   return (
     <group ref={root} position={f.p} quaternion={f.q}>
       <mesh position={[cx, -0.12, 0]} receiveShadow>
@@ -169,11 +194,13 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
             <boxGeometry args={[0.3, h, len + 1.2]} />
             <TexMat tex={wallT} color={leftColor} bump={chapter.id === "lycee" ? 0.012 : 0.004} rough={0.95} />
           </mesh>
-          <mesh position={[Lx + 0.02, h - 0.35, 0]}>
-            <boxGeometry args={[0.04, 0.08, len + 1.0]} />
-            <Flat color={a} emissive={a} emissiveIntensity={0.4} />
-          </mesh>
-          <Baseboard position={[Lx + 0.02, 0, 0]} length={len + 0.6} rotationY={Math.PI / 2} color={chapter.id === "indysigner" ? "#163A2B" : "#FFFFFF"} />
+          {chapter.id === "indysigner" ? <WaveStripe x={Lx + 0.03} y={h - 0.42} len={len + 1.0} color={a} /> : (
+            <mesh position={[Lx + 0.02, h - 0.35, 0]}>
+              <boxGeometry args={[0.04, 0.08, len + 1.0]} />
+              <Flat color={a} emissive={a} emissiveIntensity={0.4} />
+            </mesh>
+          )}
+          <Baseboard position={[Lx + 0.02, 0, 0]} length={len + 0.6} rotationY={Math.PI / 2} color={chapter.id === "indysigner" ? "#EFE8DC" : "#FFFFFF"} />
           <WallAO position={[Lx, 0, 0]} length={len + 0.6} rotationY={-Math.PI / 2} />
           {/* Murs d'entrée et de sortie */}
           <DoorWall z={-(len + 1.2) / 2 + 0.15} wid={wid} h={h} color={palette.wall} accent={a} label={signOf(chapter)} />
@@ -305,14 +332,16 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           {/* Tapis */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.2, 0.02, 0]} receiveShadow><circleGeometry args={[1.7, 48]} /><TexMat tex={cpT} color={sunset ? "#D9CBB5" : "#EFE6D6"} bump={0.006} rough={1} /></mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.2, 0.024, 0]}><ringGeometry args={[1.42, 1.52, 48]} /><Flat color={a} /></mesh>
-          {/* Mur vert : logo + grand bureau à 3 écrans */}
+          {/* Mur marine : logo + grand bureau à 3 écrans */}
           <Sign image="/logos/indysigner.webp" position={[L + 0.06, 2.55, -2.2]} rotation={[0, Math.PI / 2, 0]} width={1.7} bg="#F4EFE6" />
           <Table position={[L + 0.55, 0, -2.2]} rotationY={Math.PI / 2} w={2.4} d={0.85} top={sunset ? "#8E7658" : "#D9BE94"} />
           {[-0.8, 0, 0.8].map((dz, i) => <Monitor key={i} position={[L + 0.4, 0.76, -2.2 + dz]} rotationY={Math.PI / 2 - (i - 1) * 0.28} tex={cdT} w={0.66} h={0.4} />)}
           <Seat position={[L + 1.35, 0, -2.2]} rotationY={-Math.PI / 2} color="#1E2A3F" />
           <Laptop position={[L + 0.75, 0.78, -1.1]} rotation={[0, Math.PI / 2 + 0.4, 0]} accent={a} />
           <Plant position={[L + 0.5, 0.76, -3.45]} kind="leafy" scale={0.55} />
-          {/* Mur vert : placard à Legos + guitare */}
+          {/* Mur marine : tableau « pipeline » entre le bureau et le placard (point « Prospection automatisée ») */}
+          <PipelineBoard position={[L + 0.03, 1.8, -0.1]} rotationY={Math.PI / 2} w={1.4} />
+          {/* Mur marine : placard à Legos + guitare */}
           <LegoShelf position={[L + 0.3, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} />
           <group position={[L + 0.35, 0, 2.8]} rotation={[0, Math.PI / 2, 0.12]}>
             <mesh position={[0, 0.35, 0]} scale={[0.22, 0.28, 0.06]} castShadow><sphereGeometry args={[1, 16, 12]} /><Flat color="#B5652E" roughness={0.4} /></mesh>
@@ -322,7 +351,7 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           </group>
           {/* Mur de sortie : fenêtre, grand lit double, tables de nuit */}
           <Window position={[-4.6, 1.95, F - 0.04]} rotationY={Math.PI} w={1.9} h={1.2} sunset={sunset} beam={false} />
-          <Bed position={[-4.6, 0, F - 1.25]} rotation={[0, Math.PI, 0]} accent="#1E2F55" frame={sunset ? "#8C7456" : "#B8966B"} />
+          <Bed position={[-4.6, 0, F - 1.25]} rotation={[0, Math.PI, 0]} accent="#132948" frame={sunset ? "#8C7456" : "#B8966B"} />
           {[-6, -3.2].map((x) => (
             <group key={x} position={[x, 0, F - 0.35]}>
               <mesh position={[0, 0.28, 0]} castShadow><boxGeometry args={[0.5, 0.56, 0.42]} /><Flat color={sunset ? "#8C7456" : "#B8966B"} /></mesh>

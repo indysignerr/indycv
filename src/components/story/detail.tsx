@@ -5,7 +5,7 @@ import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { Flat } from "./materials";
 import {
-  beamTex, blobTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, plasterTex, posterTex, spreadsheetTex, woodTex,
+  beamTex, blobTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, pipelineTex, plasterTex, posterTex, spreadsheetTex, woodTex,
 } from "./textures";
 
 type V3 = [number, number, number];
@@ -475,6 +475,18 @@ export function Whiteboard({ position, rotationY = 0, accent }: { position: V3; 
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh position={[0, 1.6, -0.02]}><boxGeometry args={[2.9, 1.5, 0.05]} /><Flat color="#1A1B21" roughness={0.3} /></mesh>
       <mesh position={[0, 1.6, 0.008]}><planeGeometry args={[2.8, 1.4]} /><meshBasicMaterial map={t} toneMapped={false} /></mesh>
+    </group>
+  );
+}
+
+/** Tableau d'atelier (chambre Indysigner) : cadre chêne clair, pipeline de prospection dessiné. */
+export function PipelineBoard({ position, rotationY = 0, w = 1.5 }: { position: V3; rotationY?: number; w?: number }) {
+  const t = useMemo(() => pipelineTex(), []);
+  const h = w / 2;
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, 0, -0.02]} castShadow><boxGeometry args={[w + 0.08, h + 0.08, 0.04]} /><Flat color="#D6BC93" roughness={0.6} /></mesh>
+      <mesh position={[0, 0, 0.002]}><planeGeometry args={[w, h]} /><meshStandardMaterial map={t} roughness={0.7} /></mesh>
     </group>
   );
 }
