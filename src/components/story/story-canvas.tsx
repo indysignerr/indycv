@@ -24,11 +24,16 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
         scroll.velocity = self.getVelocity();
       },
     });
-    return () => st.kill();
+    const onMove = (e: PointerEvent) => {
+      scroll.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      scroll.mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => { st.kill(); window.removeEventListener("pointermove", onMove); };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0" aria-hidden>
+    <div className="fixed inset-0 z-0">
       <Canvas
         dpr={[1, mobile ? 1.5 : 1.75]}
         shadows={!mobile}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Download, Mail, Moon, Sun } from "lucide-react";
+import { ArrowUpRight, Download, Mail, Moon, Sun, X } from "lucide-react";
+import { hotspots } from "@/lib/hotspots";
 import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, storyUi, t } from "@/lib/story";
@@ -16,12 +17,14 @@ export function Panels() {
   const { lang, theme, setLang, toggleTheme } = useApp();
   const [chapter, setChapter] = useState(-1);
   const [progress, setProgress] = useState(0);
+  const [hotspot, setHotspot] = useState<string | null>(null);
 
   useEffect(() => {
     let raf = 0;
     const loop = () => {
       setChapter((c) => (c === scroll.chapter ? c : scroll.chapter));
       setProgress((p) => (Math.abs(p - scroll.progress) > 0.002 ? scroll.progress : p));
+      setHotspot((h) => (h === scroll.hotspot ? h : scroll.hotspot));
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -39,6 +42,8 @@ export function Panels() {
   }, [chapter, theme]);
 
   const c = chapter >= 0 ? chapters[chapter] : null;
+  const hs = hotspot ? hotspots.find((h) => h.id === hotspot) ?? null : null;
+  useEffect(() => { if (hs && hs.chapter !== c?.id) scroll.hotspot = null; }, [hs, c]);
   const atEnd = progress > 0.985;
 
   return (
@@ -67,8 +72,27 @@ export function Panels() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {hs && (
+          <motion.aside key={hs.id} initial={{ opacity: 0, y: 24, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, transition: { duration: 0.25 } }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-auto absolute bottom-3 left-3 right-3 z-10 max-h-[70vh] overflow-y-auto rounded-3xl p-6 backdrop-blur-xl sm:bottom-auto sm:left-auto sm:right-8 sm:top-1/2 sm:w-[420px] sm:-translate-y-1/2 sm:p-8"
+            style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 30px 80px rgba(0,0,0,0.4)" }}>
+            <button type="button" onClick={() => { scroll.hotspot = null; }} aria-label="Fermer" className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10"><X size={18} /></button>
+            <p className="label pr-12" style={{ color: "var(--story-accent)" }}>{t(hs.kicker, lang)}</p>
+            <h3 className="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">{t(hs.title, lang)}</h3>
+            <ul className="mt-4 space-y-2 text-[15px] leading-relaxed opacity-90">
+              {t(hs.lines, lang).map((l) => <li key={l} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--story-accent)" }} />{l}</li>)}
+            </ul>
+            {hs.links && (
+              <ul className="mt-5 flex flex-wrap gap-2">
+                {hs.links.map((l) => <li key={l.href}><a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="inline-flex min-h-[40px] items-center gap-1 rounded-full border border-current/30 px-3 text-sm hover:bg-white/10">{l.label}<ArrowUpRight size={14} aria-hidden /></a></li>)}
+              </ul>
+            )}
+          </motion.aside>
+        )}
+      </AnimatePresence>
       <AnimatePresence mode="wait">
-        {c && (
+        {c && !hs && (
           <motion.aside
             key={c.id}
             initial={{ opacity: 0, x: 40 }}
@@ -82,6 +106,9 @@ export function Panels() {
             <h2 className="mt-2 font-display text-2xl font-bold leading-tight sm:mt-3 sm:text-3xl">{t(c.title, lang)}</h2>
             <p className="mt-1 font-serif text-lg italic opacity-80">{t(c.quality, lang)}</p>
             <p className="mt-3 text-[14px] leading-relaxed opacity-90 sm:mt-4 sm:text-[15px]">{t(c.text, lang)}</p>
+            {hotspots.some((h) => h.chapter === c.id) && (
+              <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.18em] opacity-70">{lang === "fr" ? "Cliquez sur les points lumineux" : "Click the glowing dots"}</p>
+            )}
             {c.links && (
               <ul className="mt-5 flex flex-wrap gap-2">
                 {c.links.map((l) => (

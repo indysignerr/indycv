@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, outside, PATH_LENGTH, type Clip } from "@/lib/story";
 import { Character } from "./character";
-import { Diorama } from "./rooms";
+import { Diorama, Station } from "./rooms";
 import { Flat, GradientSky } from "./materials";
 import { Rock, Tree } from "./props";
 
@@ -52,11 +52,25 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     curve.getTangentAt(u, tmp.t);
     tmp.side.crossVectors(tmp.up, tmp.t).normalize();
     const inRoom = chapter >= 0;
-    const back = mobile ? 6.5 : 5.2;
-    const lat = mobile ? 2.2 : inRoom ? 4.6 : 4.0;
-    const h = mobile ? 3.4 : 2.9;
-    tmp.cam.copy(tmp.p).addScaledVector(tmp.t, -back).addScaledVector(tmp.side, lat).setY(h);
-    tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
+    // Dehors : derrière-droite. Dans une pièce : la caméra pivote sur la droite et regarde la pièce de côté.
+    const c = chapter >= 0 ? chapters[chapter] : null;
+    const roomMid = c ? c.at + c.length / 2 : 0;
+    const back = inRoom ? (mobile ? 1.5 : 0.6) : mobile ? 6.5 : 5.2;
+    const lat = inRoom ? (mobile ? 9.5 : 8.2) : mobile ? 2.2 : 4.0;
+    const h = inRoom ? (mobile ? 3.6 : 2.6) : mobile ? 3.4 : 2.9;
+    const anchor = inRoom ? curve.getPointAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.p;
+    const anchorT = inRoom ? curve.getTangentAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.t;
+    const anchorS = new THREE.Vector3().crossVectors(tmp.up, anchorT).normalize();
+    tmp.cam.copy(anchor).addScaledVector(anchorT, inRoom ? (dist.current - roomMid) * 0.35 - back : -back).addScaledVector(anchorS, lat).setY(h);
+    if (inRoom) tmp.look.copy(tmp.p).lerp(anchor, 0.55).addScaledVector(anchorS, -2.2).setY(mobile ? 0.5 : 1.1);
+    else tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
+    // Chambre : vue 360 à la souris
+    if (c?.id === "indysigner" && !mobile) {
+      const yaw = scroll.mouse.x * 0.9, pitch = scroll.mouse.y * 0.35;
+      const off = new THREE.Vector3().subVectors(tmp.cam, anchor);
+      off.applyAxisAngle(tmp.up, -yaw);
+      tmp.cam.copy(anchor).add(off).setY(h + pitch * 1.5);
+    }
     const end = THREE.MathUtils.smoothstep(u, 0.955, 1);
     if (end > 0) {
       const front = new THREE.Vector3().copy(tmp.p).addScaledVector(tmp.t, 3.2).addScaledVector(tmp.side, 1.2).setY(1.5);
@@ -96,8 +110,9 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       <Scenery curve={curve} sunset={sunset} />
 
       {chapters.map((c, i) => (
-        <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} />
+        <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} distanceRef={dist} />
       ))}
+      <Station curve={curve} at={87.2} sunset={sunset} accent={o.accent} />
 
       <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} racket={state.chapter === 0} />
     </>
@@ -127,11 +142,35 @@ function Ribbon({ curve, w, y, color, uvScale = 1 }: { curve: THREE.Curve<THREE.
   return <mesh geometry={geo} receiveShadow><Flat color={color} /></mesh>;
 }
 
+/** Chemin de dalles : une dalle arrondie tous les 0,95 m, orientée le long de la courbe. */
+function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: string }) {
+  const items = useMemo(() => {
+    const out: { p: THREE.Vector3; q: THREE.Quaternion }[] = [];
+    const L = curve.getLength(); const up = new THREE.Vector3(0, 1, 0);
+    for (let d = 0.5; d < L; d += 0.95) {
+      const u = d / L; const p = curve.getPointAt(u); const t = curve.getTangentAt(u);
+      const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(t, new THREE.Vector3(), up));
+      out.push({ p, q });
+    }
+    return out;
+  }, [curve]);
+  return (
+    <group>
+      {items.map((it, i) => (
+        <mesh key={i} position={[it.p.x, 0.02, it.p.z]} quaternion={it.q} receiveShadow>
+          <boxGeometry args={[1.1, 0.06, 0.72]} />
+          <Flat color={color} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; ground: string; path: string }) {
   return (
     <group>
       <Ribbon curve={curve} w={30} y={-0.02} color={ground} />
-      <Ribbon curve={curve} w={1.7} y={0.005} color={path} />
+      <Tiles curve={curve} color={path} />
       {/* Épaisseur de l'île (bord visible en contrebas) */}
       <Ribbon curve={curve} w={30} y={-1.4} color="#5A6A52" />
     </group>
@@ -146,7 +185,7 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
     let seed = 7;
     const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     for (let d = 2; d < PATH_LENGTH - 2; d += 1.6) {
-      const inRoom = chapters.some((c) => d > c.at - 4 && d < c.at + c.length + 4);
+      const inRoom = chapters.some((c) => d > c.at - 4 && d < c.at + c.length + 4) || (d > 80 && d < 94);
       const u = d / curve.getLength();
       const p = curve.getPointAt(u), t = curve.getTangentAt(u);
       const side = new THREE.Vector3().crossVectors(up, t).normalize();

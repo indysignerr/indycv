@@ -7,4 +7,8 @@ export const scroll = {
   chapter: -1,
   lenis: null as Lenis | null,
   started: false,
+  /** Hotspot ouvert (id) ou null. */
+  hotspot: null as string | null,
+  /** Souris normalisée (-1..1) pour la vue 360 dans la chambre. */
+  mouse: { x: 0, y: 0 },
 };
