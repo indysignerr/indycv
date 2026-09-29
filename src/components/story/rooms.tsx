@@ -9,7 +9,7 @@ import { hotspots } from "@/lib/hotspots";
 import { scroll } from "@/lib/scroll-progress";
 import type { Lang } from "@/lib/content";
 import { Flat } from "./materials";
-import { Figure, Racket } from "./figures";
+import { CLAY_COOL, CLAY_WARM, Figure, Racket } from "./figures";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
   BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
@@ -279,7 +279,7 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <CourtFence position={[-5, 0, -len / 2 - 0.2]} length={9.2} sunset={sunset} />
           <UmpireChair position={[-4.5, 0, 3.35]} rotationY={Math.PI} />
           {/* Figurants (scène de référence) : l'adversaire en fond de court, l'arbitre sur sa chaise */}
-          <Figure clip="tennis-forehand" position={[-7.7, 0, 0.6]} rotationY={Math.PI / 2} hand={<Racket />} clockId="opponent" />
+          <Figure clip="tennis-forehand" position={[-7.7, 0, 0.6]} rotationY={Math.PI / 2} hand={<Racket />} clockId="opponent" essential />
           <Figure clip="sit-idle" position={[-4.5, 1.33, 3.35]} rotationY={Math.PI} offset={0.4} />
           <CourtBench position={[-6.4, 0, 3.9]} rotationY={Math.PI} />
           <CourtBench position={[-2.6, 0, 3.9]} rotationY={Math.PI} towel="#2A4BD7" />
@@ -297,6 +297,11 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <CornerFlag position={[L + 0.3, 0, -len / 2 - 0.25]} />
           <CornerFlag position={[L + 0.3, 0, len / 2 + 0.25]} />
           <Dugout position={[-5.2, 0, len / 2 + 0.2]} rotationY={Math.PI} sunset={sunset} />
+          {/* Figurants : le gardien dans ses buts, un joueur qui fête un but, un autre qui cherche une passe, un remplaçant sur le banc */}
+          <Figure clip="idle" position={[-8.1, 0, 0.2]} rotationY={Math.PI / 2} offset={0.2} essential />
+          <Figure clip="celebrate" position={[-4.9, 0, -2.3]} rotationY={Math.PI / 2 + 0.35} tint={CLAY_WARM} scale={0.97} offset={0.5} />
+          <Figure clip="look-around" position={[-6.3, 0, 2.5]} rotationY={Math.PI / 2 - 0.45} tint={CLAY_COOL} offset={0.3} />
+          <Figure clip="sit-idle" position={[-5.47, 0, 5.35]} rotationY={Math.PI} scale={0.98} offset={0.7} />
           <Football position={[-1.4, 0, 0.9]} />
           <Football position={[-7.6, 0, -0.4]} r={0.105} />
           {[[-3, -2.8], [-3.8, -2.8], [-4.6, -2.8], [-5.4, -2.8]].map(([x, z], i) => <Cone key={i} position={[x, 0, z]} color={i % 2 ? "#F27E2B" : "#F2C01E"} />)}
@@ -332,6 +337,11 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
               <DeskClutter position={[x, 0.74, z]} rotationY={Math.PI / 2} seed={r * 2 + c} />
             </group>
           )))}
+          {/* Figurants : le professeur au tableau, trois élèves qui prennent des notes */}
+          <Figure clip="look-around" position={[-8.4, 0, -2.45]} rotationY={Math.PI / 2 + 0.25} tint={CLAY_COOL} offset={0.1} essential />
+          <Figure clip="write-board" position={[-5.7, -0.08, -2.0]} rotationY={-Math.PI / 2} scale={0.95} offset={0.35} />
+          <Figure clip="write-board" position={[-4.0, -0.08, 2.0]} rotationY={-Math.PI / 2} tint={CLAY_WARM} scale={0.93} offset={0.8} />
+          <Figure clip="sit-idle" position={[-2.3, 0, -1.4]} rotationY={-Math.PI / 2} scale={0.96} offset={0.55} />
           <Lockers position={[-5.2, 0, F - 0.1]} rotationY={Math.PI} n={6} color={sunset ? "#355F95" : "#3E6FB0"} />
           <Plant position={[L + 0.45, 0, -F + 0.35]} kind="tall" />
         </group>
@@ -352,6 +362,9 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
               <DeskClutter position={[x + 0.1, 0.76, z + 0.45]} rotationY={Math.PI / 2} seed={i + 1} />
             </group>
           ))}
+          {/* Figurants : deux collègues au clavier ; le poste marqué d'un point reste libre (celui d'Indy) */}
+          <Figure clip="typing" position={[-5.55, 0, 1.6]} rotationY={-Math.PI / 2} offset={0.2} essential />
+          <Figure clip="typing" position={[-3.15, 0, -1.6]} rotationY={-Math.PI / 2} tint={CLAY_WARM} scale={0.96} offset={0.6} />
           <Printer position={[-2.2, 0, F - 0.25]} rotationY={Math.PI} />
           <WaterCooler position={[-1.5, 0, -F + 0.3]} />
           <Plant position={[L + 0.45, 0, -F + 0.4]} kind="leafy" scale={1.3} />
@@ -415,6 +428,11 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
               <DeskClutter position={[x - 0.4, 0.76, z]} rotationY={Math.PI / 2} seed={i + 3} />
             </group>
           ))}
+          {/* Figurants : trois étudiants sur leurs portables, un quatrième debout qui regarde le tableau de bord */}
+          <Figure clip="typing" position={[-5.5, 0, -2.25]} rotationY={-Math.PI / 2} offset={0.15} essential />
+          <Figure clip="typing" position={[-5.5, 0, 1.55]} rotationY={-Math.PI / 2} tint={CLAY_COOL} scale={0.95} offset={0.45} />
+          <Figure clip="write-board" position={[-2.9, -0.08, 2.25]} rotationY={-Math.PI / 2} tint={CLAY_WARM} scale={0.97} offset={0.7} />
+          <Figure clip="look-around" position={[-7.2, 0, 3.3]} rotationY={Math.PI / 2 - 0.6} offset={0.4} />
           <Beanbag position={[-8.3, 0, F - 0.7]} color={a} />
           <Beanbag position={[-7.1, 0, F - 0.5]} color="#F5B942" />
           <BinderShelf position={[-4.4, 0, F - 0.05]} rotationY={Math.PI} w={2.2} />

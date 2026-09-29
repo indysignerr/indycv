@@ -87,10 +87,23 @@ function clay(color: string, rim: string, opts: { alphaMap?: THREE.Texture | nul
 
 export type FigureTint = { skin: string; top: string; bottom: string; hair: string; rim: string };
 export const CLAY: FigureTint = { skin: "#EFE6DA", top: "#F7F2EA", bottom: "#B9AE9F", hair: "#8C7E6E", rim: "#FFF6E8" };
+/** Variantes discrètes (haut plus chaud / plus froid) pour distinguer les silhouettes sans casser l'unité. */
+export const CLAY_WARM: FigureTint = { ...CLAY, top: "#EBD9C2", bottom: "#A99A88", hair: "#6F5F50" };
+export const CLAY_COOL: FigureTint = { ...CLAY, top: "#E2E6EC", bottom: "#9FA6B0", hair: "#9A8F84" };
+
+/** Sur mobile, seuls les figurants « essentiels » sont dessinés (un par lieu). */
+const LITE = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
 
 /** Un figurant : clone du squelette, géométrie partagée, sa propre animation (décalée pour ne pas être synchrone). */
-export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, offset = 0, speed = 1, children, hand, clockId }: {
+export function Figure(props: React.ComponentProps<typeof FigureBody>) {
+  if (LITE && !props.essential) return null;
+  return <FigureBody {...props} />;
+}
+
+function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, offset = 0, speed = 1, children, hand, clockId }: {
   clip: Clip;
+  /** Gardé sur mobile (un figurant par lieu). */
+  essential?: boolean;
   /** Publie la phase de l'animation (0..1) dans `scroll.clocks[clockId]` (synchronisation du son). */
   clockId?: string;
   position: [number, number, number];
@@ -142,9 +155,15 @@ export function Figure({ clip, position, rotationY = 0, scale = 1, tint = CLAY, 
   }, [handBone]);
 
   const group = useRef<THREE.Group>(null);
-  useFrame((_, dt) => {
-    // Pas d'animation quand la pièce est masquée (hors champ)
-    for (let o: THREE.Object3D | null = group.current; o; o = o.parent) if (!o.visible) return;
+  const tmp = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera }, dt) => {
+    const g = group.current;
+    if (!g) return;
+    // Pas d'animation quand la pièce est masquée ; figurant masqué au-delà de 24 m de la caméra
+    for (let o: THREE.Object3D | null = g.parent; o; o = o.parent) if (!o.visible) return;
+    const far = g.getWorldPosition(tmp).distanceTo(camera.position) > 24;
+    if (root.visible === far) root.visible = !far;
+    if (far) return;
     mixer.update(Math.min(dt, 0.1));
     const a = action.current;
     if (clockId && a) scroll.clocks[clockId] = (a.time % a.getClip().duration) / a.getClip().duration;
