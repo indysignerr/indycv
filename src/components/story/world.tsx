@@ -10,6 +10,9 @@ import { Character } from "./character";
 import { Diorama } from "./rooms";
 import { Clouds, Flat, GradientSky } from "./materials";
 import { Bench, Bush, LampPost, Rock, Tree } from "./props";
+import { Grass } from "./grass";
+import { TexMat } from "./detail";
+import { concreteTex, grassTex } from "./textures";
 
 /** Le chemin : un ruban en S sur l'île. */
 export function buildPath() {
@@ -111,6 +114,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
 
       {/* L'île : une dalle qui suit le chemin, bords doux, rien au-delà */}
       <Island curve={curve} ground={o.ground} path={o.path} />
+      <Lawn sunset={sunset} mobile={mobile} />
       <Scenery curve={curve} sunset={sunset} />
 
       {chapters.map((c, i) => (
@@ -124,6 +128,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
 
 /** Chemin de dalles : une dalle arrondie tous les 0,95 m, orientée le long de la courbe. */
 function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: string }) {
+  const stoneT = useMemo(() => concreteTex([1, 1]), []);
   const items = useMemo(() => {
     const out: { p: THREE.Vector3; q: THREE.Quaternion }[] = [];
     const L = curve.getLength(); const up = new THREE.Vector3(0, 1, 0);
@@ -139,9 +144,9 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
   return (
     <group>
       {items.map((it, i) => (
-        <mesh key={i} position={[it.p.x, 0.02, it.p.z]} quaternion={it.q} receiveShadow castShadow>
+        <mesh key={i} position={[it.p.x + ((i * 37) % 7 - 3) * 0.012, 0.02, it.p.z]} quaternion={it.q} rotation-y={((i * 13) % 5 - 2) * 0.03} receiveShadow castShadow>
           <boxGeometry args={[1.1, 0.07, 0.72]} />
-          <Flat color={color} roughness={0.7} />
+          <TexMat tex={stoneT} color={color} bump={0.01} rough={0.85} />
         </mesh>
       ))}
     </group>
@@ -181,12 +186,13 @@ function Horizon({ sunset }: { sunset: boolean }) {
 }
 
 function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; ground: string; path: string }) {
+  const groundT = useMemo(() => grassTex([110, 135], false), []);
   return (
     <group>
       {/* Sol immense : ses bords se perdent dans la brume, jamais visibles */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, -PATH_LENGTH / 2]} receiveShadow>
         <planeGeometry args={[260, 320]} />
-        <Flat color={ground} roughness={0.95} />
+        <TexMat tex={groundT} color={ground} bump={0.01} rough={0.95} />
       </mesh>
       <Tiles curve={curve} color={path} />
     </group>
@@ -237,6 +243,29 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
           case "bench": return <Bench key={i} position={it.pos} rotation={it.rot} />;
         }
       })}
+    </group>
+  );
+}
+
+/**
+ * Herbe animée : bande de premier plan (côté caméra), abords entre les pièces, et gazon court sur le terrain de foot.
+ * Coordonnées monde : le chemin suit -z ; les pièces sont côté +x, la caméra côté -x.
+ */
+function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
+  const { areas, exclude, pitch } = useMemo(() => {
+    const rooms = chapters.map((c) => [-2.8, 10.2, -(c.at + c.length + 0.7), -(c.at - 0.7)] as [number, number, number, number]);
+    const foot = chapters.find((c) => c.id === "foot")!;
+    return {
+      areas: [[-10, -0.75, -PATH_LENGTH - 2, 3], [0.75, 12, -PATH_LENGTH - 2, 3]] as [number, number, number, number][],
+      exclude: rooms,
+      pitch: [[-2.5, 9.8, -(foot.at + foot.length + 0.5), -(foot.at - 0.5)]] as [number, number, number, number][],
+    };
+  }, []);
+  const pitchEx = useMemo(() => [[-0.75, 0.75, -200, 10]] as [number, number, number, number][], []);
+  return (
+    <group>
+      <Grass areas={areas} exclude={exclude} count={mobile ? 9000 : 42000} base={sunset ? "#557A45" : "#6A9E57"} tip={sunset ? "#B7BE78" : "#BFDD8C"} height={0.17} />
+      <Grass areas={pitch} exclude={pitchEx} count={mobile ? 4000 : 20000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />
     </group>
   );
 }

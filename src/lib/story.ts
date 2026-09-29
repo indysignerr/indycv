@@ -22,12 +22,12 @@ export type Chapter = {
 
 const b = (fr: string, en: string): Bi => ({ fr, en });
 
-export const PATH_LENGTH = 100;
+export const PATH_LENGTH = 97;
 
 /** Un chapitre = une expérience = un diorama sur l'île. */
 export const chapters: Chapter[] = [
   {
-    id: "tennis", at: 8, length: 10, clip: "idle",
+    id: "tennis", at: 1.5, length: 10, clip: "idle",
     day:    { accent: "#D6E23A", panel: "rgba(23,52,40,0.78)", ink: "#F3F7EA", floor: "#C2673B", wall: "#E8DED2", sky: "#BFE3F5", fog: "#DDF0F8" },
     sunset: { accent: "#F0F05A", panel: "rgba(30,26,40,0.82)", ink: "#F3F7EA", floor: "#9E4F2C", wall: "#B9AE9E", sky: "#F2A26B", fog: "#F6C79A" },
     label: b("Chapitre 1 · Enfance", "Chapter 1 · Childhood"),
@@ -36,7 +36,7 @@ export const chapters: Chapter[] = [
     text: b("Six ans de compétition, plusieurs entraînements par semaine. On y apprend à perdre un point et à rejouer le suivant sans trembler.", "Six years of competition, several sessions a week. You learn to lose a point and play the next one without flinching."),
   },
   {
-    id: "foot", at: 26, length: 10, clip: "idle",
+    id: "foot", at: 19.5, length: 10, clip: "idle",
     day:    { accent: "#5FE08A", panel: "rgba(20,44,30,0.78)", ink: "#EEFBF2", floor: "#4CA455", wall: "#F1F3EE", sky: "#C4E6F7", fog: "#E0F1F9" },
     sunset: { accent: "#8CF5A8", panel: "rgba(24,26,34,0.82)", ink: "#EEFBF2", floor: "#3E8546", wall: "#B9B2A8", sky: "#F09E6A", fog: "#F5C69E" },
     label: b("Chapitre 2 · Le collectif", "Chapter 2 · Team"),
@@ -45,7 +45,7 @@ export const chapters: Chapter[] = [
     text: b("Huit ans en club. Le foot, c'est apprendre à jouer pour les autres, à parler sur le terrain, à accepter la décision du coach.", "Eight years in a club. Football is learning to play for others, to talk on the pitch, to accept the coach's call."),
   },
   {
-    id: "lycee", at: 44, length: 9, clip: "idle",
+    id: "lycee", at: 37.5, length: 9, clip: "idle",
     day:    { accent: "#F5B942", panel: "rgba(40,34,26,0.8)", ink: "#FFF7E6", floor: "#B9B7B2", wall: "#F6F4EF", sky: "#CFE3F2", fog: "#E4EFF6" },
     sunset: { accent: "#FFC85C", panel: "rgba(30,24,22,0.84)", ink: "#FFF7E6", floor: "#8E8B85", wall: "#CFC9C0", sky: "#EE9C6C", fog: "#F3C4A0" },
     label: b("Chapitre 3 · Le lycée", "Chapter 3 · High school"),
@@ -54,7 +54,7 @@ export const chapters: Chapter[] = [
     text: b("Bac maths-physique au lycée Simone Veil. Le goût des modèles, des démonstrations propres et des résultats vérifiables.", "Maths & physics baccalaureate at Lycée Simone Veil. A taste for models, clean proofs and verifiable results."),
   },
   {
-    id: "concertae", at: 60, length: 9, clip: "idle",
+    id: "concertae", at: 53.5, length: 9, clip: "idle",
     day:    { accent: "#4D86FF", panel: "rgba(24,30,46,0.8)", ink: "#EEF3FF", floor: "#C9A57A", wall: "#F2EFE8", sky: "#CFE0F2", fog: "#E3EDF6" },
     sunset: { accent: "#8FB0FF", panel: "rgba(18,20,32,0.84)", ink: "#EEF3FF", floor: "#9A7A56", wall: "#C4BDB0", sky: "#EA986C", fog: "#F1C2A0" },
     label: b("Chapitre 4 · Concertae", "Chapter 4 · Concertae"),
@@ -63,7 +63,7 @@ export const chapters: Chapter[] = [
     text: b("Un an d'alternance à Cannes (2025-2026) : Cegid, Pennylane, TVA, bilans et même un bilan de fusion. On ne rend pas un bilan à peu près.", "One year of apprenticeship in Cannes (2025-2026): Cegid, Pennylane, VAT, balance sheets and even a merger balance sheet. You don't hand in an approximate balance sheet."),
   },
   {
-    id: "indysigner", at: 76, length: 10, clip: "idle",
+    id: "indysigner", at: 69.5, length: 10, clip: "idle",
     day:    { accent: "#C8694F", panel: "rgba(19,41,75,0.86)", ink: "#F5F1EA", floor: "#D9BE94", wall: "#F4F1EA", sky: "#D8D3E6", fog: "#E7E3EF" },
     sunset: { accent: "#E08A6E", panel: "rgba(14,24,46,0.88)", ink: "#F5F1EA", floor: "#A88E6A", wall: "#C9C2B6", sky: "#D98A6E", fog: "#E9B49A" },
     label: b("Chapitre 5 · Indysigner", "Chapter 5 · Indysigner"),
@@ -78,7 +78,7 @@ export const chapters: Chapter[] = [
     ],
   },
   {
-    id: "albert", at: 90, length: 8, clip: "idle",
+    id: "albert", at: 85.5, length: 9, clip: "idle",
     day:    { accent: "#6D8BFF", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#B9B7B2", wall: "#F6F4EF", sky: "#CADFF5", fog: "#E1ECF8" },
     sunset: { accent: "#9DB0FF", panel: "rgba(14,16,32,0.86)", ink: "#F2F4FF", floor: "#8E8B85", wall: "#CFC9C0", sky: "#E6926B", fog: "#EFBE9F" },
     label: b("Chapitre 6 · Aujourd'hui", "Chapter 6 · Today"),
