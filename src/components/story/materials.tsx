@@ -1,11 +1,31 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 /** Matériau plat, doux, cohérent partout : la signature visuelle du diorama. */
-export function Flat({ color, emissive, emissiveIntensity = 0, roughness = 0.95, flat = false }: { color: string; emissive?: string; emissiveIntensity?: number; roughness?: number; flat?: boolean }) {
-  return <meshStandardMaterial color={color} roughness={roughness} metalness={0} emissive={emissive ?? "#000000"} emissiveIntensity={emissiveIntensity} flatShading={flat} />;
+export function Flat({ color, emissive, emissiveIntensity = 0, roughness = 0.8, flat = false }: { color: string; emissive?: string; emissiveIntensity?: number; roughness?: number; flat?: boolean }) {
+  return <meshStandardMaterial color={color} roughness={roughness} metalness={0} envMapIntensity={0.55} emissive={emissive ?? "#000000"} emissiveIntensity={emissiveIntensity} flatShading={flat} />;
+}
+
+/** Nuages plats et lents, très loin, pour donner de la vie au ciel. */
+export function Clouds({ sunset }: { sunset: boolean }) {
+  const items = useMemo(() => Array.from({ length: 9 }, (_, i) => ({ x: -30 + (i * 37) % 70, y: 14 + (i * 5) % 9, z: -15 - i * 11, s: 1.6 + (i * 7) % 5 * 0.4, sp: 0.15 + (i % 3) * 0.06 })), []);
+  const g = useRef<THREE.Group>(null);
+  useFrame((_, dt) => { if (g.current) g.current.children.forEach((c, i) => { c.position.x += items[i].sp * dt; if (c.position.x > 45) c.position.x = -45; }); });
+  const color = sunset ? "#FFD8C0" : "#FFFFFF";
+  return (
+    <group ref={g}>
+      {items.map((it, i) => (
+        <group key={i} position={[it.x, it.y, it.z]} scale={it.s}>
+          {[[0, 0, 0, 1.1], [1.0, 0.15, 0.2, 0.8], [-0.9, 0.1, -0.1, 0.75], [0.3, 0.45, -0.2, 0.7]].map(([x, y, z, r], k) => (
+            <mesh key={k} position={[x, y, z]}><sphereGeometry args={[r, 12, 10]} /><meshStandardMaterial color={color} roughness={1} fog={false} /></mesh>
+          ))}
+        </group>
+      ))}
+    </group>
+  );
 }
 
 /** Ciel en dégradé : grande sphère inversée, couleur haut/bas interpolée. */

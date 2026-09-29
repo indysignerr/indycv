@@ -2,13 +2,13 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { SoftShadows } from "@react-three/drei";
+import { Environment, Lightformer, SoftShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, outside, PATH_LENGTH, type Clip } from "@/lib/story";
 import { Character } from "./character";
 import { Diorama } from "./rooms";
-import { Flat, GradientSky } from "./materials";
+import { Clouds, Flat, GradientSky } from "./materials";
 import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 
 /** Le chemin : un ruban en S sur l'île. */
@@ -92,6 +92,13 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
   return (
     <>
       <GradientSky top={o.sky} bottom={o.fog} />
+      <Clouds sunset={sunset} />
+      {/* Éclairage d'ambiance synthétique (studio) : reflets doux sur les matières plates, sans HDRI */}
+      <Environment resolution={128} frames={1}>
+        <Lightformer intensity={sunset ? 2.2 : 1.6} color={sunset ? "#FFB27A" : "#FFFFFF"} position={[0, 8, -6]} scale={[14, 6, 1]} />
+        <Lightformer intensity={0.7} color={sunset ? "#FFD9B0" : "#DCEBFF"} position={[-8, 3, 4]} scale={[6, 10, 1]} rotation={[0, Math.PI / 3, 0]} />
+        <Lightformer intensity={0.4} color={sunset ? "#8A5A4A" : "#BFD7A8"} position={[0, -5, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[20, 20, 1]} />
+      </Environment>
       <fog ref={fogRef} attach="fog" args={[o.fog, 14, 46]} />
       <hemisphereLight args={[sunset ? "#FFC79A" : "#DCEBFF", sunset ? "#6B5A4A" : "#7A8F6A", sunset ? 0.9 : 1.1]} />
       <directionalLight ref={sun} intensity={sunset ? 2.2 : 2.6} color={sunset ? "#FFB27A" : "#FFF6E8"} castShadow={!mobile}
@@ -152,9 +159,9 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
   return (
     <group>
       {items.map((it, i) => (
-        <mesh key={i} position={[it.p.x, 0.02, it.p.z]} quaternion={it.q} receiveShadow>
-          <boxGeometry args={[1.1, 0.06, 0.72]} />
-          <Flat color={color} />
+        <mesh key={i} position={[it.p.x, 0.02, it.p.z]} quaternion={it.q} receiveShadow castShadow>
+          <boxGeometry args={[1.1, 0.07, 0.72]} />
+          <Flat color={color} roughness={0.7} />
         </mesh>
       ))}
     </group>

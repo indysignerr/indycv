@@ -46,6 +46,7 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
           <Preload all />
         </Suspense>
       </Canvas>
+      <div className="story-grade" aria-hidden />
     </div>
   );
 }
