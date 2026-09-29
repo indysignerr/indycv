@@ -8,8 +8,8 @@ import { scroll } from "@/lib/scroll-progress";
 import { chapters, outside, PATH_LENGTH } from "@/lib/story";
 import type { Lang } from "@/lib/content";
 import { Character } from "./character";
+import { Mountains, PhysicalSky } from "./backdrop";
 import { Diorama } from "./rooms";
-import { Clouds, Flat, GradientSky } from "./materials";
 import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 import { Grass } from "./grass";
 import { TexMat } from "./detail";
@@ -177,9 +177,9 @@ export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boole
 
   return (
     <>
-      <GradientSky top={o.sky} bottom={o.fog} />
-      <Clouds sunset={sunset} />
-      <Horizon sunset={sunset} />
+      {/* Décor lointain réaliste : ciel physique avec nuages, chaîne de montagnes en relief */}
+      <PhysicalSky sunset={sunset} mobile={mobile} />
+      <Mountains sunset={sunset} mobile={mobile} />
       {/* Éclairage d'ambiance synthétique (studio) : reflets doux sur les matières plates, sans HDRI */}
       <Environment resolution={128} frames={1}>
         <Lightformer intensity={sunset ? 2.2 : 1.6} color={sunset ? "#FFB27A" : "#FFFFFF"} position={[0, 8, -6]} scale={[14, 6, 1]} />
@@ -241,45 +241,6 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
     </instancedMesh>
   );
 }
-
-/** Horizon : trois anneaux de collines en silhouette centrés sur la caméra (jamais dans la scène). */
-const Horizon = memo(function Horizon({ sunset }: { sunset: boolean }) {
-  const g = useRef<THREE.Group>(null);
-  const { camera } = useThree();
-  const rings = useMemo(() => [0, 1, 2].map((r) => {
-    const R = 52 + r * 8, n = 96, pos: number[] = [], idx: number[] = [];
-    for (let i = 0; i <= n; i++) {
-      const a = (i / n) * Math.PI * 2;
-      const hgt = 1 + r * 1.6 + Math.abs(Math.sin(a * 5 + r * 2.1) * 2.2 + Math.sin(a * 13 + r) * 1.1) * (1 + r * 0.35);
-      const x = Math.cos(a) * R, z = Math.sin(a) * R;
-      pos.push(x, -8, z, x, hgt, z);
-      if (i < n) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-    geo.setIndex(idx);
-    return { geo, r };
-  }), []);
-  useFrame(() => { if (g.current) g.current.position.set(camera.position.x, 0, camera.position.z); });
-  const cols = sunset ? ["#D49A80", "#B07A6A", "#8A5E58"] : ["#BCD3C2", "#9DBBA6", "#7FA38C"];
-  return (
-    <group ref={g}>
-      {rings.map(({ geo, r }) => (
-        <mesh key={r} geometry={geo} frustumCulled={false}>
-          <meshBasicMaterial color={cols[r]} fog={false} toneMapped={false} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-      <mesh position={sunset ? [30, 14, -66] : [-26, 34, -58]}>
-        <circleGeometry args={[sunset ? 5 : 3.2, 48]} />
-        <meshBasicMaterial color={sunset ? "#FFD5A0" : "#FFFBEF"} fog={false} toneMapped={false} />
-      </mesh>
-      <mesh position={sunset ? [30, 14, -66.1] : [-26, 34, -58.1]}>
-        <circleGeometry args={[sunset ? 11 : 8, 48]} />
-        <meshBasicMaterial color={sunset ? "#FFC08A" : "#FFFFFF"} transparent opacity={sunset ? 0.35 : 0.28} fog={false} toneMapped={false} depthWrite={false} />
-      </mesh>
-    </group>
-  );
-});
 
 const Island = memo(function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; ground: string; path: string }) {
   const groundT = useMemo(() => grassTex([110, 135], false), []);

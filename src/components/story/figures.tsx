@@ -8,6 +8,7 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { Clip } from "@/lib/story";
 import { scroll } from "@/lib/scroll-progress";
+import { newArmPose, spreadArm } from "./character";
 
 const MODEL = "/models/indy.glb";
 
@@ -186,6 +187,7 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
   // Bras écartés du corps (même correction que le personnage), dosée selon l'animation
   const arms = useMemo(() => ["mixamorigLeftArm", "mixamorigRightArm"].map((n) => root.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o), [root]);
   const abd = useMemo(() => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -(ARM_BY_CLIP[clip] ?? 0.1)), [clip]);
+  const armPoses = useMemo(() => arms.map(() => newArmPose()), [arms]);
   useFrame(({ camera }, dt) => {
     const g = group.current;
     if (!g) return;
@@ -195,7 +197,7 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
     if (root.visible === far) root.visible = !far;
     if (far) return;
     mixer.update(Math.min(dt, 0.1));
-    for (const b of arms) b.quaternion.multiply(abd);
+    arms.forEach((b, i) => spreadArm(b, armPoses[i], abd));
     const a = action.current;
     if (clockId && a) scroll.clocks[clockId] = (a.time % a.getClip().duration) / a.getClip().duration;
   });

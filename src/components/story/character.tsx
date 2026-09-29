@@ -9,6 +9,19 @@ import { scroll } from "@/lib/scroll-progress";
 
 const MODEL = "/models/indy.glb";
 const FADE = 0.35;
+/**
+ * Applique l'écart au bras SANS l'empiler : le mélangeur d'animation ne réécrit un os que si sa valeur animée a changé
+ * (à l'arrêt, souvent non) ; on garde donc la pose d'origine et on la corrige à chaque image.
+ */
+export type ArmPose = { base: THREE.Quaternion; applied: THREE.Quaternion; has: boolean };
+export const newArmPose = (): ArmPose => ({ base: new THREE.Quaternion(), applied: new THREE.Quaternion(), has: false });
+export function spreadArm(bone: THREE.Object3D, st: ArmPose, offset: THREE.Quaternion) {
+  if (!(st.has && bone.quaternion.equals(st.applied))) st.base.copy(bone.quaternion); // nouvelle pose écrite par l'animation
+  bone.quaternion.copy(st.base).multiply(offset);
+  st.applied.copy(bone.quaternion);
+  st.has = true;
+}
+
 /** Écart des bras (rad, autour de l'axe X local de l'os du bras) : au repos et en marchant. */
 const ARM_IDLE = 0.12;
 const ARM_WALK = 0.24;
@@ -31,7 +44,7 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
   // Bras écartés du corps : les animations Mixamo sont faites pour un buste plus fin que ce modèle,
   // sans correction les bras traversent le torse (surtout pendant la marche, où ils balancent en croisant).
   const arms = useMemo(() => ["mixamorigLeftArm", "mixamorigRightArm"].map((n) => scene.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o), [scene]);
-  const abd = useRef({ angle: ARM_IDLE, q: new THREE.Quaternion(), x: new THREE.Vector3(1, 0, 0) });
+  const abd = useRef({ angle: ARM_IDLE, q: new THREE.Quaternion(), x: new THREE.Vector3(1, 0, 0), keep: [] as ArmPose[] });
 
   // Outil de réglage (développement) : accès au squelette depuis la console
   useEffect(() => {
@@ -83,7 +96,7 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
     const A = abd.current;
     A.angle += ((walkingRef.current ? ARM_WALK : ARM_IDLE) - A.angle) * Math.min(1, dt * 4);
     A.q.setFromAxisAngle(A.x, -A.angle);
-    for (const a of arms) a.quaternion.multiply(A.q);
+    arms.forEach((a, i) => spreadArm(a, (A.keep[i] ??= newArmPose()), A.q));
   });
 
   return (
