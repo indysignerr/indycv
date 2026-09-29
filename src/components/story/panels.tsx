@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Download, Mail } from "lucide-react";
+import { ArrowUpRight, Download, Mail, Moon, Sun } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, storyUi, t } from "@/lib/story";
-import { SITE } from "@/lib/content";
+import { SITE, tr, ui } from "@/lib/content";
 
 /**
  * Panneaux latéraux : un par chapitre, affiché seulement quand le personnage est dans la pièce.
  * Toujours à droite (desktop) ou en bas (mobile) : jamais devant le personnage.
  */
 export function Panels() {
-  const { lang, theme } = useApp();
+  const { lang, theme, setLang, toggleTheme } = useApp();
   const [chapter, setChapter] = useState(-1);
   const [progress, setProgress] = useState(0);
 
@@ -49,6 +49,15 @@ export function Panels() {
         <div className="h-1 w-32 overflow-hidden rounded-full bg-white/25">
           <div className="h-full rounded-full transition-[width] duration-200" style={{ width: `${progress * 100}%`, background: "var(--story-accent, rgb(var(--accent)))" }} />
         </div>
+      </div>
+      {/* Langue + jour/soir, toujours accessibles */}
+      <div className="pointer-events-auto absolute right-4 top-3 flex items-center gap-1 rounded-full bg-black/25 px-1 backdrop-blur-md sm:right-8 sm:top-5">
+        <button type="button" onClick={() => setLang(lang === "fr" ? "en" : "fr")} aria-label={tr(ui.langSwitch, lang)} className="flex h-11 min-w-[44px] items-center justify-center rounded-full px-3 font-mono text-xs uppercase tracking-widest text-white/90 hover:text-white">
+          {lang === "fr" ? "EN" : "FR"}
+        </button>
+        <button type="button" onClick={toggleTheme} aria-label={tr(theme === "dark" ? ui.theme.toLight : ui.theme.toDark, lang)} className="flex h-11 w-11 items-center justify-center rounded-full text-white/90 hover:text-white">
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
       </div>
       <AnimatePresence>
         {chapter < 0 && progress < 0.02 && (

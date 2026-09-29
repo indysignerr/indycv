@@ -40,7 +40,7 @@ export function Diorama({ curve, chapter, palette, active, sunset }: { curve: TH
             <boxGeometry args={[0.3, 3.2, len + 1.5]} />
             <Flat color={palette.wall} />
           </mesh>
-          <mesh position={[-1.5, 1.6, -(len + 1.5) / 2 + 0.15]} castShadow receiveShadow>
+          <mesh position={[-1.5, 1.6, (len + 1.5) / 2 - 0.15]} castShadow receiveShadow>
             <boxGeometry args={[wid, 3.2, 0.3]} />
             <Flat color={palette.wall} />
           </mesh>
@@ -66,7 +66,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
           <group position={[-3.6, 0, 0]}><TennisCourt width={5.5} length={len - 1} color={sunset ? "#2E6A4A" : "#3F8F63"} /></group>
           <TennisBall position={[-0.9, 0.07, 1.6]} />
           {/* Grillage bas côté fond */}
-          {[-1, 1].map((s) => <mesh key={s} position={[-3.6, 0.55, s * (len / 2 + 0.2)]}><boxGeometry args={[6.5, 1.1, 0.04]} /><meshStandardMaterial color="#DDE6DF" transparent opacity={0.35} roughness={1} /></mesh>)}
+          {[1].map((s) => <mesh key={s} position={[-3.6, 0.55, s * (len / 2 + 0.2)]}><boxGeometry args={[6.5, 1.1, 0.04]} /><meshStandardMaterial color="#DDE6DF" transparent opacity={0.35} roughness={1} /></mesh>)}
           <Tree position={[L + 1.2, 0, -len / 2 + 1]} scale={1.2} color={sunset ? "#4C8A5A" : "#5FA86A"} />
           <Tree position={[L + 2.4, 0, len / 2 - 0.5]} scale={0.9} color={sunset ? "#4C8A5A" : "#6DB57A"} />
         </group>
@@ -102,7 +102,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
           <Chair position={[-3.5, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} />
           <Desk position={[-4.4, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
           <Chair position={[-3.5, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} />
-          <Bookshelf position={[-2.0, 0, -len / 2 - 0.35]} books={[a, "#E9E4D6", "#2A4BD7", "#F5B942", "#C9C4BA"]} />
+          <Bookshelf position={[-2.0, 0, len / 2 + 0.35]} books={[a, "#E9E4D6", "#2A4BD7", "#F5B942", "#C9C4BA"]} />
           <Lamp position={[-3.6, 2.6, -0.2]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
         </group>
       );

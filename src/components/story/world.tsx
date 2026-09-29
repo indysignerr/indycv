@@ -146,12 +146,13 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
     let seed = 7;
     const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     for (let d = 2; d < PATH_LENGTH - 2; d += 1.6) {
-      const inRoom = chapters.some((c) => d > c.at - 2 && d < c.at + c.length + 2);
+      const inRoom = chapters.some((c) => d > c.at - 4 && d < c.at + c.length + 4);
       const u = d / curve.getLength();
       const p = curve.getPointAt(u), t = curve.getTangentAt(u);
       const side = new THREE.Vector3().crossVectors(up, t).normalize();
-      const sgn = inRoom ? 1 : rnd() > 0.35 ? -1 : 1; // dans un diorama, seulement à droite (côté caméra, en arrière-plan bas)
-      const off = (inRoom ? 6.5 : 3.2) + rnd() * 6;
+      if (inRoom) continue; // rien autour des dioramas : la scène reste épurée
+      const sgn = rnd() > 0.35 ? -1 : 1;
+      const off = 3.2 + rnd() * 7;
       const q = p.clone().addScaledVector(side, sgn * off);
       out.push({ kind: rnd() > 0.3 ? "tree" : "rock", pos: [q.x, 0, q.z], s: 0.7 + rnd() * 0.8 });
     }
@@ -161,7 +162,7 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
     <group>
       {items.map((it, i) => it.kind === "tree"
         ? <Tree key={i} position={it.pos} scale={it.s} color={sunset ? ["#4C8A5A", "#5C9A5A"][i % 2] : ["#5FA86A", "#6DB57A", "#4E9A5F"][i % 3]} />
-        : <Rock key={i} position={it.pos} scale={it.s} color={sunset ? "#8A8580" : "#9AA3A8"} />)}
+        : <Rock key={i} position={[it.pos[0], -0.1, it.pos[2]]} scale={it.s} color={sunset ? "#8A8580" : "#9AA3A8"} />)}
     </group>
   );
 }
