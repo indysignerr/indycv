@@ -57,24 +57,27 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     curve.getPointAt(u, tmp.p);
     curve.getTangentAt(u, tmp.t);
     tmp.side.crossVectors(tmp.up, tmp.t).normalize();
-    let camChapter = -1;
-    for (let i = 0; i < chapters.length; i++) {
-      const cc = chapters[i];
-      if (dist.current >= cc.at + 0.6 && dist.current <= cc.at + cc.length - 1.4) camChapter = i;
+    // 1) Pose « suivi » : derrière-droite du personnage
+    tmp.cam.copy(tmp.p).addScaledVector(tmp.t, mobile ? -6.0 : -5.0).addScaledVector(tmp.side, mobile ? 2.6 : 5.0).setY(mobile ? 3.6 : 3.4);
+    tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
+    // 2) Pose « de face » : au milieu d'une pièce, la caméra pivote complètement à droite et cadre la pièce de face
+    let k = 0, faceMid = 0;
+    for (const cc of chapters) {
+      const mid = cc.at + cc.length / 2;
+      const x = 1 - Math.abs(dist.current - mid) / (cc.length / 2 + 1.5);
+      const kk = THREE.MathUtils.smoothstep(x, 0.1, 0.6);
+      if (kk > k) { k = kk; faceMid = mid; }
     }
-    const inRoom = camChapter >= 0;
-    // Dehors : derrière-droite. Dans une pièce : la caméra pivote sur la droite et regarde la pièce de côté.
-    const c = camChapter >= 0 ? chapters[camChapter] : null;
-    const roomMid = c ? c.at + c.length / 2 : 0;
-    const back = inRoom ? (mobile ? 4.5 : 3.8) : mobile ? 6.0 : 5.0;
-    const lat = inRoom ? (mobile ? 9.0 : 7.2) : mobile ? 2.6 : 5.0;
-    const h = inRoom ? (mobile ? 3.6 : 2.8) : mobile ? 3.6 : 3.4;
-    const anchor = inRoom ? curve.getPointAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.p;
-    const anchorT = inRoom ? curve.getTangentAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.t;
-    const anchorS = new THREE.Vector3().crossVectors(tmp.up, anchorT).normalize();
-    tmp.cam.copy(anchor).addScaledVector(anchorT, inRoom ? (dist.current - roomMid) * 0.35 - back : -back).addScaledVector(anchorS, lat).setY(h);
-    if (inRoom) tmp.look.copy(tmp.p).lerp(anchor, 0.6).addScaledVector(anchorT, 1.2).addScaledVector(anchorS, -2.8).setY(mobile ? 0.5 : 1.2);
-    else tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
+    if (k > 0) {
+      const um = THREE.MathUtils.clamp(faceMid / L, 0, 1);
+      const ap = curve.getPointAt(um), at = curve.getTangentAt(um);
+      const as = new THREE.Vector3().crossVectors(tmp.up, at).normalize();
+      const drift = (dist.current - faceMid) * 0.25; // léger suivi latéral du personnage
+      const faceCam = ap.clone().addScaledVector(at, drift).addScaledVector(as, mobile ? 13 : 8.8).setY(mobile ? 3.4 : 2.7);
+      const faceLook = ap.clone().addScaledVector(at, drift * 0.6).addScaledVector(as, -4.6).setY(mobile ? 1.0 : 1.35);
+      tmp.cam.lerp(faceCam, k);
+      tmp.look.lerp(faceLook, k);
+    }
     camera.position.lerp(tmp.cam, snap.current ? 1 : Math.min(1, dt * 1.5));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
