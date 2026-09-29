@@ -226,6 +226,8 @@ export function UmpireChair({ position, rotationY = 0 }: { position: V3; rotatio
       <mesh position={[0, 1.8, 0]} castShadow><boxGeometry args={[0.6, 0.06, 0.55]} /><Flat color="#2E5A3F" /></mesh>
       <mesh position={[0, 2.1, -0.25]} castShadow><boxGeometry args={[0.6, 0.55, 0.05]} /><Flat color="#2E5A3F" /></mesh>
       <mesh position={[0, 2.25, -0.22]}><planeGeometry args={[0.5, 0.12]} /><Flat color="#F4F1EA" /></mesh>
+      {/* Repose-pieds */}
+      <mesh position={[0, 1.3, 0.4]} castShadow><boxGeometry args={[0.6, 0.04, 0.26]} /><Flat color="#2E5A3F" /></mesh>
       <Blob position={[0, 0, 0]} size={[1.1, 1.1]} opacity={0.4} />
     </group>
   );

@@ -9,6 +9,7 @@ import { hotspots } from "@/lib/hotspots";
 import { scroll } from "@/lib/scroll-progress";
 import type { Lang } from "@/lib/content";
 import { Flat } from "./materials";
+import { Figure, Racket } from "./figures";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
   BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
@@ -247,6 +248,9 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <CourtFence position={[L + 0.2, 0, 0]} rotationY={Math.PI / 2} length={len + 0.8} sunset={sunset} label="TENNIS CLUB · COURT 3" />
           <CourtFence position={[-5, 0, -len / 2 - 0.2]} length={9.2} sunset={sunset} />
           <UmpireChair position={[-4.5, 0, 3.35]} rotationY={Math.PI} />
+          {/* Figurants (scène de référence) : l'adversaire en fond de court, l'arbitre sur sa chaise */}
+          <Figure clip="tennis-forehand" position={[-7.7, 0, 0.6]} rotationY={Math.PI / 2} hand={<Racket />} />
+          <Figure clip="sit-idle" position={[-4.5, 1.33, 3.35]} rotationY={Math.PI} offset={0.4} />
           <CourtBench position={[-6.4, 0, 3.9]} rotationY={Math.PI} />
           <CourtBench position={[-2.6, 0, 3.9]} rotationY={Math.PI} towel="#2A4BD7" />
           <BallBasket position={[-1.2, 0, -2.6]} />
