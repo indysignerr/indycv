@@ -9,6 +9,9 @@ import { scroll } from "@/lib/scroll-progress";
 
 const MODEL = "/models/indy.glb";
 const FADE = 0.35;
+/** Écart des bras (rad, autour de l'axe X local de l'os du bras) : au repos et en marchant. */
+const ARM_IDLE = 0.12;
+const ARM_WALK = 0.24;
 
 /**
  * Personnage rigué (Mixamo). Il marche le long de `curve` selon `distance` (m),
@@ -25,6 +28,15 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
   const { actions } = useAnimations(animations, group);
   const current = useRef<Clip | null>(null);
   const tmp = useMemo(() => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), q: new THREE.Quaternion(), m: new THREE.Matrix4(), up: new THREE.Vector3(0, 1, 0) }), []);
+  // Bras écartés du corps : les animations Mixamo sont faites pour un buste plus fin que ce modèle,
+  // sans correction les bras traversent le torse (surtout pendant la marche, où ils balancent en croisant).
+  const arms = useMemo(() => ["mixamorigLeftArm", "mixamorigRightArm"].map((n) => scene.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o), [scene]);
+  const abd = useRef({ angle: ARM_IDLE, q: new THREE.Quaternion(), x: new THREE.Vector3(1, 0, 0) });
+
+  // Outil de réglage (développement) : accès au squelette depuis la console
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") (window as unknown as { __indyScene: THREE.Object3D }).__indyScene = scene;
+  }, [scene]);
 
   useEffect(() => {
     scene.traverse((o) => {
@@ -39,7 +51,7 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
     });
   }, [scene]);
 
-  useFrame(() => {
+  useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
     // Marche / arrêt : fondu entre les deux clips, sans passer par React
@@ -67,6 +79,11 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
     if (w && walkingRef.current) w.timeScale = THREE.MathUtils.clamp(Math.abs(speedRef.current) / 1.4, 0.6, 1.8) * Math.sign(speedRef.current || 1);
     // Phase du pas, pour caler le bruit des pas (son d'ambiance)
     if (w) { const d = w.getClip().duration; scroll.walkPhase = (((w.time % d) + d) % d) / d; }
+    // Après l'animation (le mélangeur a déjà posé le squelette) : on écarte le haut des bras
+    const A = abd.current;
+    A.angle += ((walkingRef.current ? ARM_WALK : ARM_IDLE) - A.angle) * Math.min(1, dt * 4);
+    A.q.setFromAxisAngle(A.x, -A.angle);
+    for (const a of arms) a.quaternion.multiply(A.q);
   });
 
   return (

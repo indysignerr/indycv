@@ -115,6 +115,9 @@ export const CLAY: FigureTint = { skin: "#EAD9C6", top: "#F7F2EA", sleeve: "#CFC
 export const CLAY_WARM: FigureTint = { ...CLAY, top: "#EBD9C2", sleeve: "#C6AE92", bottom: "#A99A88", hair: "#6F5F50" };
 export const CLAY_COOL: FigureTint = { ...CLAY, top: "#E6EAF0", sleeve: "#B9C0CB", bottom: "#9FA6B0", hair: "#9A8F84" };
 
+/** Écart des bras par animation (rad) : les clips Mixamo font traverser le torse à ce modèle plus large. */
+const ARM_BY_CLIP: Partial<Record<Clip, number>> = { idle: 0.16, "look-around": 0.1, "sit-idle": 0.1, typing: 0.06, "write-board": 0.06, celebrate: 0.02, "tennis-forehand": 0.05 };
+
 /** Sur mobile, seuls les figurants « essentiels » sont dessinés (un par lieu). */
 const LITE = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
 
@@ -180,6 +183,9 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
 
   const group = useRef<THREE.Group>(null);
   const tmp = useMemo(() => new THREE.Vector3(), []);
+  // Bras écartés du corps (même correction que le personnage), dosée selon l'animation
+  const arms = useMemo(() => ["mixamorigLeftArm", "mixamorigRightArm"].map((n) => root.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o), [root]);
+  const abd = useMemo(() => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -(ARM_BY_CLIP[clip] ?? 0.1)), [clip]);
   useFrame(({ camera }, dt) => {
     const g = group.current;
     if (!g) return;
@@ -189,6 +195,7 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
     if (root.visible === far) root.visible = !far;
     if (far) return;
     mixer.update(Math.min(dt, 0.1));
+    for (const b of arms) b.quaternion.multiply(abd);
     const a = action.current;
     if (clockId && a) scroll.clocks[clockId] = (a.time % a.getClip().duration) / a.getClip().duration;
   });

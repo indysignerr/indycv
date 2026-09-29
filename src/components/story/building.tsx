@@ -35,17 +35,19 @@ export type BuildingStyle = {
   shutters?: string;
   door: string;
   glass: { w: number; h: number };
+  /** Fenêtres de la façade d'entrée (x des centres). */
+  windows: number[];
 };
 
 export const STYLES: Record<string, BuildingStyle> = {
   // Lycée : enduit beige, soubassement de pierre, tuiles rouges
-  lycee: { facade: "render", wall: "#E4D5B8", base: "#BDB3A3", roof: { kind: "gable", pitch: 0.5, tex: "tile", color: "#B65A3F" }, frame: "#F7F4EE", door: "#2E5FA8", glass: { w: 1.3, h: 1.7 } },
+  lycee: { facade: "render", wall: "#E4D5B8", base: "#BDB3A3", roof: { kind: "gable", pitch: 0.5, tex: "tile", color: "#B65A3F" }, frame: "#F7F4EE", door: "#2E5FA8", glass: { w: 1.3, h: 1.7 }, windows: [-8.2, -5.9, -3.6, 3.3] },
   // Cabinet à Cannes : enduit ocre, volets bleus, tuiles romaines, pente douce
-  concertae: { facade: "render", wall: "#E6B48A", base: "#C9A07C", roof: { kind: "gable", pitch: 0.36, tex: "tile", color: "#C4683F" }, frame: "#FFFFFF", shutters: "#6E9CC6", door: "#2F5E7E", glass: { w: 1.1, h: 1.5 } },
+  concertae: { facade: "render", wall: "#E6B48A", base: "#C9A07C", roof: { kind: "gable", pitch: 0.36, tex: "tile", color: "#C4683F" }, frame: "#FFFFFF", shutters: "#6E9CC6", door: "#2F5E7E", glass: { w: 1.1, h: 1.5 }, windows: [-8.1, -5.4, 3.4] },
   // La maison d'Indy : enduit crème, volets marine, ardoises, cheminée
-  indysigner: { facade: "render", wall: "#F0E7D8", base: "#D6CAB5", roof: { kind: "gable", pitch: 0.62, tex: "slate", color: "#58626F" }, frame: "#FFFFFF", shutters: "#1D3A66", door: "#1D3A66", glass: { w: 1.1, h: 1.4 } },
+  indysigner: { facade: "render", wall: "#F0E7D8", base: "#D6CAB5", roof: { kind: "gable", pitch: 0.62, tex: "slate", color: "#58626F" }, frame: "#FFFFFF", shutters: "#1D3A66", door: "#1D3A66", glass: { w: 1.1, h: 1.4 }, windows: [-8.1, -5.4, 3.4] },
   // Albert School : brique, grandes baies, toit-terrasse
-  albert: { facade: "brick", wall: "#FFFFFF", roof: { kind: "flat", color: "#9A9C9F" }, frame: "#2B2D33", door: "#2B2D33", glass: { w: 2.0, h: 2.3 } },
+  albert: { facade: "brick", wall: "#FFFFFF", roof: { kind: "flat", color: "#9A9C9F" }, frame: "#2B2D33", door: "#2B2D33", glass: { w: 2.0, h: 2.3 }, windows: [-7.9, -5.0, 3.4] },
 };
 
 /** Boîte dont les UV sont en mètres (les motifs gardent leur taille quelle que soit la dimension du mur). */
@@ -121,17 +123,22 @@ function SlidingDoor({ at, distanceRef, color }: { at: number; distanceRef: Reac
   );
 }
 
-/** Logo sur plaque (image) : fond clair, cadre fin. */
-function LogoPlaque({ url, width, position, rotationY }: { url: string; width: number; position: [number, number, number]; rotationY: number }) {
+/** Plaque murale de logo : liseré, fond et logo éclairés par la scène (le soir aussi), fixée par quatre entretoises. */
+function LogoPlaque({ url, width, position, rotationY, plate, border }: { url: string; width: number; position: [number, number, number]; rotationY: number; plate: string; border: string }) {
   const tex = useTexture(url);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
   const img = tex.image as { width: number; height: number } | undefined;
-  const h = width * (img ? img.height / img.width : 0.5);
+  const h = width * (img ? img.height / img.width : 0.3);
+  const pad = 0.07, W = width + 2 * pad, Hh = h + 2 * pad;
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh position={[0, 0, -0.02]}><boxGeometry args={[width + 0.14, h + 0.14, 0.04]} /><Flat color="#C9A45C" roughness={0.35} /></mesh>
-      <mesh position={[0, 0, 0.002]}><planeGeometry args={[width + 0.06, h + 0.06]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>
-      <mesh position={[0, 0, 0.006]}><planeGeometry args={[width, h]} /><meshBasicMaterial map={tex} transparent alphaTest={0.02} toneMapped={false} /></mesh>
+      <mesh position={[0, 0, 0.02]} castShadow><boxGeometry args={[W + 0.04, Hh + 0.04, 0.03]} /><Flat color={border} roughness={0.35} /></mesh>
+      <mesh position={[0, 0, 0.036]}><planeGeometry args={[W, Hh]} /><meshStandardMaterial color={plate} roughness={0.45} emissive={plate} emissiveIntensity={0.12} /></mesh>
+      <mesh position={[0, 0, 0.038]}><planeGeometry args={[width, h]} /><meshStandardMaterial map={tex} transparent alphaTest={0.05} roughness={0.45} emissive="#FFFFFF" emissiveMap={tex} emissiveIntensity={0.12} /></mesh>
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy], i) => (
+        <mesh key={i} position={[sx * (W / 2 - 0.035), sy * (Hh / 2 - 0.035), 0.042]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.014, 0.014, 0.012, 12]} /><meshStandardMaterial color="#D9D4C8" metalness={0.8} roughness={0.3} /></mesh>
+      ))}
     </group>
   );
 }
@@ -226,7 +233,7 @@ export function Building({ id, len, mid, distanceRef, sunset, interior, backInte
       )}
 
       {/* Fenêtres : façade d'entrée (regarde -z) et façade avant (regarde +x) */}
-      {(st.facade === "brick" ? [-7.9, -5.0, 3.4] : [-8.2, -5.9, -3.6, 3.3]).map((x) => (
+      {st.windows.map((x) => (
         <FacadeWindow key={`e${x}`} position={[x, st.glass.h > 2 ? 1.55 : 1.75, -Zo - 0.02]} rotationY={Math.PI} w={st.glass.w} h={st.glass.h} frame={st.frame} shutters={st.shutters} sunset={sunset} mullions={st.facade !== "brick"} />
       ))}
       {[-2.6, 2.6].map((z) => (
@@ -276,13 +283,13 @@ export function Building({ id, len, mid, distanceRef, sunset, interior, backInte
       )}
       {id === "concertae" && (
         <>
-          <LogoPlaque url="/logos/concertae.png" width={1.1} position={[-2.3, 1.75, -Zo - 0.04]} rotationY={Math.PI} />
+          <LogoPlaque url="/logos/concertae.png" width={1.0} position={[-2.75, 1.75, -Zo - 0.01]} rotationY={Math.PI} plate="#FFFFFF" border="#B8B4AB" />
           <Palm position={[-3.4, 0, -Zo - 1.4]} />
         </>
       )}
       {id === "indysigner" && (
         <>
-          <LogoPlaque url="/logos/indysigner.webp" width={0.62} position={[1.85, 1.65, -Zo - 0.04]} rotationY={Math.PI} />
+          <LogoPlaque url="/logos/indysigner-wordmark.webp" width={0.82} position={[-2.7, 1.7, -Zo - 0.01]} rotationY={Math.PI} plate="#FBF7F0" border="#132948" />
           {[-1, 1].map((s) => (
             <group key={s} position={[s * 1.75, 0, -Zo - 0.5]}>
               <mesh position={[0, 0.25, 0]} castShadow><cylinderGeometry args={[0.24, 0.18, 0.5, 14]} /><Flat color="#C46D56" roughness={0.7} /></mesh>
