@@ -250,31 +250,3 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
 
 const cxOf = (wid: number) => -wid / 2 + DOOR_W / 2 + 0.75;
 
-/** Quai de gare + train à l'arrêt, panneau MILANO : posé entre la chambre et Albert School. */
-export function Station({ curve, at, sunset, accent }: { curve: THREE.Curve<THREE.Vector3>; at: number; sunset: boolean; accent: string }) {
-  const f = useMemo(() => frameAt(curve, at), [curve, at]);
-  const body = sunset ? "#B23A2C" : "#C9432F";
-  return (
-    <group position={f.p} quaternion={f.q}>
-      {/* Quai (à droite du chemin, côté caméra le train reste lisible) */}
-      <mesh position={[-2.2, 0.18, 0]} receiveShadow><boxGeometry args={[4.4, 0.36, 12]} /><Flat color={sunset ? "#A39B8E" : "#CFC8BB"} /></mesh>
-      <mesh position={[-0.1, 0.37, 0]}><boxGeometry args={[0.12, 0.02, 12]} /><Flat color={accent} /></mesh>
-      {/* Train */}
-      <group position={[-6.2, 0, 0]}>
-        <mesh position={[0, 1.55, 0]} castShadow receiveShadow><boxGeometry args={[2.8, 2.4, 11]} /><Flat color={body} roughness={0.7} /></mesh>
-        <mesh position={[0, 2.8, 0]} castShadow><boxGeometry args={[2.6, 0.2, 10.6]} /><Flat color="#2A2A2E" /></mesh>
-        {[-4, -2, 0, 2, 4].map((z) => <mesh key={z} position={[1.41, 1.9, z]}><boxGeometry args={[0.02, 0.8, 1.3]} /><Flat color="#BFDDF3" emissive="#BFDDF3" emissiveIntensity={sunset ? 0.5 : 0.1} /></mesh>)}
-        <mesh position={[1.41, 1.1, 0]}><boxGeometry args={[0.02, 0.12, 10.6]} /><Flat color="#F5F1EA" /></mesh>
-        {[-3.5, 3.5].map((z) => [-0.9, 0.9].map((x) => <mesh key={`${z}${x}`} position={[x, 0.45, z]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.45, 0.45, 0.25, 14]} /><Flat color="#2A2A2E" /></mesh>))}
-      </group>
-      {/* Panneau MILANO */}
-      <group position={[-1.6, 0, -4.2]}>
-        <mesh position={[0, 1.4, 0]}><cylinderGeometry args={[0.04, 0.04, 2.8, 8]} /><Flat color="#2A2A2E" /></mesh>
-        <mesh position={[0, 2.75, 0]} castShadow><boxGeometry args={[2.4, 0.6, 0.08]} /><Flat color="#1B2A5A" /></mesh>
-        <Text position={[0, 2.75, 0.05]} fontSize={0.3} color="#FFFFFF" anchorX="center" anchorY="middle" letterSpacing={0.18}>MILANO</Text>
-        <Text position={[0, 2.75, -0.05]} rotation={[0, Math.PI, 0]} fontSize={0.3} color="#FFFFFF" anchorX="center" anchorY="middle" letterSpacing={0.18}>MILANO</Text>
-      </group>
-      <Lamp position={[-1.0, 3.2, 3]} color="#FFF3DD" intensity={sunset ? 8 : 2} />
-    </group>
-  );
-}

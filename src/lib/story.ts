@@ -22,7 +22,7 @@ export type Chapter = {
 
 const b = (fr: string, en: string): Bi => ({ fr, en });
 
-export const PATH_LENGTH = 104;
+export const PATH_LENGTH = 100;
 
 /** Un chapitre = une expérience = un diorama sur l'île. */
 export const chapters: Chapter[] = [
@@ -78,7 +78,7 @@ export const chapters: Chapter[] = [
     ],
   },
   {
-    id: "albert", at: 96, length: 8, clip: "idle",
+    id: "albert", at: 90, length: 8, clip: "idle",
     day:    { accent: "#2A4BD7", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#DCD6CA", wall: "#F4F1EA", sky: "#CADFF5", fog: "#E1ECF8" },
     sunset: { accent: "#9DB0FF", panel: "rgba(14,16,32,0.86)", ink: "#F2F4FF", floor: "#A79E90", wall: "#C7C1B5", sky: "#E6926B", fog: "#EFBE9F" },
     label: b("Chapitre 6 · Aujourd'hui", "Chapter 6 · Today"),
@@ -104,6 +104,10 @@ export const storyUi = {
   scrollHint: b("Défilez pour marcher", "Scroll to walk"),
   loading: b("Chargement du monde…", "Loading the world…"),
   end: b("Fin de l'histoire. Écrivons la suite ensemble.", "End of the story. Let's write the next one together."),
+  endKicker: b("Merci d'être arrivé jusqu'ici", "Thanks for making it this far"),
+  endTitle: b("La suite s'écrit avec vous : un stage d'environ 6 semaines à partir du 5 juin 2027.", "The next chapter is written with you: a ~6-week internship from 5 June 2027."),
+  endText: b("Business, data & code. Un seul cerveau. Écrivez-moi, je réponds vite.", "Business, data & code. One brain. Write to me, I reply fast."),
+  replay: b("Revoir l'histoire", "Replay the story"),
 };
 
 export const t = <T,>(v: Bi<T>, lang: Lang): T => v[lang];

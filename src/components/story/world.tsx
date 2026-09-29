@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { scroll } from "@/lib/scroll-progress";
 import { chapters, outside, PATH_LENGTH, type Clip } from "@/lib/story";
 import { Character } from "./character";
-import { Diorama, Station } from "./rooms";
+import { Diorama } from "./rooms";
 import { Flat, GradientSky } from "./materials";
 import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 
@@ -71,12 +71,6 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       off.applyAxisAngle(tmp.up, -yaw);
       tmp.cam.copy(anchor).add(off).setY(h + pitch * 1.5);
     }
-    const end = THREE.MathUtils.smoothstep(u, 0.955, 1);
-    if (end > 0) {
-      const front = new THREE.Vector3().copy(tmp.p).addScaledVector(tmp.t, 3.2).addScaledVector(tmp.side, 1.2).setY(1.5);
-      tmp.cam.lerp(front, end);
-      tmp.look.lerp(new THREE.Vector3().copy(tmp.p).setY(1.1), end);
-    }
     camera.position.lerp(tmp.cam, Math.min(1, dt * 1.5));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
@@ -112,7 +106,6 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       {chapters.map((c, i) => (
         <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} distanceRef={dist} />
       ))}
-      <Station curve={curve} at={90.8} sunset={sunset} accent={o.accent} />
 
       <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} racket={state.chapter === 0} />
     </>
@@ -131,7 +124,7 @@ function Ribbon({ curve, w, y, color, uvScale = 1 }: { curve: THREE.Curve<THREE.
       const s = new THREE.Vector3().crossVectors(up, t).normalize().multiplyScalar(w / 2);
       pos.push(p.x - s.x, y, p.z - s.z, p.x + s.x, y, p.z + s.z);
       uv.push(0, u * uvScale, 1, u * uvScale);
-      if (i < n) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      if (i < n) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } // normales vers le haut
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
@@ -139,7 +132,7 @@ function Ribbon({ curve, w, y, color, uvScale = 1 }: { curve: THREE.Curve<THREE.
     g.setIndex(idx); g.computeVertexNormals();
     return g;
   }, [curve, w, y, uvScale]);
-  return <mesh geometry={geo} receiveShadow><Flat color={color} /></mesh>;
+  return <mesh geometry={geo} receiveShadow><meshStandardMaterial color={color} roughness={0.95} metalness={0} side={THREE.DoubleSide} /></mesh>;
 }
 
 /** Chemin de dalles : une dalle arrondie tous les 0,95 m, orientée le long de la courbe. */
@@ -186,7 +179,7 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
     const up = new THREE.Vector3(0, 1, 0);
     let seed = 7;
     const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    const near = (d: number) => chapters.some((c) => d > c.at - 2.5 && d < c.at + c.length + 2.5) || (d > 86 && d < 96);
+    const near = (d: number) => chapters.some((c) => d > c.at - 2.5 && d < c.at + c.length + 2.5) 
     for (let d = 1; d < PATH_LENGTH - 1; d += 0.9) {
       const u = d / curve.getLength();
       const p = curve.getPointAt(u), t = curve.getTangentAt(u);

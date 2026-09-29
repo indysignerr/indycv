@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, ChevronDown, Download, Mail, Moon, Sun, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Download, Mail, Moon, RotateCcw, Sun, X } from "lucide-react";
 import { hotspots } from "@/lib/hotspots";
 import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
@@ -46,7 +46,7 @@ export function Panels() {
   const c = chapter >= 0 ? chapters[chapter] : null;
   const hs = hotspot ? hotspots.find((h) => h.id === hotspot) ?? null : null;
   useEffect(() => { if (hs && hs.chapter !== c?.id) scroll.hotspot = null; }, [hs, c]);
-  const atEnd = progress > 0.985;
+  const atEnd = progress > 0.975;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20">
@@ -131,12 +131,24 @@ export function Panels() {
 
       <AnimatePresence>
         {atEnd && (
-          <motion.div key="end" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pointer-events-auto absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-4 text-center">
-            <p className="font-serif text-xl italic text-white drop-shadow">{t(storyUi.end, lang)}</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} /> {SITE.email}</a>
-              <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost bg-bg/60"><Download size={18} /> {t(storyUi.cv, lang)}</a>
+          <motion.div key="end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: "easeInOut" }} className="pointer-events-auto absolute inset-0 flex flex-col bg-bg/85 backdrop-blur-md">
+            <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 sm:px-8">
+              <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="label mb-6 text-accent">{t(storyUi.endKicker, lang)}</motion.p>
+              <motion.h2 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.8 }} className="font-display text-[clamp(1.9rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-tight text-ink">{t(storyUi.endTitle, lang)}</motion.h2>
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-6 max-w-xl font-serif text-xl italic text-mute">{t(storyUi.endText, lang)}</motion.p>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-10 flex flex-wrap gap-3">
+                <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} /> {SITE.email}</a>
+                <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost"><Download size={18} /> {t(storyUi.cv, lang)}</a>
+                <button type="button" onClick={() => scroll.lenis ? scroll.lenis.scrollTo(0, { duration: 2.5 }) : window.scrollTo({ top: 0, behavior: "smooth" })} className="btn-ghost"><RotateCcw size={18} /> {t(storyUi.replay, lang)}</button>
+              </motion.div>
+              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-10 flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs text-mute">
+                <li>{SITE.phone}</li>
+                <li><a href={SITE.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-ink">LinkedIn</a></li>
+                <li><a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">GitHub</a></li>
+                <li><a href="/mentions-legales/" className="hover:text-ink">{lang === "fr" ? "Mentions légales" : "Legal"}</a></li>
+              </motion.ul>
             </div>
+            <p className="px-5 pb-6 font-mono text-xs text-mute sm:px-8">Indy François · Mines Paris-PSL × Albert School · indyfrancois.com</p>
           </motion.div>
         )}
       </AnimatePresence>
