@@ -22,7 +22,7 @@ export type Chapter = {
 
 const b = (fr: string, en: string): Bi => ({ fr, en });
 
-export const PATH_LENGTH = 96;
+export const PATH_LENGTH = 104;
 
 /** Un chapitre = une expérience = un diorama sur l'île. */
 export const chapters: Chapter[] = [
@@ -78,7 +78,7 @@ export const chapters: Chapter[] = [
     ],
   },
   {
-    id: "albert", at: 89, length: 7, clip: "idle",
+    id: "albert", at: 96, length: 8, clip: "idle",
     day:    { accent: "#2A4BD7", panel: "rgba(22,26,50,0.8)", ink: "#F2F4FF", floor: "#DCD6CA", wall: "#F4F1EA", sky: "#CADFF5", fog: "#E1ECF8" },
     sunset: { accent: "#9DB0FF", panel: "rgba(14,16,32,0.86)", ink: "#F2F4FF", floor: "#A79E90", wall: "#C7C1B5", sky: "#E6926B", fog: "#EFBE9F" },
     label: b("Chapitre 6 · Aujourd'hui", "Chapter 6 · Today"),

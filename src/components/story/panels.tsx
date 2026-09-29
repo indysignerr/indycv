@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Download, Mail, Moon, Sun, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Download, Mail, Moon, Sun, X } from "lucide-react";
 import { hotspots } from "@/lib/hotspots";
 import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
@@ -18,6 +18,8 @@ export function Panels() {
   const [chapter, setChapter] = useState(-1);
   const [progress, setProgress] = useState(0);
   const [hotspot, setHotspot] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(false); }, [chapter]);
 
   useEffect(() => {
     let raf = 0;
@@ -99,18 +101,21 @@ export function Panels() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40, transition: { duration: 0.35 } }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto absolute bottom-3 left-3 right-3 max-h-[38vh] overflow-y-auto rounded-3xl p-5 backdrop-blur-xl sm:bottom-auto sm:left-auto sm:right-8 sm:top-1/2 sm:max-h-none sm:w-[380px] sm:-translate-y-1/2 sm:p-8"
-            style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}
+            className="pointer-events-auto absolute bottom-3 left-3 right-3 max-h-[38vh] overflow-y-auto rounded-2xl p-4 backdrop-blur-xl sm:bottom-8 sm:left-auto sm:right-8 sm:max-h-none sm:w-[340px] sm:p-5"
+            style={{ background: "var(--story-panel)", color: "var(--story-ink)", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}
           >
             <p className="label" style={{ color: "var(--story-accent)" }}>{t(c.label, lang)}</p>
-            <h2 className="mt-2 font-display text-2xl font-bold leading-tight sm:mt-3 sm:text-3xl">{t(c.title, lang)}</h2>
-            <p className="mt-1 font-serif text-lg italic opacity-80">{t(c.quality, lang)}</p>
-            <p className="mt-3 text-[14px] leading-relaxed opacity-90 sm:mt-4 sm:text-[15px]">{t(c.text, lang)}</p>
+            <h2 className="mt-1.5 font-display text-xl font-bold leading-tight sm:text-2xl">{t(c.title, lang)}</h2>
+            <p className="mt-0.5 font-serif text-base italic opacity-80">{t(c.quality, lang)}</p>
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="mt-2 inline-flex min-h-[40px] items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] opacity-80 hover:opacity-100">
+              {open ? (lang === "fr" ? "Réduire" : "Less") : (lang === "fr" ? "Lire" : "Read")} <ChevronDown size={14} className={open ? "rotate-180 transition-transform" : "transition-transform"} />
+            </button>
+            {open && <p className="mt-2 text-[14px] leading-relaxed opacity-90">{t(c.text, lang)}</p>}
             {hotspots.some((h) => h.chapter === c.id) && (
-              <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.18em] opacity-70">{lang === "fr" ? "Cliquez sur les points lumineux" : "Click the glowing dots"}</p>
+              <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em] opacity-60">{lang === "fr" ? "Cliquez sur les points lumineux" : "Click the glowing dots"}</p>
             )}
-            {c.links && (
-              <ul className="mt-5 flex flex-wrap gap-2">
+            {c.links && open && (
+              <ul className="mt-4 flex flex-wrap gap-2">
                 {c.links.map((l) => (
                   <li key={l.href}>
                     <a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="inline-flex min-h-[40px] items-center gap-1 rounded-full border border-current/30 px-3 text-sm hover:bg-white/10">

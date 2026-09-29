@@ -163,3 +163,34 @@ export function Lamp({ position, color = "#FFE7B8", intensity = 6 }: { position:
     </group>
   );
 }
+
+export function Bush({ position, scale = 1, color = "#6FB56E" }: { position: [number, number, number]; scale?: number; color?: string }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 0.35, 0]} castShadow><icosahedronGeometry args={[0.45, 1]} /><Flat color={color} flat /></mesh>
+      <mesh position={[0.35, 0.28, 0.1]} castShadow><icosahedronGeometry args={[0.32, 1]} /><Flat color={color} flat /></mesh>
+      <mesh position={[-0.3, 0.25, -0.15]} castShadow><icosahedronGeometry args={[0.28, 1]} /><Flat color={color} flat /></mesh>
+    </group>
+  );
+}
+
+export function LampPost({ position, rotation = 0, sunset }: { position: [number, number, number]; rotation?: number; sunset: boolean }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 1.6, 0]} castShadow><cylinderGeometry args={[0.04, 0.06, 3.2, 8]} /><Flat color="#2A2A2E" /></mesh>
+      <mesh position={[-0.35, 3.15, 0]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.035, 0.035, 0.7, 8]} /><Flat color="#2A2A2E" /></mesh>
+      <mesh position={[-0.7, 3.05, 0]}><sphereGeometry args={[0.13, 12, 10]} /><Flat color="#FFF0C8" emissive="#FFE1A0" emissiveIntensity={sunset ? 1.4 : 0.15} /></mesh>
+      {sunset && <pointLight position={[-0.7, 2.9, 0]} color="#FFD9A0" intensity={5} distance={9} decay={2} />}
+    </group>
+  );
+}
+
+export function Bench({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 0.45, 0]} castShadow><boxGeometry args={[0.45, 0.06, 1.6]} /><Flat color="#8A6A48" /></mesh>
+      <mesh position={[-0.2, 0.7, 0]} castShadow><boxGeometry args={[0.06, 0.45, 1.6]} /><Flat color="#8A6A48" /></mesh>
+      {[-0.65, 0.65].map((z) => <mesh key={z} position={[0, 0.22, z]}><boxGeometry args={[0.4, 0.44, 0.06]} /><Flat color="#2A2A2E" /></mesh>)}
+    </group>
+  );
+}

@@ -9,7 +9,7 @@ import { chapters, outside, PATH_LENGTH, type Clip } from "@/lib/story";
 import { Character } from "./character";
 import { Diorama, Station } from "./rooms";
 import { Flat, GradientSky } from "./materials";
-import { Rock, Tree } from "./props";
+import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 
 /** Le chemin : un ruban en S sur l'île. */
 export function buildPath() {
@@ -55,9 +55,9 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     // Dehors : derrière-droite. Dans une pièce : la caméra pivote sur la droite et regarde la pièce de côté.
     const c = chapter >= 0 ? chapters[chapter] : null;
     const roomMid = c ? c.at + c.length / 2 : 0;
-    const back = inRoom ? (mobile ? 4.5 : 3.6) : mobile ? 6.5 : 5.2;
-    const lat = inRoom ? (mobile ? 9.0 : 7.6) : mobile ? 2.2 : 4.0;
-    const h = inRoom ? (mobile ? 3.6 : 2.7) : mobile ? 3.4 : 2.9;
+    const back = inRoom ? (mobile ? 4.5 : 3.8) : mobile ? 6.0 : 4.6;
+    const lat = inRoom ? (mobile ? 9.0 : 7.2) : mobile ? 2.6 : 5.4;
+    const h = inRoom ? (mobile ? 3.6 : 2.8) : mobile ? 3.4 : 3.0;
     const anchor = inRoom ? curve.getPointAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.p;
     const anchorT = inRoom ? curve.getTangentAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.t;
     const anchorS = new THREE.Vector3().crossVectors(tmp.up, anchorT).normalize();
@@ -66,7 +66,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     else tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
     // Chambre : vue 360 à la souris
     if (c?.id === "indysigner" && !mobile) {
-      const yaw = scroll.mouse.x * 0.9, pitch = scroll.mouse.y * 0.35;
+      const yaw = scroll.mouse.x * 0.32, pitch = scroll.mouse.y * 0.25;
       const off = new THREE.Vector3().subVectors(tmp.cam, anchor);
       off.applyAxisAngle(tmp.up, -yaw);
       tmp.cam.copy(anchor).add(off).setY(h + pitch * 1.5);
@@ -77,10 +77,10 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       tmp.cam.lerp(front, end);
       tmp.look.lerp(new THREE.Vector3().copy(tmp.p).setY(1.1), end);
     }
-    camera.position.lerp(tmp.cam, Math.min(1, dt * 2.2));
+    camera.position.lerp(tmp.cam, Math.min(1, dt * 1.5));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
-    camera.quaternion.slerp(tmp.q, Math.min(1, dt * 2.6));
+    camera.quaternion.slerp(tmp.q, Math.min(1, dt * 1.8));
 
     if (sun.current) {
       sun.current.position.copy(tmp.p).add(sunset ? new THREE.Vector3(-10, 6, 8) : new THREE.Vector3(6, 14, 5));
@@ -112,7 +112,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       {chapters.map((c, i) => (
         <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} distanceRef={dist} />
       ))}
-      <Station curve={curve} at={87.2} sunset={sunset} accent={o.accent} />
+      <Station curve={curve} at={90.8} sunset={sunset} accent={o.accent} />
 
       <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} racket={state.chapter === 0} />
     </>
@@ -182,28 +182,47 @@ function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; gr
 /** Arbres et rochers semés le long du chemin, hors des dioramas, jamais sur le sentier. */
 function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset: boolean }) {
   const items = useMemo(() => {
-    const out: { kind: "tree" | "rock"; pos: [number, number, number]; s: number }[] = [];
+    const out: { kind: "tree" | "rock" | "bush" | "lamp" | "bench"; pos: [number, number, number]; s: number; rot: number }[] = [];
     const up = new THREE.Vector3(0, 1, 0);
     let seed = 7;
     const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    for (let d = 2; d < PATH_LENGTH - 2; d += 1.6) {
-      const inRoom = chapters.some((c) => d > c.at - 4 && d < c.at + c.length + 4) || (d > 80 && d < 94);
+    const near = (d: number) => chapters.some((c) => d > c.at - 2.5 && d < c.at + c.length + 2.5) || (d > 86 && d < 96);
+    for (let d = 1; d < PATH_LENGTH - 1; d += 0.9) {
       const u = d / curve.getLength();
       const p = curve.getPointAt(u), t = curve.getTangentAt(u);
       const side = new THREE.Vector3().crossVectors(up, t).normalize();
-      if (inRoom) continue; // rien autour des dioramas : la scène reste épurée
-      const sgn = rnd() > 0.35 ? -1 : 1;
-      const off = 3.2 + rnd() * 7;
-      const q = p.clone().addScaledVector(side, sgn * off);
-      out.push({ kind: rnd() > 0.3 ? "tree" : "rock", pos: [q.x, 0, q.z], s: 0.7 + rnd() * 0.8 });
+      const yaw = Math.atan2(t.x, t.z);
+      if (near(d)) {
+        // Autour d'un diorama : seulement quelques éléments bas côté droit, loin
+        if (rnd() > 0.6) { const q = p.clone().addScaledVector(side, 9 + rnd() * 5); out.push({ kind: rnd() > 0.5 ? "tree" : "bush", pos: [q.x, 0, q.z], s: 0.8 + rnd() * 0.6, rot: yaw }); }
+        continue;
+      }
+      // Lampadaire tous les ~6 m, banc de temps en temps, le reste : arbres, buissons, rochers des deux côtés
+      const r = rnd();
+      if (Math.round(d) % 6 === 0) { const q = p.clone().addScaledVector(side, 1.4); out.push({ kind: "lamp", pos: [q.x, 0, q.z], s: 1, rot: yaw }); }
+      if (Math.round(d) % 11 === 0) { const q = p.clone().addScaledVector(side, -1.6); out.push({ kind: "bench", pos: [q.x, 0, q.z], s: 1, rot: yaw }); }
+      for (let k = 0; k < 2; k++) {
+        const sgn = k === 0 ? -1 : 1;
+        const off = 2.4 + rnd() * 7;
+        const q = p.clone().addScaledVector(side, sgn * off);
+        const rr = rnd();
+        out.push({ kind: rr > 0.55 ? "tree" : rr > 0.25 ? "bush" : "rock", pos: [q.x, 0, q.z], s: 0.6 + rnd() * 0.9, rot: rnd() * 6.28 });
+      }
+      void r;
     }
     return out;
   }, [curve]);
   return (
     <group>
-      {items.map((it, i) => it.kind === "tree"
-        ? <Tree key={i} position={it.pos} scale={it.s} color={sunset ? ["#4C8A5A", "#5C9A5A"][i % 2] : ["#5FA86A", "#6DB57A", "#4E9A5F"][i % 3]} />
-        : <Rock key={i} position={[it.pos[0], -0.1, it.pos[2]]} scale={it.s} color={sunset ? "#8A8580" : "#9AA3A8"} />)}
+      {items.map((it, i) => {
+        switch (it.kind) {
+          case "tree": return <Tree key={i} position={it.pos} scale={it.s} color={sunset ? ["#4C8A5A", "#5C9A5A"][i % 2] : ["#5FA86A", "#6DB57A", "#4E9A5F"][i % 3]} />;
+          case "bush": return <Bush key={i} position={it.pos} scale={it.s} color={sunset ? "#5A8F5C" : "#6FB56E"} />;
+          case "rock": return <Rock key={i} position={[it.pos[0], -0.1, it.pos[2]]} scale={it.s} color={sunset ? "#8A8580" : "#9AA3A8"} />;
+          case "lamp": return <LampPost key={i} position={it.pos} rotation={it.rot} sunset={sunset} />;
+          case "bench": return <Bench key={i} position={it.pos} rotation={it.rot} />;
+        }
+      })}
     </group>
   );
 }

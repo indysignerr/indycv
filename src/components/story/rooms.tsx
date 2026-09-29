@@ -35,12 +35,11 @@ function DoorWall({ z, wid, h, color, accent, distanceRef, doorAt }: { z: number
     if (left.current) left.current.rotation.y += (-target - left.current.rotation.y) * Math.min(1, dt * 3);
     if (right.current) right.current.rotation.y += (target - right.current.rotation.y) * Math.min(1, dt * 3);
   });
-  const sideW = (wid - DOOR_W) / 2;
+  const leftW = wid - DOOR_W - 1.5; // du bord gauche de la porte au bord gauche de la dalle
   return (
     <group position={[0, 0, z]}>
-      {/* La pièce est décalée à gauche du chemin : mur de -wid+DOOR_W/2 … à DOOR_W/2 */}
-      <mesh position={[-DOOR_W / 2 - sideW / 2 - (wid / 2 - DOOR_W / 2 - sideW / 2) + 0, h / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[wid - DOOR_W - 1.5, h, 0.3]} />
+      <mesh position={[-DOOR_W / 2 - leftW / 2, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[leftW, h, 0.3]} />
         <Flat color={color} />
       </mesh>
       <mesh position={[DOOR_W / 2 + 0.75, h / 2, 0]} castShadow receiveShadow>
@@ -68,7 +67,7 @@ function Sign({ image, text, position, rotation, width = 2.4, color = "#F5F1EA",
   return (
     <group position={position} rotation={rotation}>
       {image ? <LogoPlane url={image} width={width} bg={bg} /> : (
-        <Text fontSize={0.34} color={color} anchorX="center" anchorY="middle" maxWidth={width} textAlign="center" letterSpacing={0.08}>{text}</Text>
+        <Text fontSize={0.28} color={color} anchorX="center" anchorY="middle" maxWidth={width} textAlign="center" letterSpacing={0.08}>{text}</Text>
       )}
     </group>
   );
@@ -191,7 +190,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "lycee":
       return (
         <group>
-          <Sign text="LYCÉE SIMONE VEIL" position={[L + 0.02, 2.55, 1.6]} rotation={[0, Math.PI / 2, 0]} width={5} color={a} />
+          <Sign text="LYCÉE SIMONE VEIL" position={[L + 0.02, 2.66, 0.4]} rotation={[0, Math.PI / 2, 0]} width={5} color={a} />
           <Chalkboard position={[L + 0.25, 0, 0.4]} rotation={[0, Math.PI / 2, 0]} accent={a} />
           {[-2.4, -0.8, 0.8].map((z, i) => (
             <group key={i}>
@@ -227,7 +226,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
           <mesh position={[L + 1.1, 0.56, -2.6]} castShadow><boxGeometry args={[1.5, 0.12, 2.0]} /><Flat color={a} /></mesh>
           <mesh position={[L + 1.1, 0.62, -3.4]}><boxGeometry args={[1.2, 0.14, 0.5]} /><Flat color="#F5F1EA" /></mesh>
           {["indysigner.fr", "lovive.fr", "manikalab.com", "nayumatea.com"].map((s, i) => (
-            <ProjectCard key={s} position={[-5.4 + i * 1.15, 1.9 + (i % 2) * 0.45, -0.6 - (i % 2) * 0.5]} label={s} accent={a} active={active} />
+            <ProjectCard key={s} position={[-3.2 + (i % 2) * 1.2, 1.6 + Math.floor(i / 2) * 0.9, -3.2 + (i % 2) * 0.5]} label={s} accent={a} active={active} />
           ))}
           {/* Affiche prospection sur le mur gauche */}
           <mesh position={[L + 0.03, 1.9, 3.6]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.3, 0.9]} /><Flat color="#15141B" emissive={a} emissiveIntensity={0.15} /></mesh>
