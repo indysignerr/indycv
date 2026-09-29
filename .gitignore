@@ -45,4 +45,6 @@ next-env.d.ts
 .claude/
 *.blend1
 /assets/mixamo/*.fbx
-!/assets/mixamo/indy-tpose.fbx
+/assets/source/*.blend
+/assets/source/*.blend1
+/assets/mixamo/
