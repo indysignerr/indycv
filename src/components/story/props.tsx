@@ -234,14 +234,17 @@ export function LegoShelf({ position, rotation = [0, 0, 0] }: { position: [numbe
   const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   return (
     <group position={position} rotation={rotation}>
-      <mesh position={[0, 1.1, 0]} castShadow receiveShadow><boxGeometry args={[1.3, 2.2, 0.5]} /><Flat color="#F4F1EA" /></mesh>
-      {[0.45, 0.95, 1.45, 1.95].map((y, r) => (
+      {/* Placard ouvert : fond, côtés, dessus */}
+      <mesh position={[0, 1.1, -0.23]} castShadow receiveShadow><boxGeometry args={[1.3, 2.2, 0.04]} /><Flat color="#F4F1EA" /></mesh>
+      {[-0.64, 0.64].map((x) => <mesh key={x} position={[x, 1.1, 0]} castShadow receiveShadow><boxGeometry args={[0.04, 2.2, 0.5]} /><Flat color="#F4F1EA" /></mesh>)}
+      <mesh position={[0, 2.2, 0]} castShadow><boxGeometry args={[1.3, 0.04, 0.5]} /><Flat color="#F4F1EA" /></mesh>
+      {[0.05, 0.55, 1.05, 1.55].map((y, r) => (
         <group key={r}>
-          <mesh position={[0, y - 0.03, 0.05]}><boxGeometry args={[1.2, 0.04, 0.46]} /><Flat color="#DDD8CF" /></mesh>
+          <mesh position={[0, y - 0.02, 0]} receiveShadow><boxGeometry args={[1.26, 0.04, 0.5]} /><Flat color="#DDD8CF" /></mesh>
           {Array.from({ length: 14 }).map((_, i) => {
             const w = 0.08 + rnd() * 0.12, h = 0.06 + rnd() * 0.1, d = 0.08 + rnd() * 0.14;
             return (
-              <mesh key={i} position={[-0.55 + (i / 13) * 1.1, y + h / 2, -0.1 + rnd() * 0.25]} rotation={[0, rnd() * 0.6, 0]} castShadow>
+              <mesh key={i} position={[-0.55 + (i / 13) * 1.1, y + h / 2, -0.15 + rnd() * 0.3]} rotation={[0, rnd() * 0.6, 0]} castShadow>
                 <boxGeometry args={[w, h, d]} /><Flat color={colors[Math.floor(rnd() * colors.length)]} roughness={0.5} />
               </mesh>
             );
