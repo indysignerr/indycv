@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { Flat } from "./materials";
@@ -297,6 +297,7 @@ export function GoalHD({ position, rotationY = 0 }: { position: V3; rotationY?: 
   const netS = useMemo(() => meshAlpha([8, 12]), []);
   const netT = useMemo(() => meshAlpha([30, 8]), []);
   const W = 3.66, H = 1.8, D = 1.2;
+  const sideShape = useMemo(() => { const sh = new THREE.Shape(); sh.moveTo(-D / 2, -H / 2); sh.lineTo(D / 2, -H / 2); sh.lineTo(D / 2, H / 2); sh.lineTo(-D / 2, -H / 2 + 0.01); return sh; }, []);
   const post = (p: V3, a: [number, number, number, number], r: V3 = [0, 0, 0]) => <mesh position={p} rotation={r} castShadow><cylinderGeometry args={a} /><Flat color="#FAFAF6" roughness={0.35} /></mesh>;
   const netMat = (m: THREE.Texture) => <meshStandardMaterial color="#F4F4F0" alphaMap={m} transparent side={THREE.DoubleSide} depthWrite={false} roughness={1} />;
   return (
@@ -310,7 +311,7 @@ export function GoalHD({ position, rotationY = 0 }: { position: V3; rotationY?: 
       <mesh position={[0, H / 2, -D / 2]} rotation={[0.58, 0, 0]}><planeGeometry args={[W, Math.hypot(H, D)]} />{netMat(net)}</mesh>
       {[-1, 1].map((s) => (
         <mesh key={s} position={[s * W / 2, H / 2, -D / 2]} rotation={[0, Math.PI / 2, 0]}>
-          <shapeGeometry args={[(() => { const sh = new THREE.Shape(); sh.moveTo(-D / 2, -H / 2); sh.lineTo(D / 2, -H / 2); sh.lineTo(D / 2, H / 2); sh.lineTo(-D / 2, -H / 2 + 0.01); return sh; })()]} />
+          <shapeGeometry args={[sideShape]} />
           {netMat(netS)}
         </mesh>
       ))}
@@ -400,24 +401,45 @@ export function Lockers({ position, rotationY = 0, n = 5, color = "#3E6FB0" }: {
 
 export function BinderShelf({ position, rotationY = 0, w = 1.8 }: { position: V3; rotationY?: number; w?: number }) {
   const cols = ["#2E5FA8", "#C93A18", "#2E7D5B", "#E0A52A", "#1E2F55", "#8C8C94"];
-  let seed = 9;
-  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  // Classeurs instanciés : 2 draw calls au lieu de plusieurs centaines
+  const { mats, colors, labels } = useMemo(() => {
+    let seed = 9;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    const o = new THREE.Object3D();
+    const mats: THREE.Matrix4[] = [], colors: THREE.Color[] = [], labels: THREE.Matrix4[] = [];
+    [0.04, 0.54, 1.04, 1.54].forEach((y) => {
+      for (let i = 0; i < Math.floor((w - 0.1) / 0.075); i++) {
+        if (rnd() < 0.12) continue;
+        const c = cols[Math.floor(rnd() * cols.length)];
+        o.position.set(-w / 2 + 0.08 + i * 0.075, y + 0.16, 0.02);
+        o.rotation.set(0, 0, rnd() < 0.08 ? 0.2 : 0);
+        o.scale.set(1, 1, 1);
+        o.updateMatrix(); mats.push(o.matrix.clone()); colors.push(new THREE.Color(c));
+        o.position.set(o.position.x, o.position.y + 0.04, 0.166); o.updateMatrix(); labels.push(o.matrix.clone());
+      }
+    });
+    return { mats, colors, labels };
+  }, [w]);
+  const body = useRef<THREE.InstancedMesh>(null);
+  const lab = useRef<THREE.InstancedMesh>(null);
+  useEffect(() => {
+    mats.forEach((m, i) => { body.current?.setMatrixAt(i, m); body.current?.setColorAt(i, colors[i]); lab.current?.setMatrixAt(i, labels[i]); });
+    if (body.current) { body.current.instanceMatrix.needsUpdate = true; if (body.current.instanceColor) body.current.instanceColor.needsUpdate = true; }
+    if (lab.current) lab.current.instanceMatrix.needsUpdate = true;
+  }, [mats, colors, labels]);
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh position={[0, 1.0, -0.17]} castShadow receiveShadow><boxGeometry args={[w, 2.0, 0.03]} /><Flat color="#F2EFE8" /></mesh>
       {[-1, 1].map((s) => <mesh key={s} position={[s * w / 2, 1.0, 0]}><boxGeometry args={[0.03, 2.0, 0.36]} /><Flat color="#F2EFE8" /></mesh>)}
       {[0.02, 0.52, 1.02, 1.52, 1.98].map((y) => <mesh key={y} position={[0, y, 0]}><boxGeometry args={[w, 0.03, 0.36]} /><Flat color="#F2EFE8" /></mesh>)}
-      {[0.04, 0.54, 1.04, 1.54].map((y, r) => Array.from({ length: Math.floor((w - 0.1) / 0.075) }).map((_, i) => {
-        if (rnd() < 0.12) return null;
-        const c = cols[Math.floor(rnd() * cols.length)];
-        return (
-          <group key={`${r}-${i}`} position={[-w / 2 + 0.08 + i * 0.075, y + 0.16, 0.02]} rotation={[0, 0, rnd() < 0.08 ? 0.2 : 0]}>
-            <mesh castShadow><boxGeometry args={[0.065, 0.32, 0.29]} /><Flat color={c} roughness={0.5} /></mesh>
-            <mesh position={[0, 0.04, 0.146]}><boxGeometry args={[0.045, 0.08, 0.002]} /><Flat color="#FFFFFF" /></mesh>
-            <mesh position={[0, -0.08, 0.146]}><cylinderGeometry args={[0.012, 0.012, 0.002, 10]} /><Flat color="#FFFFFF" /></mesh>
-          </group>
-        );
-      }))}
+      <instancedMesh ref={body} args={[undefined, undefined, mats.length]} castShadow>
+        <boxGeometry args={[0.065, 0.32, 0.29]} />
+        <meshStandardMaterial roughness={0.5} />
+      </instancedMesh>
+      <instancedMesh ref={lab} args={[undefined, undefined, labels.length]}>
+        <boxGeometry args={[0.045, 0.08, 0.002]} />
+        <meshStandardMaterial color="#FFFFFF" roughness={0.8} />
+      </instancedMesh>
     </group>
   );
 }

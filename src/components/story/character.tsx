@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,12 +13,11 @@ const FADE = 0.35;
  * Personnage rigué (Mixamo). Il marche le long de `curve` selon `distance` (m),
  * et joue `action` quand il est à l'arrêt.
  */
-export function Character({ curve, distanceRef, speedRef, action, walking }: {
+export const Character = memo(function Character({ curve, distanceRef, speedRef, walkingRef }: {
   curve: THREE.Curve<THREE.Vector3>;
   distanceRef: React.MutableRefObject<number>;
   speedRef: React.MutableRefObject<number>;
-  action: Clip;
-  walking: boolean;
+  walkingRef: React.MutableRefObject<boolean>;
 }) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(MODEL);
@@ -39,19 +38,20 @@ export function Character({ curve, distanceRef, speedRef, action, walking }: {
     });
   }, [scene]);
 
-  const clip: Clip = walking ? "walk" : action;
-  useEffect(() => {
-    const next = actions[clip];
-    if (!next) return;
-    const prev = current.current ? actions[current.current] : null;
-    next.reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(FADE).play();
-    if (prev && prev !== next) prev.fadeOut(FADE);
-    current.current = clip;
-  }, [clip, actions]);
-
   useFrame(() => {
     const g = group.current;
     if (!g) return;
+    // Marche / arrêt : fondu entre les deux clips, sans passer par React
+    const clip: Clip = walkingRef.current ? "walk" : "idle";
+    if (clip !== current.current) {
+      const next = actions[clip];
+      if (next) {
+        const prev = current.current ? actions[current.current] : null;
+        next.reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(FADE).play();
+        if (prev && prev !== next) prev.fadeOut(FADE);
+        current.current = clip;
+      }
+    }
     const L = curve.getLength();
     const u = THREE.MathUtils.clamp(distanceRef.current / L, 0, 1);
     curve.getPointAt(u, tmp.p);
@@ -63,7 +63,7 @@ export function Character({ curve, distanceRef, speedRef, action, walking }: {
     g.quaternion.slerp(tmp.q, 0.15);
     // Vitesse de la marche proportionnelle à la vitesse de scroll
     const w = actions["walk"];
-    if (w && walking) w.timeScale = THREE.MathUtils.clamp(Math.abs(speedRef.current) / 1.4, 0.6, 1.8) * Math.sign(speedRef.current || 1);
+    if (w && walkingRef.current) w.timeScale = THREE.MathUtils.clamp(Math.abs(speedRef.current) / 1.4, 0.6, 1.8) * Math.sign(speedRef.current || 1);
   });
 
   return (
@@ -71,6 +71,6 @@ export function Character({ curve, distanceRef, speedRef, action, walking }: {
       <primitive object={scene} />
     </group>
   );
-}
+});
 
 useGLTF.preload(MODEL);

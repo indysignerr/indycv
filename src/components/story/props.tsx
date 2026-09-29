@@ -180,7 +180,6 @@ export function LampPost({ position, rotation = 0, sunset }: { position: [number
       <mesh position={[0, 1.6, 0]} castShadow><cylinderGeometry args={[0.04, 0.06, 3.2, 8]} /><Flat color="#2A2A2E" /></mesh>
       <mesh position={[-0.35, 3.15, 0]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.035, 0.035, 0.7, 8]} /><Flat color="#2A2A2E" /></mesh>
       <mesh position={[-0.7, 3.05, 0]}><sphereGeometry args={[0.13, 12, 10]} /><Flat color="#FFF0C8" emissive="#FFE1A0" emissiveIntensity={sunset ? 1.4 : 0.15} /></mesh>
-      {sunset && <pointLight position={[-0.7, 2.9, 0]} color="#FFD9A0" intensity={5} distance={9} decay={2} />}
     </group>
   );
 }

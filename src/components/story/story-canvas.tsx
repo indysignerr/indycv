@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Preload } from "@react-three/drei";
+import { PerformanceMonitor, Preload } from "@react-three/drei";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useApp } from "@/components/providers";
@@ -12,6 +12,7 @@ import { World } from "./world";
 export function StoryCanvas({ onReady }: { onReady?: () => void }) {
   const { theme } = useApp();
   const [mobile, setMobile] = useState(false);
+  const [dpr, setDpr] = useState(1.5);
 
   useEffect(() => {
     setMobile(window.matchMedia("(max-width: 768px)").matches);
@@ -39,12 +40,13 @@ export function StoryCanvas({ onReady }: { onReady?: () => void }) {
   return (
     <div className="fixed inset-0 z-0">
       <Canvas
-        dpr={[1, mobile ? 1.5 : 1.5]}
+        dpr={dpr}
         shadows={!mobile}
         camera={{ fov: mobile ? 50 : 36, near: 0.1, far: 80, position: [4, 3, 6] }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
-        onCreated={() => onReady?.()}
+        onCreated={({ gl }) => { (window as unknown as { __gl: unknown }).__gl = gl; onReady?.(); }}
       >
+        <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(1, d - 0.25))} onIncline={() => setDpr((d) => Math.min(mobile ? 1.5 : 1.75, d + 0.25))} flipflops={3} onFallback={() => setDpr(1)} />
         <Suspense fallback={null}>
           <World sunset={theme === "dark"} mobile={mobile} />
           <Preload all />

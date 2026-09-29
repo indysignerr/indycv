@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -8,7 +8,7 @@ import type { Chapter, Palette } from "@/lib/story";
 import { hotspots } from "@/lib/hotspots";
 import { scroll } from "@/lib/scroll-progress";
 import { Flat } from "./materials";
-import { Bed, Bookshelf, Lamp, Laptop, LegoShelf, TennisBall, Tree } from "./props";
+import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import {
   BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
   Football, GoalHD, Lockers, Monitor, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens,
@@ -124,7 +124,14 @@ function floorTex(id: string, wid: number, len: number) {
  * murs d'entrée et de sortie percés d'un portique, plafond avec dalles lumineuses, plinthes et ombres d'angle.
  * Ouvert côté droit (caméra). Le chemin passe en x=0, la pièce s'étend vers -x.
  */
-export function Diorama({ curve, chapter, palette, active, sunset }: { curve: THREE.Curve<THREE.Vector3>; chapter: Chapter; palette: Palette; active: boolean; sunset: boolean; distanceRef?: React.MutableRefObject<number> }) {
+export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, distanceRef }: { curve: THREE.Curve<THREE.Vector3>; chapter: Chapter; palette: Palette; sunset: boolean; distanceRef: React.MutableRefObject<number> }) {
+  const root = useRef<THREE.Group>(null);
+  // Hors champ : la pièce n'est plus dessinée (ni ses ombres) quand le personnage est loin
+  useFrame(() => {
+    if (!root.current) return;
+    const d = distanceRef.current - (chapter.at + chapter.length / 2);
+    root.current.visible = d > -24 && d < 20;
+  });
   const mid = chapter.at + chapter.length / 2;
   const f = useMemo(() => frameAt(curve, mid), [curve, mid]);
   const len = chapter.length, wid = ROOM_W, h = 3.4;
@@ -137,7 +144,7 @@ export function Diorama({ curve, chapter, palette, active, sunset }: { curve: TH
   const Lx = -wid + DOOR_W / 2 + 0.3; // face intérieure du mur gauche
   const leftColor = chapter.id === "indysigner" ? (sunset ? "#1B3E30" : "#1F4D3A") : palette.wall;
   return (
-    <group position={f.p} quaternion={f.q}>
+    <group ref={root} position={f.p} quaternion={f.q}>
       <mesh position={[cx, -0.12, 0]} receiveShadow>
         <boxGeometry args={[wid + 1.5, 0.24, len + 1.2]} />
         {ft ? <TexMat tex={ft} color={palette.floor} bump={chapter.id === "tennis" ? 0.02 : 0.006} rough={chapter.id === "tennis" ? 0.95 : 0.7} /> : <Flat color={palette.floor} />}
@@ -166,18 +173,17 @@ export function Diorama({ curve, chapter, palette, active, sunset }: { curve: TH
             <meshStandardMaterial map={ceilT} color={sunset ? "#CFC6B8" : "#E9E6E0"} emissive={sunset ? "#8A7560" : "#C9C6C0"} emissiveIntensity={0.55} roughness={1} side={THREE.DoubleSide} />
           </mesh>
           {[-2.6, 0, 2.6].filter((z) => Math.abs(z) < len / 2).map((z) => [-7.2, -4.2].map((x) => <CeilingPanel key={`${x}${z}`} position={[x, h - 0.03, z]} sunset={sunset} />))}
-          <pointLight position={[-5, h - 0.4, 0]} intensity={active ? (sunset ? 26 : 14) : 5} distance={14} decay={2} color={sunset ? "#FFE0B8" : "#FFFFFF"} />
         </>
       )}
-      <Contents chapter={chapter} palette={palette} active={active} sunset={sunset} len={len} wid={wid} />
+      <Contents chapter={chapter} palette={palette} sunset={sunset} len={len} wid={wid} />
       {hotspots.filter((hs) => hs.chapter === chapter.id).map((hs) => (
         <HotspotMarker key={hs.id} id={hs.id} position={hs.position} accent={a} />
       ))}
     </group>
   );
-}
+});
 
-function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Chapter; palette: Palette; active: boolean; sunset: boolean; len: number; wid: number }) {
+function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; palette: Palette; sunset: boolean; len: number; wid: number }) {
   const a = palette.accent;
   const L = -wid + DOOR_W / 2 + 0.3; // face intérieure du mur gauche (≈ -9.6)
   const F = (len + 1.2) / 2 - 0.3; // face intérieure du mur de sortie
@@ -185,7 +191,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
   const shT = useMemo(() => screens.spreadsheet(a), [a]);
   const cdT = useMemo(() => screens.code(a), [a]);
   const cpT = useMemo(() => carpetTex([1, len]), [len]);
-  const Carpet = () => (
+  const carpet = (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
       <planeGeometry args={[1.9, len + 0.6]} />
       <TexMat tex={cpT} color={sunset ? "#2A4284" : "#3353B8"} bump={0.006} rough={1} />
@@ -227,7 +233,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "lycee":
       return (
         <group>
-          <Carpet />
+          {carpet}
           <Text position={[L + 0.03, 2.66, 0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.22} color="#1E2F55" anchorX="center" anchorY="middle" letterSpacing={0.18}>LYCÉE SIMONE VEIL</Text>
           <ChalkboardHD position={[L + 0.03, 0, 0]} rotationY={Math.PI / 2} />
           <Clock position={[L + 0.04, 2.5, -2.2]} rotationY={Math.PI / 2} />
@@ -313,13 +319,12 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
           ))}
           <Poster position={[-1.9, 1.8, F - 0.03]} rotationY={Math.PI} w={0.6} h={0.85} bg="#1E2F55" fg="#C8694F" title="LIVE" sub="Concert · 2025" />
           <Plant position={[-1.2, 0, -F + 0.4]} kind="tall" />
-          <Lamp position={[-4.2, 3.0, 0]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 8 : 2} />
         </group>
       );
     case "albert":
       return (
         <group>
-          <Carpet />
+          {carpet}
           <Sign image="/logos/albert-x-mines.webp" position={[L + 0.06, 2.75, -2.1]} rotation={[0, Math.PI / 2, 0]} width={1.9} bg="#FFFFFF" />
           <Whiteboard position={[L + 0.04, 0, 1.3]} rotationY={Math.PI / 2} accent={a} />
           <Window position={[L + 0.02, 1.7, -3.6]} rotationY={Math.PI / 2} w={1} h={1.4} sunset={sunset} />

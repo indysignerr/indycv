@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, SoftShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { scroll } from "@/lib/scroll-progress";
-import { chapters, outside, PATH_LENGTH, type Clip } from "@/lib/story";
+import { chapters, outside, PATH_LENGTH } from "@/lib/story";
 import { Character } from "./character";
 import { Diorama } from "./rooms";
 import { Clouds, Flat, GradientSky } from "./materials";
@@ -28,10 +28,11 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
   const dist = useRef(0);
   const snap = useRef(true);
   const speed = useRef(0);
-  const [state, setState] = useState<{ walking: boolean; action: Clip; chapter: number }>({ walking: false, action: "idle", chapter: -1 });
+  const walkingRef = useRef(false);
   const { camera } = useThree();
   const tmp = useMemo(() => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), side: new THREE.Vector3(), cam: new THREE.Vector3(), look: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), q: new THREE.Quaternion(), m: new THREE.Matrix4() }), []);
   const sun = useRef<THREE.DirectionalLight>(null);
+  const roomLight = useRef<THREE.PointLight>(null);
   const fogRef = useRef<THREE.Fog>(null);
   const cur = useMemo(() => ({ fog: new THREE.Color(), skyTop: new THREE.Color(), skyBot: new THREE.Color() }), []);
 
@@ -41,7 +42,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     const prev = dist.current;
     dist.current += (target - dist.current) * Math.min(1, dt * 3.5);
     speed.current = (dist.current - prev) / Math.max(dt, 1e-3);
-    const walking = Math.abs(speed.current) > 0.12;
+    walkingRef.current = Math.abs(speed.current) > 0.12;
 
     let chapter = -1;
     for (let i = 0; i < chapters.length; i++) {
@@ -49,8 +50,6 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
       if (dist.current >= c.at - 0.5 && dist.current <= c.at + c.length + 0.5) chapter = i;
     }
     scroll.chapter = chapter;
-    const action: Clip = chapter >= 0 ? chapters[chapter].clip : "idle";
-    if (walking !== state.walking || action !== state.action || chapter !== state.chapter) setState({ walking, action, chapter });
 
     // Caméra 3/4 : devant-droite du personnage, légèrement en hauteur ; les dioramas sont à sa gauche
     const u = THREE.MathUtils.clamp(dist.current / L, 0, 1);
@@ -84,6 +83,20 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     camera.quaternion.slerp(tmp.q, snap.current ? 1 : Math.min(1, dt * 1.8));
     snap.current = false;
 
+    // Lumière intérieure : une seule, qui se place au plafond de la pièce fermée la plus proche
+    if (roomLight.current) {
+      let best = 1e9, bi = -1;
+      chapters.forEach((cc, i) => { if (!["lycee", "concertae", "indysigner", "albert"].includes(cc.id)) return; const dd = Math.abs(dist.current - (cc.at + cc.length / 2)); if (dd < best) { best = dd; bi = i; } });
+      if (bi >= 0) {
+        const cc = chapters[bi];
+        const um = THREE.MathUtils.clamp((cc.at + cc.length / 2) / L, 0, 1);
+        const ap = curve.getPointAt(um), at = curve.getTangentAt(um);
+        const as = tmp.side.clone().crossVectors(tmp.up, at).normalize();
+        roomLight.current.position.copy(ap).addScaledVector(as, -5).setY(3.0);
+        const target = THREE.MathUtils.clamp(1 - (best - cc.length / 2) / 6, 0, 1) * (sunset ? 22 : 12);
+        roomLight.current.intensity += (target - roomLight.current.intensity) * Math.min(1, dt * 3);
+      }
+    }
     if (sun.current) {
       sun.current.position.copy(tmp.p).add(sunset ? new THREE.Vector3(-10, 6, 8) : new THREE.Vector3(6, 14, 5));
       sun.current.target.position.copy(tmp.p);
@@ -91,7 +104,8 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     }
     // Couleurs d'ambiance : fondu vers la palette du chapitre
     const pal = chapter >= 0 ? (sunset ? chapters[chapter].sunset : chapters[chapter].day) : (sunset ? outside.sunset : outside.day);
-    cur.fog.lerp(new THREE.Color(pal.fog), Math.min(1, dt * 1.5));
+    cur.skyTop.set(pal.fog);
+    cur.fog.lerp(cur.skyTop, Math.min(1, dt * 1.5));
     if (fogRef.current) fogRef.current.color.copy(cur.fog);
   });
 
@@ -114,17 +128,18 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
         shadow-mapSize={mobile ? 512 : 1024} shadow-bias={-0.0004} shadow-normalBias={0.04}
         shadow-camera-near={1} shadow-camera-far={45} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} />
       {!mobile && <SoftShadows size={16} samples={6} focus={0.6} />}
+      <pointLight ref={roomLight} intensity={0} distance={15} decay={2} color={sunset ? "#FFE0B8" : "#FFF8EE"} />
 
       {/* L'île : une dalle qui suit le chemin, bords doux, rien au-delà */}
       <Island curve={curve} ground={o.ground} path={o.path} />
       <Lawn sunset={sunset} mobile={mobile} />
       <Scenery curve={curve} sunset={sunset} />
 
-      {chapters.map((c, i) => (
-        <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} distanceRef={dist} />
+      {chapters.map((c) => (
+        <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} sunset={sunset} distanceRef={dist} />
       ))}
 
-      <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} />
+      <Character curve={curve} distanceRef={dist} speedRef={speed} walkingRef={walkingRef} />
     </>
   );
 }
@@ -132,32 +147,37 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
 /** Chemin de dalles : une dalle arrondie tous les 0,95 m, orientée le long de la courbe. */
 function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: string }) {
   const stoneT = useMemo(() => concreteTex([1, 1]), []);
-  const items = useMemo(() => {
-    const out: { p: THREE.Vector3; q: THREE.Quaternion }[] = [];
-    const L = curve.getLength(); const up = new THREE.Vector3(0, 1, 0);
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const mats = useMemo(() => {
+    const out: THREE.Matrix4[] = [];
+    const Lc = curve.getLength(), up = new THREE.Vector3(0, 1, 0), o = new THREE.Object3D();
     const closed = chapters.filter((c) => ["lycee", "concertae", "indysigner", "albert"].includes(c.id));
-    for (let d = 0.5; d < L; d += 0.95) {
+    let i = 0;
+    for (let d = 0.5; d < Lc; d += 0.95, i++) {
       if (closed.some((c) => d > c.at - 0.3 && d < c.at + c.length + 0.3)) continue;
-      const u = d / L; const p = curve.getPointAt(u); const t = curve.getTangentAt(u);
-      const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(t, new THREE.Vector3(), up));
-      out.push({ p, q });
+      const u = d / Lc, p = curve.getPointAt(u), t = curve.getTangentAt(u);
+      o.position.set(p.x + ((i * 37) % 7 - 3) * 0.012, 0.02, p.z);
+      o.quaternion.setFromRotationMatrix(new THREE.Matrix4().lookAt(t, new THREE.Vector3(), up));
+      o.rotateY(((i * 13) % 5 - 2) * 0.03);
+      o.updateMatrix();
+      out.push(o.matrix.clone());
     }
     return out;
   }, [curve]);
+  useEffect(() => {
+    mats.forEach((m, i) => ref.current?.setMatrixAt(i, m));
+    if (ref.current) { ref.current.instanceMatrix.needsUpdate = true; ref.current.computeBoundingSphere(); }
+  }, [mats]);
   return (
-    <group>
-      {items.map((it, i) => (
-        <mesh key={i} position={[it.p.x + ((i * 37) % 7 - 3) * 0.012, 0.02, it.p.z]} quaternion={it.q} rotation-y={((i * 13) % 5 - 2) * 0.03} receiveShadow castShadow>
-          <boxGeometry args={[1.1, 0.07, 0.72]} />
-          <TexMat tex={stoneT} color={color} bump={0.01} rough={0.85} />
-        </mesh>
-      ))}
-    </group>
+    <instancedMesh ref={ref} args={[undefined, undefined, mats.length]} receiveShadow castShadow>
+      <boxGeometry args={[1.1, 0.07, 0.72]} />
+      <TexMat tex={stoneT} color={color} bump={0.01} rough={0.85} />
+    </instancedMesh>
   );
 }
 
 /** Horizon : trois anneaux de collines en silhouette centrés sur la caméra (jamais dans la scène). */
-function Horizon({ sunset }: { sunset: boolean }) {
+const Horizon = memo(function Horizon({ sunset }: { sunset: boolean }) {
   const g = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const rings = useMemo(() => [0, 1, 2].map((r) => {
@@ -186,9 +206,9 @@ function Horizon({ sunset }: { sunset: boolean }) {
       {sunset && <mesh position={[30, 16, -66]}><circleGeometry args={[5, 40]} /><meshBasicMaterial color="#FFD5A0" fog={false} toneMapped={false} /></mesh>}
     </group>
   );
-}
+});
 
-function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; ground: string; path: string }) {
+const Island = memo(function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; ground: string; path: string }) {
   const groundT = useMemo(() => grassTex([110, 135], false), []);
   return (
     <group>
@@ -200,10 +220,10 @@ function Island({ curve, ground, path }: { curve: THREE.Curve<THREE.Vector3>; gr
       <Tiles curve={curve} color={path} />
     </group>
   );
-}
+});
 
 /** Arbres et rochers semés le long du chemin, hors des dioramas, jamais sur le sentier. */
-function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset: boolean }) {
+const Scenery = memo(function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset: boolean }) {
   const items = useMemo(() => {
     const out: { kind: "tree" | "rock" | "bush" | "lamp" | "bench"; pos: [number, number, number]; s: number; rot: number }[] = [];
     const up = new THREE.Vector3(0, 1, 0);
@@ -248,13 +268,13 @@ function Scenery({ curve, sunset }: { curve: THREE.Curve<THREE.Vector3>; sunset:
       })}
     </group>
   );
-}
+});
 
 /**
  * Herbe animée : bande de premier plan (côté caméra), abords entre les pièces, et gazon court sur le terrain de foot.
  * Coordonnées monde : le chemin suit -z ; les pièces sont côté +x, la caméra côté -x.
  */
-function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
+const Lawn = memo(function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
   const { areas, exclude, pitch } = useMemo(() => {
     const rooms = chapters.map((c) => [-2.8, 10.2, -(c.at + c.length + 0.7), -(c.at - 0.7)] as [number, number, number, number]);
     const foot = chapters.find((c) => c.id === "foot")!;
@@ -271,4 +291,4 @@ function Lawn({ sunset, mobile }: { sunset: boolean; mobile: boolean }) {
       <Grass areas={pitch} exclude={pitchEx} count={mobile ? 3000 : 12000} base={sunset ? "#4E7F45" : "#5EA654"} tip={sunset ? "#95B868" : "#9DD878"} height={0.08} />
     </group>
   );
-}
+});
