@@ -14,7 +14,8 @@ import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 /** Le chemin : un ruban en S sur l'île. */
 export function buildPath() {
   const pts: THREE.Vector3[] = [];
-  for (let d = 0; d <= PATH_LENGTH; d += 4) pts.push(new THREE.Vector3(Math.sin(d * 0.09) * 1.8, 0, -d));
+  // Ligne droite : les portes des pièces tombent exactement sur le passage du personnage
+  for (let d = 0; d <= PATH_LENGTH; d += 4) pts.push(new THREE.Vector3(0, 0, -d));
   return new THREE.CatmullRomCurve3(pts, false, "centripetal");
 }
 
@@ -51,13 +52,18 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     curve.getPointAt(u, tmp.p);
     curve.getTangentAt(u, tmp.t);
     tmp.side.crossVectors(tmp.up, tmp.t).normalize();
-    const inRoom = chapter >= 0;
+    let camChapter = -1;
+    for (let i = 0; i < chapters.length; i++) {
+      const cc = chapters[i];
+      if (dist.current >= cc.at + 0.6 && dist.current <= cc.at + cc.length - 1.4) camChapter = i;
+    }
+    const inRoom = camChapter >= 0;
     // Dehors : derrière-droite. Dans une pièce : la caméra pivote sur la droite et regarde la pièce de côté.
-    const c = chapter >= 0 ? chapters[chapter] : null;
+    const c = camChapter >= 0 ? chapters[camChapter] : null;
     const roomMid = c ? c.at + c.length / 2 : 0;
-    const back = inRoom ? (mobile ? 4.5 : 3.8) : mobile ? 6.0 : 4.6;
-    const lat = inRoom ? (mobile ? 9.0 : 7.2) : mobile ? 2.6 : 5.4;
-    const h = inRoom ? (mobile ? 3.6 : 2.8) : mobile ? 3.4 : 3.0;
+    const back = inRoom ? (mobile ? 4.5 : 3.8) : mobile ? 6.0 : 5.0;
+    const lat = inRoom ? (mobile ? 9.0 : 7.2) : mobile ? 2.6 : 5.0;
+    const h = inRoom ? (mobile ? 3.6 : 2.8) : mobile ? 3.6 : 3.4;
     const anchor = inRoom ? curve.getPointAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.p;
     const anchorT = inRoom ? curve.getTangentAt(THREE.MathUtils.clamp(roomMid / L, 0, 1)) : tmp.t;
     const anchorS = new THREE.Vector3().crossVectors(tmp.up, anchorT).normalize();

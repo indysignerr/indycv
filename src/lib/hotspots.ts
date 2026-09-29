@@ -41,19 +41,19 @@ export const hotspots: Hotspot[] = [
     lines: b(["Comptabilité générale sur Cegid et Pennylane (1 an en cabinet).", "TVA, bilans, bilan de fusion.", "Gestion de projet client, cadrage de devis, prospection B2B."], ["General accounting on Cegid and Pennylane (1 year in a firm).", "VAT, balance sheets, merger balance sheet.", "Client project management, quote scoping, B2B prospecting."]),
   },
   {
-    id: "chambre-laptop", chapter: "indysigner", position: [-8.6, 1.35, -2.6],
+    id: "chambre-laptop", chapter: "indysigner", position: [-8.6, 1.45, -1.9],
     kicker: b("Indysigner · depuis avril 2026", "Indysigner · since April 2026"), title: b("Le studio", "The studio"),
     lines: b(["Sites sur mesure pour des TPE, livrés de bout en bout : design, code, mise en ligne, SEO.", "Stack : Next.js, TypeScript, Tailwind, GSAP, Three.js, Cloudflare Pages.", "Quatre sites en ligne pour de vrais clients."], ["Custom websites for small businesses, delivered end to end: design, code, launch, SEO.", "Stack: Next.js, TypeScript, Tailwind, GSAP, Three.js, Cloudflare Pages.", "Four live websites for real clients."]),
     links: [{ label: "indysigner.fr", href: "https://indysigner.fr" }],
   },
   {
-    id: "chambre-cards", chapter: "indysigner", position: [-1.6, 2.5, 1.5],
+    id: "chambre-cards", chapter: "indysigner", position: [-8.7, 1.3, 1.6],
     kicker: b("Projets", "Projects"), title: b("Quatre sites en ligne", "Four live websites"),
     lines: b(["L'Ovive : pizzeria, CMS pour que le gérant édite sa carte seul.", "Manika.LAB : distributeur B2B de cosmétique capillaire, 226 produits, compte pro.", "Nayuma Tea : boutique de thés headless Shopify, couche B2B et devis.", "Indysigner.fr : le site du studio, animé en 3D."], ["L'Ovive: pizzeria, CMS so the owner edits the menu alone.", "Manika.LAB: B2B hair-cosmetics distributor, 226 products, pro accounts.", "Nayuma Tea: headless Shopify tea shop, B2B layer and quotes.", "Indysigner.fr: the studio's own animated 3D site."]),
     links: [{ label: "lovive.fr", href: "https://lovive.fr" }, { label: "manikalab.com", href: "https://manikalab.com" }, { label: "nayumatea.com", href: "https://nayumatea.com" }],
   },
   {
-    id: "chambre-poster", chapter: "indysigner", position: [-9.3, 2.35, -2.6],
+    id: "chambre-poster", chapter: "indysigner", position: [-4.6, 1.2, 3.2],
     kicker: b("Data & automatisation", "Data & automation"), title: b("Prospection automatisée", "Automated prospecting"),
     lines: b(["Sourcing d'entreprises locales, mails rédigés avec l'IA, validation manuelle, envoi et suivi des réponses par n8n.", "Synchronisation et audit de catalogues Shopify, indexation de recherche au build, relances Klaviyo."], ["Local business sourcing, AI-drafted emails, manual validation, sending and reply tracking via n8n.", "Shopify catalogue sync and audits, build-time search indexing, Klaviyo flows."]),
   },

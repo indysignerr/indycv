@@ -64,8 +64,8 @@ export const chapters: Chapter[] = [
   },
   {
     id: "indysigner", at: 76, length: 10, clip: "idle",
-    day:    { accent: "#FF5A36", panel: "rgba(24,46,38,0.84)", ink: "#F5F1EA", floor: "#D9BE94", wall: "#F4F1EA", sky: "#D8D3E6", fog: "#E7E3EF" },
-    sunset: { accent: "#FF6B47", panel: "rgba(14,12,18,0.86)", ink: "#F5F1EA", floor: "#A88E6A", wall: "#C9C2B6", sky: "#D98A6E", fog: "#E9B49A" },
+    day:    { accent: "#C8694F", panel: "rgba(19,41,75,0.86)", ink: "#F5F1EA", floor: "#D9BE94", wall: "#F4F1EA", sky: "#D8D3E6", fog: "#E7E3EF" },
+    sunset: { accent: "#E08A6E", panel: "rgba(14,24,46,0.88)", ink: "#F5F1EA", floor: "#A88E6A", wall: "#C9C2B6", sky: "#D98A6E", fog: "#E9B49A" },
     label: b("Chapitre 5 · Indysigner", "Chapter 5 · Indysigner"),
     title: b("L'atelier", "The studio"),
     quality: b("Autonomie & livraison", "Autonomy & delivery"),

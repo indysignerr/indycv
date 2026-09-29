@@ -201,7 +201,7 @@ export function Parquet({ width, length, color = "#C9A57A", dark = "#B08D63" }: 
   return (
     <group>
       {Array.from({ length: rows }).map((_, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-width / 2 + 0.13 + i * 0.26, 0.008, 0]} receiveShadow>
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-width / 2 + 0.13 + i * 0.26, 0.03, 0]} receiveShadow>
           <planeGeometry args={[0.24, length]} /><Flat color={i % 3 === 1 ? dark : color} roughness={0.7} />
         </mesh>
       ))}
@@ -211,7 +211,7 @@ export function Parquet({ width, length, color = "#C9A57A", dark = "#B08D63" }: 
 
 /** Moquette bleue le long du chemin. */
 export function Carpet({ length, color = "#2F4FB5", width = 1.9 }: { length: number; color?: string; width?: number }) {
-  return <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} receiveShadow><planeGeometry args={[width, length]} /><Flat color={color} roughness={1} /></mesh>;
+  return <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.045, 0]} receiveShadow><planeGeometry args={[width, length]} /><Flat color={color} roughness={1} /></mesh>;
 }
 
 /** Grand lit double. */

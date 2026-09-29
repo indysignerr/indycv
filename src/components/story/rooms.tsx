@@ -26,38 +26,22 @@ export function frameAt(curve: THREE.Curve<THREE.Vector3>, d: number) {
 const CLOSED = new Set(["lycee", "concertae", "indysigner", "albert"]);
 
 /** Mur transversal percé d'une porte (le chemin passe en x=0), avec deux battants qui s'ouvrent à l'approche. */
-function DoorWall({ z, wid, h, color, accent, distanceRef, doorAt }: { z: number; wid: number; h: number; color: string; accent: string; distanceRef: React.MutableRefObject<number>; doorAt: number }) {
-  const left = useRef<THREE.Group>(null), right = useRef<THREE.Group>(null);
-  useFrame((_, dt) => {
-    const d = distanceRef.current - doorAt;
-    const open = d > -2.4 && d < 2.4;
-    const target = open ? Math.PI * 0.55 : 0;
-    if (left.current) left.current.rotation.y += (-target - left.current.rotation.y) * Math.min(1, dt * 3);
-    if (right.current) right.current.rotation.y += (target - right.current.rotation.y) * Math.min(1, dt * 3);
-  });
-  const leftW = wid - DOOR_W - 1.5; // du bord gauche de la porte au bord gauche de la dalle
+function DoorWall({ z, wid, h, color, accent }: { z: number; wid: number; h: number; color: string; accent: string; distanceRef?: React.MutableRefObject<number>; doorAt?: number }) {
+  // Mur transversal qui s'arrête 1,6 m avant le chemin + portique coloré centré sur le chemin
+  const end = -1.6;
+  const start = -wid + DOOR_W / 2 + 0.75 - 0.0;
+  const w = end - start;
   return (
     <group position={[0, 0, z]}>
-      <mesh position={[-DOOR_W / 2 - leftW / 2, h / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[leftW, h, 0.3]} />
+      <mesh position={[start + w / 2, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, 0.3]} />
         <Flat color={color} />
       </mesh>
-      <mesh position={[DOOR_W / 2 + 0.75, h / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.5, h, 0.3]} />
-        <Flat color={color} />
-      </mesh>
-      <mesh position={[0, (h + 2.3) / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[DOOR_W, h - 2.3, 0.3]} />
-        <Flat color={color} />
-      </mesh>
-      {[[-1, left], [1, right]].map(([s, ref]) => (
-        <group key={String(s)} ref={ref as React.RefObject<THREE.Group>} position={[(s as number) * (DOOR_W / 2), 0, 0]}>
-          <mesh position={[-(s as number) * (DOOR_W / 4), 1.15, 0]} castShadow>
-            <boxGeometry args={[DOOR_W / 2 - 0.02, 2.3, 0.06]} />
-            <Flat color={accent} roughness={0.6} />
-          </mesh>
-        </group>
+      {/* Portique : deux montants + linteau */}
+      {[-1, 1].map((sx) => (
+        <mesh key={sx} position={[sx * (DOOR_W / 2), 1.3, 0]} castShadow><boxGeometry args={[0.16, 2.6, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
       ))}
+      <mesh position={[0, 2.6, 0]} castShadow><boxGeometry args={[DOOR_W + 0.16, 0.16, 0.2]} /><Flat color={accent} roughness={0.6} /></mesh>
     </group>
   );
 }
@@ -148,10 +132,10 @@ export function Diorama({ curve, chapter, palette, active, sunset, distanceRef }
             <Flat color={a} emissive={a} emissiveIntensity={0.5} />
           </mesh>
           {/* Murs d'entrée et de sortie, percés */}
-          <DoorWall z={-(len + 1.2) / 2 + 0.15} wid={wid + 1.5} h={h} color={palette.wall} accent={a} distanceRef={distanceRef} doorAt={chapter.at - 0.45} />
-          <DoorWall z={(len + 1.2) / 2 - 0.15} wid={wid + 1.5} h={h} color={palette.wall} accent={a} distanceRef={distanceRef} doorAt={chapter.at + chapter.length + 0.45} />
+          <DoorWall z={-(len + 1.2) / 2 + 0.15} wid={wid} h={h} color={palette.wall} accent={a} />
+          <DoorWall z={(len + 1.2) / 2 - 0.15} wid={wid} h={h} color={palette.wall} accent={a} />
           {/* Sol intérieur un ton plus clair */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0.005, 0]} receiveShadow>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0.015, 0]} receiveShadow>
             <planeGeometry args={[wid + 1.2, len + 0.9]} />
             <Flat color={palette.floor} />
           </mesh>
@@ -194,7 +178,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "lycee":
       return (
         <group>
-          <Carpet length={len + 0.9} color={sunset ? "#26407F" : "#2F4FB5"} />
+          <Carpet length={len + 0.5} color={sunset ? "#26407F" : "#2F4FB5"} />
           <Sign text="LYCÉE SIMONE VEIL" position={[L + 0.02, 2.66, 0.4]} rotation={[0, Math.PI / 2, 0]} width={5} color={a} />
           <Chalkboard position={[L + 0.25, 0, 0.4]} rotation={[0, Math.PI / 2, 0]} accent={a} />
           {[-2.4, -0.8, 0.8].map((z, i) => (
@@ -209,7 +193,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "concertae":
       return (
         <group>
-          <group position={[cxOf(wid), 0, 0]}><Parquet width={wid + 1.2} length={len + 0.9} color={sunset ? "#9A7A56" : "#C9A57A"} dark={sunset ? "#80654A" : "#B08D63"} /></group>
+          <group position={[cxOf(wid), 0, 0]}><Parquet width={wid + 1.2} length={len + 0.5} color={sunset ? "#9A7A56" : "#C9A57A"} dark={sunset ? "#80654A" : "#B08D63"} /></group>
           <Sign image="/logos/concertae.png" position={[L + 0.06, 2.3, 0.2]} rotation={[0, Math.PI / 2, 0]} width={2.8} bg="#FFFFFF" />
           <Desk position={[-4.4, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
           <Chair position={[-3.5, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} />
@@ -222,26 +206,42 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "indysigner":
       return (
         <group>
-          <group position={[cxOf(wid), 0, 0]}><Parquet width={wid + 1.2} length={len + 0.9} color={sunset ? "#A88E6A" : "#E2CBA4"} dark={sunset ? "#957C5C" : "#CDB48C"} /></group>
-          <Sign image="/logos/indysigner.webp" position={[L + 0.06, 2.3, 0.4]} rotation={[0, Math.PI / 2, 0]} width={2.6} bg="#F4EFE6" />
-          <BigDesk position={[L + 0.55, 0, -2.6]} rotation={[0, Math.PI / 2, 0]} accent={a} top={sunset ? "#8E7658" : "#D9BE94"} />
-          <Chair position={[L + 1.4, 0, -2.6]} rotation={[0, Math.PI / 2, 0]} color="#15141B" />
-          <Laptop position={[L + 0.55, 0.78, -1.5]} rotation={[0, Math.PI / 2 + 0.4, 0]} accent={a} />
-          <Bed position={[-2.6, 0, F - 1.25]} rotation={[0, 0, 0]} accent={a} frame={sunset ? "#6E5640" : "#8A6A48"} />
-          <LegoShelf position={[L + 0.3, 0, 3.2]} rotation={[0, Math.PI / 2, 0]} />
-          {["indysigner.fr", "lovive.fr", "manikalab.com", "nayumatea.com"].map((s, i) => (
-            <ProjectCard key={s} position={[-3.6 + i * 0.9, 1.9 + (i % 2) * 0.45, 1.2 + (i % 2) * 0.6]} label={s} accent={a} active={active} />
-          ))}
-          {/* Affiche prospection au-dessus du bureau */}
-          <mesh position={[L + 0.03, 2.35, -2.6]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.3, 0.8]} /><Flat color="#15141B" emissive={a} emissiveIntensity={0.15} /></mesh>
-          <Text position={[L + 0.05, 2.35, -2.6]} rotation={[0, Math.PI / 2, 0]} fontSize={0.12} color={a} anchorX="center" anchorY="middle" maxWidth={1.1} textAlign="center">n8n · Shopify · Klaviyo</Text>
-          <Lamp position={[-4.0, 2.9, 0.4]} color={a} intensity={active ? 12 : 4} />
+          <group position={[cxOf(wid), 0, 0]}><Parquet width={wid + 1.2} length={len + 0.5} color={sunset ? "#B39873" : "#E6D1AE"} dark={sunset ? "#A08664" : "#D5BD96"} /></group>
+          {/* Tapis rond au centre */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.2, 0.05, -0.2]} receiveShadow><circleGeometry args={[1.6, 40]} /><Flat color={sunset ? "#D9CBB5" : "#EFE6D6"} /></mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.2, 0.055, -0.2]}><ringGeometry args={[1.35, 1.45, 40]} /><Flat color={a} /></mesh>
+          {/* Mur vert : bureau 3 écrans sous le logo */}
+          <Sign image="/logos/indysigner.webp" position={[L + 0.06, 2.5, -1.9]} rotation={[0, Math.PI / 2, 0]} width={1.9} bg="#F4EFE6" />
+          <BigDesk position={[L + 0.55, 0, -1.9]} rotation={[0, Math.PI / 2, 0]} accent={a} top={sunset ? "#8E7658" : "#D9BE94"} />
+          <Chair position={[L + 1.45, 0, -1.9]} rotation={[0, -Math.PI / 2, 0]} color="#1E2A3F" />
+          {/* Mur vert : placard à Legos */}
+          <LegoShelf position={[L + 0.3, 0, 1.6]} rotation={[0, Math.PI / 2, 0]} />
+          {/* Mur du fond (blanc) : fenêtre + grand lit double + table de nuit */}
+          {/* Fenêtre sur le mur du fond (face tournée vers la pièce) */}
+          <group position={[-4.6, 2.15, F - 0.02]} rotation={[0, Math.PI, 0]}>
+            <mesh position={[0, 0, -0.03]}><boxGeometry args={[2.1, 1.3, 0.06]} /><Flat color="#FFFFFF" /></mesh>
+            <mesh position={[0, 0, 0.005]}><planeGeometry args={[1.9, 1.1]} /><meshBasicMaterial color={sunset ? "#F2A26B" : "#BFDDF3"} toneMapped={false} /></mesh>
+            <mesh position={[0, 0, 0.012]}><boxGeometry args={[0.05, 1.1, 0.02]} /><Flat color="#FFFFFF" /></mesh>
+            <mesh position={[0, 0, 0.012]}><boxGeometry args={[1.9, 0.05, 0.02]} /><Flat color="#FFFFFF" /></mesh>
+          </group>
+          <Bed position={[-4.6, 0, F - 1.25]} rotation={[0, Math.PI, 0]} accent="#1E2F55" frame={sunset ? "#8C7456" : "#B8966B"} />
+          <group position={[-3.2, 0, F - 0.4]}>
+            <mesh position={[0, 0.28, 0]} castShadow><boxGeometry args={[0.5, 0.56, 0.45]} /><Flat color={sunset ? "#8C7456" : "#B8966B"} /></mesh>
+            <mesh position={[0, 0.66, 0]}><cylinderGeometry args={[0.07, 0.1, 0.2, 12]} /><Flat color="#F4F1EA" /></mesh>
+            <mesh position={[0, 0.84, 0]}><coneGeometry args={[0.16, 0.2, 16, 1, true]} /><Flat color={a} emissive="#FFD9A0" emissiveIntensity={sunset ? 0.6 : 0} /></mesh>
+          </group>
+          {/* Plante */}
+          <group position={[-1.2, 0, F - 0.5]}>
+            <mesh position={[0, 0.2, 0]} castShadow><cylinderGeometry args={[0.2, 0.16, 0.4, 14]} /><Flat color="#C8694F" /></mesh>
+            {[0, 1, 2, 3, 4].map((k) => <mesh key={k} position={[Math.cos(k * 1.3) * 0.12, 0.65 + (k % 2) * 0.15, Math.sin(k * 1.3) * 0.12]} rotation={[Math.cos(k) * 0.4, k, Math.sin(k) * 0.4]} castShadow><coneGeometry args={[0.1, 0.6, 5]} /><Flat color="#3F7A4E" flat /></mesh>)}
+          </group>
+          <Lamp position={[-4.2, 2.95, -0.2]} color={sunset ? "#FFD9A8" : "#FFF3DD"} intensity={active ? 10 : 3} />
         </group>
       );
     case "albert":
       return (
         <group>
-          <Carpet length={len + 0.9} color={sunset ? "#26407F" : "#2F4FB5"} />
+          <Carpet length={len + 0.5} color={sunset ? "#26407F" : "#2F4FB5"} />
           <Sign image="/logos/albert-x-mines.webp" position={[L + 0.06, 2.3, 1.0]} rotation={[0, Math.PI / 2, 0]} width={2.6} bg="#FFFFFF" />
           {[-3.0, -1.6].map((z, i) => <Bookshelf key={i} position={[L + 0.2, 0, z]} rotation={[0, Math.PI / 2, 0]} books={[a, "#E9E4D6", "#FF5A36", "#F5B942", "#5FA86A"]} />)}
           <Desk position={[-4.2, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#A79E90" : "#DCD6CA"} />
