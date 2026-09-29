@@ -28,7 +28,7 @@ export function Intro() {
   }, []);
 
   return (
-    <div ref={ref} className="pointer-events-none fixed inset-0 z-30 flex flex-col bg-bg/80 backdrop-blur-md">
+    <div ref={ref} className="story-cover pointer-events-none fixed inset-0 z-30 flex flex-col">
       <div className="px-5 pt-5 sm:px-8"><span className="font-display text-lg font-bold">IF<span className="text-accent">.</span></span></div>
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 sm:px-8">
         <p className="label mb-6 text-accent">{t(storyUi.introKicker, lang)} · {theme === "dark" ? (lang === "fr" ? "Coucher de soleil" : "Sunset") : (lang === "fr" ? "Plein jour" : "Daylight")}</p>
