@@ -9,7 +9,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useApp } from "@/components/providers";
 import { INTRO_VH, scroll, splitProgress, TOTAL_VH } from "@/lib/scroll-progress";
 import { loading } from "@/lib/loading";
-import { quality, qualityFor, refineTier, stepDown, useQuality } from "@/lib/quality";
+import { quality, qualityFor, refineTier, useQuality } from "@/lib/quality";
 import { MODEL } from "./character";
 import { labelsFont } from "./label";
 import { applySoftShadows } from "./soft-shadows";
@@ -109,6 +109,8 @@ export function StoryCanvas({ onFail }: { onFail: () => void }) {
   const [mobile] = useState(() => window.matchMedia("(max-width: 768px)").matches);
   const q = useQuality();
   const [dpr, setDpr] = useState(q.dprStart);
+  // Résolution plancher : 1 (0,8 sur les appareils faibles, pour garder de la fluidité)
+  const minDpr = Math.min(q.dprMax, q.tier === "low" ? 0.8 : 1);
   const [gpuChecked, setGpuChecked] = useState(false);
   const [ready, setReady] = useState(false);
   const getState = useRef<(() => RootState) | null>(null);
@@ -200,14 +202,18 @@ export function StoryCanvas({ onFail }: { onFail: () => void }) {
         gl={{ antialias: q.antialias, powerPreference: "high-performance", toneMappingExposure: 1.06 }}
         onCreated={onCreated}
       >
-        {/* Si les images ralentissent : on baisse d'abord la résolution, puis des réglages sans recompilation */}
+        {/*
+          Si les images ralentissent vraiment (< 26 par seconde), on baisse seulement la résolution : jamais de contenu
+          retiré en cours de visite (figurants, ciel, herbe restent tels que choisis au chargement). Le seuil est sous
+          30 images/s car un Mac en économie d'énergie plafonne le navigateur à 30 sans que le site peine.
+        */}
         {ready && (
           <PerformanceMonitor
-            bounds={(refresh) => (refresh > 100 ? [45, 90] : [38, 57])}
-            onDecline={() => setDpr((d) => { if (d > 1) return Math.max(1, d - 0.25); stepDown(mobile); return d; })}
-            onIncline={() => setDpr((d) => Math.min(quality.get().dprMax, d + 0.25))}
+            bounds={() => [26, 50]}
+            onDecline={() => setDpr((d) => Math.max(minDpr, +(d - 0.25).toFixed(2)))}
+            onIncline={() => setDpr((d) => Math.min(quality.get().dprMax, +(d + 0.25).toFixed(2)))}
             flipflops={4}
-            onFallback={() => { stepDown(mobile); stepDown(mobile); setDpr(Math.min(1, quality.get().dprMax)); }}
+            onFallback={() => setDpr(minDpr)}
           />
         )}
         {gpuChecked && (

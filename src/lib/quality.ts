@@ -2,13 +2,11 @@ import { useSyncExternalStore } from "react";
 
 /**
  * Niveaux de qualité du rendu 3D : estimés au démarrage selon l'appareil, affinés dès que la carte graphique
- * est connue, puis abaissés en direct si la machine peine. Objectif : que le site reste fluide partout,
- * même sur un vieux téléphone.
+ * est connue. Objectif : que le site reste fluide partout, même sur un vieux téléphone.
  *
- * Les réglages « lourds » (ombres, ombres douces, ciel, relief des montagnes) sont fixés une fois pour toutes
- * avant le premier rendu : les changer en cours de visite obligerait à recompiler tous les programmes de rendu
- * (plusieurs secondes de blocage). En cours de route, on n'abaisse que des réglages sans recompilation :
- * résolution, herbe, figurants, nuages.
+ * Tout est fixé avant le premier rendu : changer ombres ou ciel en cours de visite recompilerait tous les
+ * programmes de rendu (secondes de blocage), et retirer figurants ou herbe se verrait (« les personnages ont
+ * disparu »). En cours de route, seule la résolution s'adapte (voir story-canvas.tsx).
  */
 
 export type Tier = "high" | "medium" | "low";
@@ -62,6 +60,10 @@ export function detectTier(): Tier | "classic" {
   const nav = navigator as Navigator & { deviceMemory?: number };
   const mem = nav.deviceMemory ?? 8;
   const cores = nav.hardwareConcurrency ?? 8;
+  // iPhone / iPad : Safari masque la mémoire et plafonne le nombre de cœurs annoncé, qui ne veulent donc rien dire.
+  // Tous ceux qui ont WebGL 2 tiennent le niveau moyen ; la résolution s'adapte ensuite si besoin.
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  if (ios) return "medium";
   if (mem <= 2 || cores <= 2) return "low";
   if (isMobileDevice()) return mem >= 4 && cores >= 6 ? "medium" : "low";
   if (mem <= 4 || cores <= 4) return "medium";
@@ -81,7 +83,7 @@ export function refineTier(tier: Tier, renderer: string): Tier | "classic" {
   return tier;
 }
 
-/** Petit magasin partagé (le niveau peut baisser en cours de visite). */
+/** Petit magasin partagé (niveau choisi au chargement). */
 let current: Quality = qualityFor("medium", false);
 const listeners = new Set<() => void>();
 export const quality = {
@@ -90,22 +92,5 @@ export const quality = {
   subscribe(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; },
 };
 
-const ORDER: Tier[] = ["high", "medium", "low"];
-/** Un cran en dessous, sans rien recompiler (renvoie false si on est déjà au plus bas). */
-export function stepDown(mobile: boolean) {
-  const i = ORDER.indexOf(current.tier);
-  if (i >= ORDER.length - 1) return false;
-  const next = ORDER[i + 1], p = PRESETS[next];
-  quality.set({
-    ...current,
-    tier: next,
-    grass: p.grass,
-    figures: p.figures,
-    sky: current.sky === "clouds" ? "physical" : current.sky,
-    dprMax: Math.min(current.dprMax, dprCap(next, mobile)),
-  });
-  return true;
-}
-
-/** Niveau courant, dans un composant React (se met à jour si le niveau baisse en cours de route). */
+/** Niveau courant, dans un composant React. */
 export const useQuality = () => useSyncExternalStore(quality.subscribe, quality.get, quality.get);
