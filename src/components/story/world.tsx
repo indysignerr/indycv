@@ -99,7 +99,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
         <Diorama key={c.id} curve={curve} chapter={c} palette={sunset ? c.sunset : c.day} active={state.chapter === i} sunset={sunset} />
       ))}
 
-      <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} />
+      <Character curve={curve} distanceRef={dist} speedRef={speed} action={state.action} walking={state.walking} racket={state.chapter === 0} />
     </>
   );
 }
