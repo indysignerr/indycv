@@ -33,12 +33,12 @@ export const hotspots: Hotspot[] = [
   {
     id: "concertae-pc", chapter: "concertae", position: [-4.4, 1.15, 1.2],
     kicker: b("Concertae · Cannes · 2025-2026", "Concertae · Cannes · 2025-2026"), title: b("Ce que le cabinet m'a appris", "What the firm taught me"),
-    lines: b(["Saisie comptable, lettrage et rapprochements bancaires.", "Révision des comptes et préparation des clôtures.", "Déclarations de TVA et respect des échéances.", "Relation client au quotidien : expliquer, rassurer, relancer.", "Outils : Excel avancé et le logiciel de production comptable du cabinet."], ["Bookkeeping, matching and bank reconciliations.", "Account reviews and closing preparation.", "VAT returns and deadline discipline.", "Daily client contact: explain, reassure, follow up.", "Tools: advanced Excel and the firm's accounting software."]),
+    lines: b(["Outils : Cegid et Pennylane, au quotidien.", "Déclarations de TVA et respect des échéances.", "Bilans : de la révision des comptes à la clôture.", "Un bilan de fusion, du début à la fin.", "Relation client : expliquer, rassurer, relancer."], ["Tools: Cegid and Pennylane, daily.", "VAT returns and deadline discipline.", "Balance sheets: from account reviews to closing.", "One merger balance sheet, end to end.", "Client contact: explain, reassure, follow up."]),
   },
   {
     id: "concertae-shelf", chapter: "concertae", position: [-2.0, 1.6, 4.6],
     kicker: b("Compétences", "Skills"), title: b("Business", "Business"),
-    lines: b(["Comptabilité générale (1 an en cabinet).", "Gestion de projet client et cadrage de devis.", "Prospection B2B et suivi commercial."], ["General accounting (1 year in a firm).", "Client project management and quote scoping.", "B2B prospecting and sales follow-up."]),
+    lines: b(["Comptabilité générale sur Cegid et Pennylane (1 an en cabinet).", "TVA, bilans, bilan de fusion.", "Gestion de projet client, cadrage de devis, prospection B2B."], ["General accounting on Cegid and Pennylane (1 year in a firm).", "VAT, balance sheets, merger balance sheet.", "Client project management, quote scoping, B2B prospecting."]),
   },
   {
     id: "chambre-laptop", chapter: "indysigner", position: [-4.4, 1.05, 1.0],

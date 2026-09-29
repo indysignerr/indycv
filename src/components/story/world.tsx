@@ -64,13 +64,6 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     tmp.cam.copy(anchor).addScaledVector(anchorT, inRoom ? (dist.current - roomMid) * 0.35 - back : -back).addScaledVector(anchorS, lat).setY(h);
     if (inRoom) tmp.look.copy(tmp.p).lerp(anchor, 0.6).addScaledVector(anchorT, 1.2).addScaledVector(anchorS, -2.8).setY(mobile ? 0.5 : 1.2);
     else tmp.look.copy(tmp.p).addScaledVector(tmp.t, 1.0).addScaledVector(tmp.side, mobile ? 0 : -1.6).setY(mobile ? 0.2 : 1.0);
-    // Chambre : vue 360 à la souris
-    if (c?.id === "indysigner" && !mobile) {
-      const yaw = scroll.mouse.x * 0.32, pitch = scroll.mouse.y * 0.25;
-      const off = new THREE.Vector3().subVectors(tmp.cam, anchor);
-      off.applyAxisAngle(tmp.up, -yaw);
-      tmp.cam.copy(anchor).add(off).setY(h + pitch * 1.5);
-    }
     camera.position.lerp(tmp.cam, Math.min(1, dt * 1.5));
     tmp.m.lookAt(camera.position, tmp.look, tmp.up);
     tmp.q.setFromRotationMatrix(tmp.m);
@@ -93,6 +86,7 @@ export function World({ sunset, mobile }: { sunset: boolean; mobile: boolean }) 
     <>
       <GradientSky top={o.sky} bottom={o.fog} />
       <Clouds sunset={sunset} />
+      <Horizon sunset={sunset} />
       {/* Éclairage d'ambiance synthétique (studio) : reflets doux sur les matières plates, sans HDRI */}
       <Environment resolution={128} frames={1}>
         <Lightformer intensity={sunset ? 2.2 : 1.6} color={sunset ? "#FFB27A" : "#FFFFFF"} position={[0, 8, -6]} scale={[14, 6, 1]} />
@@ -164,6 +158,36 @@ function Tiles({ curve, color }: { curve: THREE.Curve<THREE.Vector3>; color: str
           <Flat color={color} roughness={0.7} />
         </mesh>
       ))}
+    </group>
+  );
+}
+
+/** Horizon : trois rangées de collines en silhouette (de plus en plus pâles) + soleil bas au coucher. */
+function Horizon({ sunset }: { sunset: boolean }) {
+  const rows = useMemo(() => [0, 1, 2].map((r) => {
+    const pts: [number, number][] = [];
+    for (let i = 0; i <= 40; i++) {
+      const x = -140 + i * 7;
+      const y = 4 + r * 3 + Math.abs(Math.sin(i * 0.9 + r * 2.1) * 6 + Math.sin(i * 0.31 + r) * 4) * (1 + r * 0.35);
+      pts.push([x, y]);
+    }
+    const shape = new THREE.Shape();
+    shape.moveTo(-140, -10);
+    pts.forEach(([x, y]) => shape.lineTo(x, y));
+    shape.lineTo(140, -10);
+    return { geo: new THREE.ShapeGeometry(shape), z: -58 - r * 8, r };
+  }), []);
+  const cols = sunset ? ["#8A5E58", "#B07A6A", "#D49A80"] : ["#7FA38C", "#9DBBA6", "#BCD3C2"];
+  return (
+    <group>
+      {rows.map(({ geo, z, r }) => (
+        <mesh key={r} geometry={geo} position={[0, -6, z]} frustumCulled={false}>
+          <meshBasicMaterial color={cols[r]} fog={false} toneMapped={false} />
+        </mesh>
+      ))}
+      {sunset && (
+        <mesh position={[18, 9, -75]}><circleGeometry args={[5.5, 40]} /><meshBasicMaterial color="#FFD5A0" fog={false} toneMapped={false} /></mesh>
+      )}
     </group>
   );
 }

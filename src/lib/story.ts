@@ -60,7 +60,7 @@ export const chapters: Chapter[] = [
     label: b("Chapitre 4 · Concertae", "Chapter 4 · Concertae"),
     title: b("Le cabinet comptable", "The accounting firm"),
     quality: b("Fiabilité & échéances", "Reliability & deadlines"),
-    text: b("Un an d'alternance à Cannes (2025-2026) : saisie, révision, clôtures, contact client. On ne rend pas un bilan à peu près.", "One year of apprenticeship in Cannes (2025-2026): bookkeeping, reviews, closings, client contact. You don't hand in an approximate balance sheet."),
+    text: b("Un an d'alternance à Cannes (2025-2026) : Cegid, Pennylane, TVA, bilans et même un bilan de fusion. On ne rend pas un bilan à peu près.", "One year of apprenticeship in Cannes (2025-2026): Cegid, Pennylane, VAT, balance sheets and even a merger balance sheet. You don't hand in an approximate balance sheet."),
   },
   {
     id: "indysigner", at: 76, length: 10, clip: "idle",

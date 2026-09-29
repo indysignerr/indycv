@@ -76,12 +76,16 @@ function Sign({ image, text, position, rotation, width = 2.4, color = "#F5F1EA",
 function LogoPlane({ url, width, bg }: { url: string; width: number; bg?: string }) {
   const tex = useTexture(url);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
   const img = tex.image as { width: number; height: number } | undefined;
   const ratio = img ? img.height / img.width : 0.66;
+  const h = width * ratio;
   return (
     <group>
-      {bg && <mesh position={[0, 0, -0.02]}><planeGeometry args={[width + 0.3, width * ratio + 0.3]} /><Flat color={bg} /></mesh>}
-      <mesh><planeGeometry args={[width, width * ratio]} /><meshBasicMaterial map={tex} transparent toneMapped={false} /></mesh>
+      {/* Affiche : fond papier + cadre fin, image non éclairée pour garder les couleurs du logo */}
+      <mesh position={[0, 0, -0.035]}><boxGeometry args={[width + 0.36, h + 0.36, 0.05]} /><Flat color="#1F1E24" roughness={0.6} /></mesh>
+      <mesh position={[0, 0, -0.005]}><planeGeometry args={[width + 0.2, h + 0.2]} /><meshBasicMaterial color={bg ?? "#F7F3EC"} toneMapped={false} /></mesh>
+      <mesh><planeGeometry args={[width, h]} /><meshBasicMaterial map={tex} toneMapped={false} /></mesh>
     </group>
   );
 }
@@ -108,7 +112,7 @@ export function HotspotMarker({ id, position, accent }: { id: string; position: 
       <mesh><sphereGeometry args={[0.07, 12, 12]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>
       {/* Zone de clic large */}
       <mesh onClick={(e) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; }} onPointerOver={() => { setHover(true); document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}>
-        <sphereGeometry args={[0.45, 8, 8]} />
+        <sphereGeometry args={[0.7, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
     </group>
@@ -204,7 +208,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "concertae":
       return (
         <group>
-          <Sign image="/logos/concertae.png" position={[L + 0.03, 2.35, 0.2]} rotation={[0, Math.PI / 2, 0]} width={3.2} bg="#FFFFFF" />
+          <Sign image="/logos/concertae.png" position={[L + 0.06, 2.3, 0.2]} rotation={[0, Math.PI / 2, 0]} width={2.8} bg="#FFFFFF" />
           <Desk position={[-4.4, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
           <Chair position={[-3.5, 0, -1.6]} rotation={[0, Math.PI / 2, 0]} />
           <Desk position={[-4.4, 0, 1.2]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#8C7458" : "#B79A7C"} />
@@ -216,8 +220,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "indysigner":
       return (
         <group>
-          <Sign image="/logos/indysigner.webp" position={[L + 0.03, 2.25, 0.4]} rotation={[0, Math.PI / 2, 0]} width={1.3} />
-          <Text position={[L + 0.04, 1.35, 0.4]} rotation={[0, Math.PI / 2, 0]} fontSize={0.2} color={a} anchorX="center" anchorY="middle" letterSpacing={0.25}>INDYSIGNER</Text>
+          <Sign image="/logos/indysigner.webp" position={[L + 0.06, 2.3, 0.4]} rotation={[0, Math.PI / 2, 0]} width={2.6} bg="#F4EFE6" />
           <Desk position={[-4.4, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} top="#2A2830" legs="#15141B" />
           <Laptop position={[-4.4, 0.78, 1.0]} rotation={[0, Math.PI / 2 + 0.3, 0]} accent={a} />
           <Chair position={[-3.5, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} color="#15141B" />
@@ -237,7 +240,7 @@ function Contents({ chapter, palette, active, sunset, len, wid }: { chapter: Cha
     case "albert":
       return (
         <group>
-          <Sign image="/logos/albert-x-mines.webp" position={[L + 0.03, 2.2, 1.0]} rotation={[0, Math.PI / 2, 0]} width={2.8} bg="#FFFFFF" />
+          <Sign image="/logos/albert-x-mines.webp" position={[L + 0.06, 2.3, 1.0]} rotation={[0, Math.PI / 2, 0]} width={2.6} bg="#FFFFFF" />
           {[-3.0, -1.6].map((z, i) => <Bookshelf key={i} position={[L + 0.2, 0, z]} rotation={[0, Math.PI / 2, 0]} books={[a, "#E9E4D6", "#FF5A36", "#F5B942", "#5FA86A"]} />)}
           <Desk position={[-4.2, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} screen accent={a} top={sunset ? "#A79E90" : "#DCD6CA"} />
           <Chair position={[-3.35, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} />
