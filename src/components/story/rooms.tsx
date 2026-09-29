@@ -108,8 +108,9 @@ export function HotspotMarker({ id, position, accent }: { id: string; position: 
       </mesh>
       <mesh><sphereGeometry args={[0.07, 12, 12]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>
       {/* Zone de clic large */}
-      <mesh onClick={(e) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; }} onPointerOver={() => { setHover(true); document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }} visible={false}>
+      <mesh onClick={(e) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; }} onPointerOver={() => { setHover(true); document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}>
         <sphereGeometry args={[0.45, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
     </group>
   );

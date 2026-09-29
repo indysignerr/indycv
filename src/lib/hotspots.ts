@@ -31,7 +31,7 @@ export const hotspots: Hotspot[] = [
     lines: b(["Spécialités mathématiques et physique-chimie.", "Le goût des modèles, des démonstrations propres et des résultats qu'on peut vérifier.", "Ensuite : une année de BUT GEA à l'IUT de Nice (gestion, comptabilité, droit)."], ["Mathematics and physics-chemistry majors.", "A taste for models, clean proofs and results you can check.", "Then: one year of BUT GEA at IUT Nice (management, accounting, law)."]),
   },
   {
-    id: "concertae-pc", chapter: "concertae", position: [-4.4, 1.15, -1.6],
+    id: "concertae-pc", chapter: "concertae", position: [-4.4, 1.15, 1.2],
     kicker: b("Concertae · Cannes · 2025-2026", "Concertae · Cannes · 2025-2026"), title: b("Ce que le cabinet m'a appris", "What the firm taught me"),
     lines: b(["Saisie comptable, lettrage et rapprochements bancaires.", "Révision des comptes et préparation des clôtures.", "Déclarations de TVA et respect des échéances.", "Relation client au quotidien : expliquer, rassurer, relancer.", "Outils : Excel avancé et le logiciel de production comptable du cabinet."], ["Bookkeeping, matching and bank reconciliations.", "Account reviews and closing preparation.", "VAT returns and deadline discipline.", "Daily client contact: explain, reassure, follow up.", "Tools: advanced Excel and the firm's accounting software."]),
   },

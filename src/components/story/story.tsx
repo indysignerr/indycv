@@ -40,7 +40,7 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
       <AnimatePresence>{!started && <Intro ready={ready} onStart={() => { window.scrollTo(0, 0); setStarted(true); }} />}</AnimatePresence>
       {started && <Panels />}
       {/* Longueur de scroll = longueur de l'histoire (texte sémantique pour SEO / lecteurs d'écran) */}
-      <main className="relative z-10">
+      <main className="pointer-events-none relative z-10">
         <div className="sr-only">
           <h1>Indy François — Business, data & code. Un seul cerveau.</h1>
           {chapters.map((c) => (
