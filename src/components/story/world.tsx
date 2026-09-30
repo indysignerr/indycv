@@ -39,7 +39,7 @@ const STEPS = 3 + chapters.length;
 export function World({ sunset, mobile, lang }: { sunset: boolean; mobile: boolean; lang: Lang }) {
   const [built, setBuilt] = useState(1);
   useEffect(() => {
-    loading.set({ progress: Math.max(loading.get().progress, 0.7 + 0.04 * (built / STEPS)) });
+    loading.phase("build", built / STEPS);
     if (built >= STEPS) { resolveBuilt(); return; }
     const id = requestAnimationFrame(() => setBuilt((b) => b + 1));
     return () => cancelAnimationFrame(id);

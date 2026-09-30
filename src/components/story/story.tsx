@@ -5,7 +5,7 @@ import { Component, useCallback, useEffect, useState, type ReactNode } from "rea
 import { scroll, TOTAL_VH } from "@/lib/scroll-progress";
 import { chapters } from "@/lib/story";
 import { detectTier, quality, qualityFor } from "@/lib/quality";
-import { loading, useLoading } from "@/lib/loading";
+import { loading, useReady } from "@/lib/loading";
 import { MODEL_URL } from "@/lib/assets";
 import { Intro } from "./intro";
 import { Panels } from "./panels";
@@ -46,7 +46,8 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
     setMode(tier === "classic" ? "fallback" : "story");
   }, []);
   const fail = useCallback(() => setMode("fallback"), []);
-  const { ready } = useLoading();
+  // Seulement « prête ou pas » : Story (et toute la scène) ne se redessine pas à chaque pour-cent du chargement
+  const ready = useReady();
 
   // Outils de réglage du son (développement uniquement)
   useEffect(() => {

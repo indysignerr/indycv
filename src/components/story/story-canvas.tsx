@@ -49,13 +49,34 @@ function Warmup({ onReady }: { onReady: () => void }) {
     let alive = true;
     (async () => {
       await worldBuilt;
-      loading.set({ progress: Math.max(loading.get().progress, 0.74) });
+      loading.phase("compile", 0);
       await labelsFont();
       await nextFrame();
       if (!alive) return;
-      try { await Promise.race([gl.compileAsync(scene, camera), sleep(15000)]); } catch {}
+      // 1) programmes de rendu : compilés en parallèle par la carte graphique (même principe que compileAsync),
+      //    en comptant ceux qui sont prêts pour faire avancer la barre au fil de l'eau
+      try {
+        const pending = new Set<THREE.Material>();
+        let t1 = performance.now();
+        // (les lumières sont déjà comptées via la scène : compiler une partie qui en contient les compterait deux fois)
+        const hasLight = (o: THREE.Object3D) => { let found = false; o.traverse((c) => { if ((c as THREE.Light).isLight) found = true; }); return found; };
+        for (const part of scene.children.filter((c) => !hasLight(c))) {
+          (gl.compile(part, camera, scene) as Set<THREE.Material>).forEach((m) => pending.add(m));
+          if (performance.now() - t1 > 12) { await nextFrame(); if (!alive) return; t1 = performance.now(); }
+        }
+        const total = Math.max(1, pending.size), t0 = performance.now();
+        while (pending.size && performance.now() - t0 < 15000) {
+          for (const m of pending) {
+            const program = (gl.properties.get(m) as { currentProgram?: { isReady: () => boolean } }).currentProgram;
+            if (!program || program.isReady()) pending.delete(m);
+          }
+          loading.phase("compile", 1 - pending.size / total);
+          if (pending.size) await sleep(16);
+          if (!alive) return;
+        }
+      } catch {}
       if (!alive) return;
-      loading.set({ progress: 0.9 });
+      loading.phase("textures", 0);
       const textures = new Set<THREE.Texture>();
       scene.traverse((o) => {
         const m = (o as THREE.Mesh).material;
@@ -67,12 +88,13 @@ function Warmup({ onReady }: { onReady: () => void }) {
           }
         }
       });
-      let t0 = performance.now();
+      let t0 = performance.now(), done = 0;
       for (const t of textures) {
         gl.initTexture(t);
+        loading.phase("textures", ++done / textures.size);
         if (performance.now() - t0 > 10) { await nextFrame(); if (!alive) return; t0 = performance.now(); }
       }
-      loading.set({ progress: 0.94 });
+      loading.phase("warm", 0);
       // 3) géométries et derniers réglages envoyés par lots (une fraction de la scène par image, même hors champ)
       const objects: THREE.Object3D[] = [];
       scene.traverse((o) => { if ((o as THREE.Mesh).isMesh || (o as THREE.Points).isPoints || (o as THREE.Line).isLine) objects.push(o); });
@@ -80,20 +102,20 @@ function Warmup({ onReady }: { onReady: () => void }) {
       const restore = () => objects.forEach((o, k) => { o.visible = shown[k]; o.frustumCulled = culled[k]; });
       objects.forEach((o) => { o.frustumCulled = false; });
       // Taille des lots ajustée à l'appareil : ~12 ms de préparation par image (gros lots sur un ordinateur rapide)
-      let size = 40;
+      let size = 24;
       for (let i = 0; i < objects.length;) {
         const end = Math.min(objects.length, i + size);
         objects.forEach((o, k) => { o.visible = shown[k] && k >= i && k < end; });
         const t = performance.now();
         gl.render(scene, camera);
         const spent = performance.now() - t;
-        size = Math.max(20, Math.min(400, Math.round(size * Math.min(2, 12 / Math.max(1, spent)))));
+        size = Math.max(12, Math.min(400, Math.round(size * Math.min(2, 9 / Math.max(1, spent)))));
         i = end;
+        loading.phase("warm", i / objects.length);
         await nextFrame();
         if (!alive) { restore(); return; }
       }
       restore();
-      loading.set({ progress: 0.98 });
       await nextFrame();
       if (!alive) return;
       gl.render(scene, camera);
@@ -154,7 +176,7 @@ export function StoryCanvas({ onFail }: { onFail: () => void }) {
   // Progression du téléchargement (modèle, images) pour l'écran d'accueil
   useEffect(
     () => useProgress.subscribe((s) => {
-      if (s.total > 0) loading.set({ progress: Math.max(loading.get().progress, 0.7 * (s.loaded / s.total)) });
+      if (s.total > 0) loading.phase("download", s.loaded / s.total);
     }),
     [],
   );
@@ -162,7 +184,7 @@ export function StoryCanvas({ onFail }: { onFail: () => void }) {
   const onReady = useCallback(() => {
     readyRef.current = true;
     setReady(true);
-    loading.set({ progress: 1, ready: true });
+    loading.set({ progress: 1, ceiling: 1, ready: true });
     const st = getState.current?.();
     if (st) { st.setFrameloop("always"); st.invalidate(); }
     // Deux images pour tout mettre en place, puis pause si l'accueil couvre encore l'écran

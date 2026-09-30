@@ -8,14 +8,20 @@ import { storyUi, t } from "@/lib/story";
 import { ambience } from "@/lib/ambience";
 import { SITE, ui, cvFile } from "@/lib/content";
 import { switchView } from "@/lib/view";
-import { useLoading } from "@/lib/loading";
+import { loading, useReady } from "@/lib/loading";
 
 /** Écran d'ouverture : visible en haut de l'histoire, s'efface dès qu'on descend (pas de bouton à cliquer). */
 export function Intro() {
   const { lang, theme } = useApp();
   const ref = useRef<HTMLDivElement>(null);
   const sound = useSyncExternalStore(ambience.subscribe, ambience.getSnapshot, ambience.getServerSnapshot);
-  const { progress, ready } = useLoading();
+  const ready = useReady();
+  // Barre de chargement : affichée image par image (sans passer par React), elle glisse vers l'avancement réel
+  const bar = useRef<HTMLDivElement>(null);
+  const pct = useRef<HTMLSpanElement>(null);
+  const meter = useRef<HTMLDivElement>(null);
+  const finished = useRef(false);
+  const [done, setDone] = useState(false);
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     if (ready) return;
@@ -24,14 +30,40 @@ export function Intro() {
   }, [ready]);
 
   useEffect(() => {
-    let raf = 0;
-    const loop = () => {
+    let raf = 0, last = performance.now(), shown = 0, lastPct = -1, written = 0, writtenAt = 0;
+    const loop = (now: number) => {
+      const dt = Math.min(0.1, Math.max(0, (now - last) / 1000));
+      last = now;
       const el = ref.current;
       if (el) {
         const o = scroll.intro;
         el.style.opacity = String(o);
         el.style.visibility = o < 0.01 ? "hidden" : "visible";
         el.style.transform = `translateY(${(1 - o) * -24}px)`;
+      }
+      if (!finished.current) {
+        const s = loading.get();
+        // Sans nouvelle, la barre glisse doucement vers le plafond de l'étape (sans l'atteindre) ; dès que
+        // l'avancement réel la dépasse, elle le rattrape en douceur. Jamais d'arrêt net, jamais de recul.
+        const creep = shown + (s.ceiling - 0.01 - shown) * (1 - Math.exp(-dt * 1.2));
+        const goal = s.ready ? 1 : Math.max(s.progress, Math.min(s.ceiling - 0.01, creep));
+        // Vitesse bornée : pas de bond même après une image longue
+        shown += Math.min(dt * 1.1, Math.max(0, goal - shown) * Math.min(1, dt * (s.ready ? 9 : 6)));
+        // La barre est animée par le compositeur (transition CSS sur transform) : elle continue de glisser
+        // même quand la page est occupée par la préparation de la 3D. On ne lui donne qu'une nouvelle cible
+        // toutes les ~100 ms, qu'elle rejoint en 300 ms.
+        if (bar.current && (now - writtenAt > 100 || shown - written > 0.02 || (s.ready && shown > 0.99))) {
+          bar.current.style.transform = `scaleX(${Math.max(0.03, shown)})`;
+          written = shown;
+          writtenAt = now;
+        }
+        const p = Math.min(100, Math.round(shown * 100));
+        if (p !== lastPct) {
+          lastPct = p;
+          if (pct.current) pct.current.textContent = `${p} %`;
+          if (meter.current && (p % 5 === 0 || p === 100)) meter.current.setAttribute("aria-valuenow", String(p));
+        }
+        if (s.ready && shown > 0.995) { finished.current = true; setDone(true); }
       }
       raf = requestAnimationFrame(loop);
     };
@@ -56,14 +88,14 @@ export function Intro() {
             {sound ? <Volume2 size={18} /> : <VolumeX size={18} />} {t(sound ? ui.sound.off : ui.sound.on, lang)}
           </button>
         </div>
-        {ready ? (
+        {done ? (
           <p className="label mt-8 inline-flex items-center gap-2"><span className="inline-flex animate-bounce items-center gap-2">{t(storyUi.scrollHint, lang)} <ArrowDown size={14} /></span><span className="hidden normal-case tracking-normal sm:inline">· {t(storyUi.introHint, lang)}</span></p>
         ) : (
-          <div className="mt-8 flex w-full max-w-xs flex-col gap-2" role="status" aria-live="polite">
-            <div className="h-[3px] w-full overflow-hidden rounded-full bg-ink/10">
-              <div className="h-full rounded-full bg-accent transition-[width] duration-500 ease-out" style={{ width: `${Math.max(4, Math.round(progress * 100))}%` }} />
+          <div className="mt-8 flex w-full max-w-xs flex-col gap-2">
+            <div ref={meter} role="progressbar" aria-label={t(storyUi.loading, lang)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={0} className="h-[3px] w-full overflow-hidden rounded-full bg-ink/10">
+              <div ref={bar} className="h-full w-full origin-left bg-accent will-change-transform" style={{ transform: "scaleX(0.03)", transition: "transform 300ms linear" }} />
             </div>
-            <p className="label">{t(storyUi.loading, lang)} · {Math.round(progress * 100)} %</p>
+            <p className="label" aria-hidden>{t(storyUi.loading, lang)} · <span ref={pct}>0 %</span></p>
             {slow && <p className="text-xs text-mute">{t(storyUi.loadingSlow, lang)}</p>}
           </div>
         )}
