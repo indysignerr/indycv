@@ -10,6 +10,7 @@ import type { Clip } from "@/lib/story";
 import { scroll } from "@/lib/scroll-progress";
 import { MODEL, newArmPose, spreadArm } from "./character";
 import { useQuality } from "@/lib/quality";
+import { DYNAMIC } from "./static-merge";
 
 
 
@@ -227,7 +228,7 @@ function FigureBody({ clip, position, rotationY = 0, scale = 1, tint = CLAY, off
   });
 
   return (
-    <group ref={group} position={position} rotation={[0, rotationY, 0]} scale={scale}>
+    <group ref={group} position={position} rotation={[0, rotationY, 0]} scale={scale} userData={DYNAMIC}>
       <primitive object={root} />
       {hand && <group ref={holder}>{hand}</group>}
       {children}

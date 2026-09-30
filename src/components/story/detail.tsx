@@ -26,24 +26,39 @@ export function TexMat({ tex, color, bump = 0.012, rough = 0.85, metal = 0 }: { 
 }
 
 /** Ombre de contact douce, posée au sol sous un objet. */
+/**
+ * Décalques (ombres de contact, ombres au pied des murs, rayons de lumière) : matériaux partagés et marqués
+ * `decal`, pour être regroupés même s'ils sont transparents. Ombres noires en mélange normal et rayons en
+ * mélange additif : l'ordre de dessin ne change rien au résultat, le regroupement est invisible.
+ */
+const decals = new Map<string, THREE.MeshBasicMaterial>();
+function decalMaterial(map: THREE.Texture, color: string, opacity: number, additive = false) {
+  const key = `${map.uuid}|${color}|${opacity}|${additive}`;
+  let m = decals.get(key);
+  if (!m) {
+    m = new THREE.MeshBasicMaterial({ map, color, opacity, transparent: true, depthWrite: false, ...(additive ? { blending: THREE.AdditiveBlending, toneMapped: false } : {}) });
+    m.userData.decal = true;
+    decals.set(key, m);
+  }
+  return m;
+}
+
 export function Blob({ position, size, opacity = 0.7 }: { position: V3; size: [number, number]; opacity?: number }) {
-  const t = useMemo(() => blobTex(), []);
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[position[0], position[1] + 0.012, position[2]]} renderOrder={1}>
       <planeGeometry args={size} />
-      <meshBasicMaterial map={t} transparent opacity={opacity} depthWrite={false} color="#000" />
+      <primitive object={decalMaterial(blobTex(), "#000", opacity)} attach="material" />
     </mesh>
   );
 }
 
 /** Occlusion d'angle : bande sombre au pied d'un mur (le dégradé part du mur). */
 export function WallAO({ position, length, rotationY = 0, width = 0.8 }: { position: V3; length: number; rotationY?: number; width?: number }) {
-  const t = useMemo(() => edgeTex(), []);
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.013, width / 2]} renderOrder={1}>
         <planeGeometry args={[length, width]} />
-        <meshBasicMaterial map={t} transparent depthWrite={false} color="#000" />
+        <primitive object={decalMaterial(edgeTex(), "#000", 1)} attach="material" />
       </mesh>
     </group>
   );
@@ -73,7 +88,7 @@ export function Window({ position, rotationY = 0, w = 1.8, h = 1.3, sunset, blin
       {beam && (
         <mesh position={[0, -h / 2 - 0.2, 0.9]} rotation={[-1.05, 0, 0]} renderOrder={2}>
           <planeGeometry args={[w * 1.05, 2.2]} />
-          <meshBasicMaterial map={bt} transparent opacity={sunset ? 0.28 : 0.2} depthWrite={false} color={sunset ? "#FFC58F" : "#FFFBEA"} blending={THREE.AdditiveBlending} toneMapped={false} />
+          <primitive object={decalMaterial(bt, sunset ? "#FFC58F" : "#FFFBEA", sunset ? 0.28 : 0.2, true)} attach="material" />
         </mesh>
       )}
     </group>

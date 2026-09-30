@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { Flat } from "./materials";
 import { brickTex, renderTex, romanTileTex, slateTex, stoneBaseTex } from "./textures";
 import { Label } from "./label";
+import { DYNAMIC } from "./static-merge";
 
 /**
  * Bâtiments des pièces fermées : un vrai volume vu de dehors (façades texturées, fenêtres, toit, auvent, portes
@@ -111,7 +112,7 @@ function SlidingDoor({ at, distanceRef, color }: { at: number; distanceRef: Reac
   });
   const lw = DOOR_W / 2 - 0.1;
   return (
-    <group ref={leaves}>
+    <group ref={leaves} userData={DYNAMIC}>
       {[-1, 1].map((s) => (
         <group key={s} position={[s * DOOR_W / 4, 0, 0]}>
           <mesh position={[0, DOOR_H / 2 - 0.04, 0]} castShadow><boxGeometry args={[lw, DOOR_H - 0.1, 0.05]} /><Flat color={color} roughness={0.45} /></mesh>

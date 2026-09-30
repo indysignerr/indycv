@@ -16,6 +16,7 @@ export function flatMaterial(color: string, roughness = 0.8, emissive = "#000000
   let m = flatCache.get(key);
   if (!m) {
     m = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0, envMapIntensity: 0.55, emissive, emissiveIntensity, flatShading: flat });
+    m.userData.flat = true; // matériau uni : fusionnable en couleurs par sommet (voir static-merge.tsx)
     flatCache.set(key, m);
   }
   return m;

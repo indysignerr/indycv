@@ -15,6 +15,7 @@ import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
 import { Badge, BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout, Football, GoalHD, Lockers, Monitor, PipelineBoard, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens, DeskFlag } from "./detail";
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
 import { Label } from "./label";
+import { DYNAMIC, Static } from "./static-merge";
 
 const up = new THREE.Vector3(0, 1, 0);
 export const ROOM_W = 11;
@@ -52,7 +53,11 @@ function veilMaterial(color: string) {
  * À l'approche, l'encadrement s'illumine ; le voile culmine juste avant le seuil puis s'efface quand on le traverse.
  */
 function DoorFrame({ z, out, accent, label, at, distanceRef }: { z: number; out: 1 | -1; accent: string; label?: string; at: number; distanceRef: React.MutableRefObject<number> }) {
-  const frame = useMemo(() => new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.1, roughness: 0.55, metalness: 0, envMapIntensity: 0.55 }), [accent]);
+  const frame = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.1, roughness: 0.55, metalness: 0, envMapIntensity: 0.55 });
+    m.userData.animated = true; // s'allume à l'approche (voir useFrame) : fusionné tel quel, jamais converti
+    return m;
+  }, [accent]);
   const veil = useMemo(() => veilMaterial(accent), [accent]);
   useFrame(({ clock }) => {
     const x = distanceRef.current - at;
@@ -146,7 +151,7 @@ export function HotspotMarker({ id, position, accent, label }: { id: string; pos
   });
   const toggle = (e: { stopPropagation: () => void }) => { e.stopPropagation(); scroll.hotspot = scroll.hotspot === id ? null : id; };
   return (
-    <group position={position}>
+    <group position={position} userData={DYNAMIC}>
       <Billboard>
         <mesh ref={ring} renderOrder={5}><ringGeometry args={[0.14, 0.16, 40]} /><meshBasicMaterial color="#FFFFFF" transparent depthWrite={false} toneMapped={false} /></mesh>
         <mesh ref={halo} renderOrder={5}><circleGeometry args={[0.2, 40]} /><meshBasicMaterial color={accent} transparent opacity={0.75} depthWrite={false} toneMapped={false} /></mesh>
@@ -205,6 +210,8 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
   const backMat = useMemo(() => new THREE.MeshStandardMaterial({ map: wallT, bumpMap: wallT, bumpScale: chapter.id === "lycee" ? 0.012 : 0.004, color: leftColor, roughness: 0.95, envMapIntensity: 0.55 }), [wallT, leftColor, chapter.id]);
   return (
     <group ref={root} position={f.p} quaternion={f.q}>
+      {/* Objets immobiles fusionnés par matériau (quelques dizaines d'appels de dessin au lieu de centaines) */}
+      <Static deps={[sunset, lang]}>
       {/* Sol : la dalle de la pièce (étendue jusqu'au mur avant pour les pièces fermées) */}
       <mesh position={[closed ? (X0 - 0.3 + X1 + 0.3) / 2 : cx, -0.12, 0]} receiveShadow>
         <boxGeometry args={[closed ? X1 - X0 + 0.6 : wid + 1.5, 0.24, len + 1.2]} />
@@ -241,6 +248,7 @@ export const Diorama = memo(function Diorama({ curve, chapter, palette, sunset, 
       {hotspots.filter((hs) => hs.chapter === chapter.id).map((hs) => (
         <HotspotMarker key={hs.id} id={hs.id} position={hs.position} accent={a} label={hs.title[lang]} />
       ))}
+      </Static>
     </group>
   );
 });

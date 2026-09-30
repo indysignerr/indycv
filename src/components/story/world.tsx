@@ -17,6 +17,7 @@ import { Bench, Bush, LampPost, Rock, Tree } from "./props";
 import { Grass } from "./grass";
 import { TexMat } from "./detail";
 import { concreteTex, grassTex } from "./textures";
+import { Static } from "./static-merge";
 
 const CLOSED = ["lycee", "concertae", "indysigner", "albert"];
 
@@ -308,7 +309,7 @@ const Scenery = memo(function Scenery({ curve, sunset }: { curve: THREE.Curve<TH
     return out;
   }, [curve]);
   return (
-    <group>
+    <Static deps={[sunset]}>
       {items.map((it, i) => {
         switch (it.kind) {
           case "tree": return <Tree key={i} position={it.pos} scale={it.s} color={sunset ? ["#4C8A5A", "#5C9A5A"][i % 2] : ["#5FA86A", "#6DB57A", "#4E9A5F"][i % 3]} />;
@@ -318,7 +319,7 @@ const Scenery = memo(function Scenery({ curve, sunset }: { curve: THREE.Curve<TH
           case "bench": return <Bench key={i} position={it.pos} rotation={it.rot} />;
         }
       })}
-    </group>
+    </Static>
   );
 });
 
