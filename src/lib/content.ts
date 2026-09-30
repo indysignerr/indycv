@@ -111,16 +111,16 @@ export const timeline = [
     ),
   },
   {
-    period: b("Avant", "Before"),
+    period: b("2025 — 2026", "2025 — 2026"),
     title: b("BUT GEA · IUT de Nice", "BUT GEA · IUT Nice"),
     sub: b("Gestion des entreprises et des administrations", "Business & administration management"),
-    text: b("Une année de socle en gestion, comptabilité et droit.", "A foundation year in management, accounting and law."),
+    text: b("Une année de socle en gestion, comptabilité et droit, en alternance chez Concertae : 3e de la promotion.", "A foundation year in management, accounting and law, while working at Concertae: ranked 3rd in my class."),
   },
   {
-    period: b("Avant", "Before"),
+    period: b("2025", "2025"),
     title: b("Baccalauréat mathématiques-physique", "Baccalauréat, maths & physics"),
     sub: b("Lycée Simone Veil", "Lycée Simone Veil"),
-    text: b("Le goût des modèles et de la méthode.", "A taste for models and method."),
+    text: b("Le goût des modèles et de la méthode, et un échange Erasmus en Norvège.", "A taste for models and method, and an Erasmus exchange in Norway."),
   },
 ];
 

@@ -37,7 +37,12 @@ export function PrintCv() {
   );
   const Item = ({ e }: { e: (typeof c.experience)[number] }) => (
     <article className="mb-[4.8mm] break-inside-avoid">
-      <h3 className="font-display text-[14px] font-bold leading-tight">{e.title}</h3>
+      <h3 className="font-display text-[14px] font-bold leading-tight">
+        {e.title}
+        {e.badge && (
+          <span className="ml-[2mm] inline-block translate-y-[-0.3mm] whitespace-nowrap rounded-full px-[2.2mm] py-[0.5mm] align-middle font-mono text-[9.5px] font-medium text-[#14121A]" style={{ background: ACCENT }}>{e.badge}</span>
+        )}
+      </h3>
       <p className="mt-[0.8mm] text-[11.2px]">
         <span className="font-semibold italic">{e.org}</span>
         <span className="font-mono text-[10px] text-[#77727F]"> | {e.period}</span>

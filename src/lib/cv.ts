@@ -5,7 +5,7 @@ import type { Lang } from "./content";
  * expériences marquantes détaillées en puces courtes, chiffres concrets, jamais de tarifs ni de montants clients.
  */
 
-type Entry = { title: string; org: string; period: string; bullets: string[] };
+type Entry = { title: string; org: string; period: string; bullets: string[]; /** Mise en avant (pastille vermillon à côté du titre). */ badge?: string };
 export type Cv = {
   role: string;
   availability: string;
@@ -79,8 +79,14 @@ const fr: Cv = {
       period: "2026 – 2029",
       bullets: ["Data, IA et mathématiques ; finance, marketing et stratégie. Trois campus : Milan, Paris puis Madrid. Diplôme conjoint avec Mines Paris-PSL."],
     },
-    { title: "BUT Gestion des entreprises et des administrations (1re année)", org: "IUT de Nice", period: "2024 – 2025", bullets: [] },
-    { title: "Baccalauréat général · mathématiques et physique", org: "Lycée Simone Veil", period: "2024", bullets: [] },
+    {
+      title: "BUT GEA (1re année)",
+      org: "IUT de Nice",
+      period: "2025 – 2026",
+      badge: "3e de promo",
+      bullets: ["Gestion des entreprises et des administrations : classé 3e de la promotion, en alternance chez Concertae."],
+    },
+    { title: "Bac général · maths et physique", org: "Lycée Simone Veil", period: "2025", badge: "Échange Erasmus en Norvège", bullets: [] },
   ],
 };
 
@@ -144,8 +150,14 @@ const en: Cv = {
       period: "2026 – 2029",
       bullets: ["Data, AI and maths; finance, marketing and strategy. Three campuses: Milan, Paris, then Madrid. Joint degree with Mines Paris-PSL."],
     },
-    { title: "BUT in Business & Administration (1st year)", org: "IUT Nice", period: "2024 – 2025", bullets: [] },
-    { title: "French Baccalauréat · maths and physics", org: "Lycée Simone Veil", period: "2024", bullets: [] },
+    {
+      title: "BUT in Business & Administration (1st year)",
+      org: "IUT Nice",
+      period: "2025 – 2026",
+      badge: "Ranked 3rd",
+      bullets: ["Ranked 3rd in my class while working at Concertae: management, accounting and law."],
+    },
+    { title: "French Baccalauréat · maths and physics", org: "Lycée Simone Veil", period: "2025", badge: "Erasmus exchange in Norway", bullets: [] },
   ],
 };
 
