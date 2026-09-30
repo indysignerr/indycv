@@ -89,7 +89,7 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
       {/* Longueur de scroll = longueur de l'histoire (texte sémantique pour SEO / lecteurs d'écran) */}
       <main className="pointer-events-none relative z-10">
         <div className="sr-only">
-          <h1>Indy François — Business, data & code. Un seul cerveau.</h1>
+          <h1>Indy François — Business, data & code.</h1>
           {chapters.map((c) => (
             <section key={c.id}><h2>{c.title.fr}</h2><p>{c.text.fr}</p></section>
           ))}

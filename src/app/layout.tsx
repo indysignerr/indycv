@@ -9,7 +9,7 @@ const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: "ital
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 const description =
-  "Indy François — étudiant Mines Paris-PSL × Albert School (Bachelor Business & Data) et fondateur d'Indysigner. Business, data & code. Un seul cerveau.";
+  "Indy François — étudiant Mines Paris-PSL × Albert School (Bachelor Business & Data) et fondateur d'Indysigner. Business, data & code.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE.url,
     siteName: "Indy François",
-    title: "Indy François — Business, data & code. Un seul cerveau.",
+    title: "Indy François — Business, data & code",
     description,
     locale: "fr_FR",
     alternateLocale: ["en_US"],

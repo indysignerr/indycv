@@ -47,7 +47,7 @@ export function Intro() {
         <div className="my-auto py-2">
         <p className="label mb-4 text-accent sm:mb-6">{t(storyUi.introKicker, lang)} · {theme === "dark" ? (lang === "fr" ? "Coucher de soleil" : "Sunset") : (lang === "fr" ? "Plein jour" : "Daylight")}</p>
         <h2 className="font-display text-[clamp(1.8rem,4.4vw,3.2rem)] font-bold leading-[1.1] tracking-tight">{t(storyUi.introTitle, lang)}</h2>
-        <p className="mt-5 font-serif text-[clamp(1.3rem,2.4vw,1.75rem)] italic text-accent">{t(ui.hero.line1, lang)} {t(ui.hero.line2, lang)}</p>
+        <p className="mt-5 font-serif text-[clamp(1.3rem,2.4vw,1.75rem)] italic text-accent">{t(ui.hero.line1, lang)}</p>
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-mute">{t(storyUi.introWho, lang)}</p>
         <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
           <a href={`mailto:${SITE.email}`} className="btn-primary pointer-events-auto"><Mail size={18} /> {t(storyUi.write, lang)}</a>

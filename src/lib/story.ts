@@ -112,7 +112,7 @@ export const storyUi = {
   end: b("Fin de l'histoire. Écrivons la suite ensemble.", "End of the story. Let's write the next one together."),
   endKicker: b("Merci d'être arrivé jusqu'ici", "Thanks for making it this far"),
   endTitle: b("La suite s'écrit avec vous\u00a0: un stage d'environ 6\u00a0semaines à partir du 5\u00a0juin\u00a02027.", "The next chapter is written with you: an internship of about 6\u00a0weeks, from 5\u00a0June\u00a02027."),
-  endText: b("Business, data & code. Un seul cerveau. Écrivez-moi, je réponds vite.", "Business, data & code. One brain. Write to me, I reply fast."),
+  endText: b("Business, data & code. Écrivez-moi, je réponds vite.", "Business, data & code. Write to me, I reply fast."),
   replay: b("Revoir l'histoire", "Replay the story"),
 };
 

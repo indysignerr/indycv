@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE, hobbies, languages, projects, skills, timeline, tr, ui, type Lang } from "@/lib/content";
+import { SITE, type Lang } from "@/lib/content";
+import { cv } from "@/lib/cv";
 
-/** Version A4 du CV, rendue à /cv/?lang=fr|en et convertie en PDF au build (scripts/build-cv-pdf.mjs). */
+/**
+ * CV A4 (une page), rendu à /cv/?lang=fr|en puis converti en PDF (scripts/build-cv-pdf.mjs).
+ * Mise en page : bandeau avec nom et poste, colonne sombre (photo, contact, profil, langues, compétences, loisirs),
+ * colonne claire (expériences, projet, formation) avec repères de section à cheval sur les deux colonnes.
+ * Couleurs du site : vermillon #FF5A36, encre #14121A, colonne #16161E.
+ */
+const ACCENT = "#FF5A36";
+
 export function PrintCv() {
   const [lang, setLang] = useState<Lang>("fr");
   useEffect(() => {
@@ -11,60 +19,103 @@ export function PrintCv() {
     const q = new URLSearchParams(window.location.search).get("lang");
     if (q === "en" || q === "fr") setLang(q);
   }, []);
+  const c = cv[lang];
 
-  const H = ({ children }: { children: React.ReactNode }) => (
-    <h2 className="mb-2 mt-5 border-b border-black/20 pb-1 font-mono text-[9px] uppercase tracking-[0.2em] text-[#C93A18]">{children}</h2>
+  const Side = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <section className="mb-[6.5mm]">
+      <h2 className="mb-[2.6mm] font-display text-[13px] font-bold uppercase tracking-[0.14em]" style={{ color: ACCENT }}>{title}</h2>
+      {children}
+    </section>
+  );
+  const Main = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <section className="relative mb-[8mm]">
+      {/* Repère à cheval sur la frontière des deux colonnes */}
+      <span aria-hidden className="absolute left-[-12.2mm] top-[0.8mm] h-[4.4mm] w-[4.4mm] rounded-full border-[1.6px] border-white" style={{ background: ACCENT }} />
+      <h2 className="mb-[3.6mm] font-display text-[16px] font-bold uppercase tracking-[0.06em]">{title}</h2>
+      {children}
+    </section>
+  );
+  const Item = ({ e }: { e: (typeof c.experience)[number] }) => (
+    <article className="mb-[4.8mm] break-inside-avoid">
+      <h3 className="font-display text-[14px] font-bold leading-tight">{e.title}</h3>
+      <p className="mt-[0.8mm] text-[11.2px]">
+        <span className="font-semibold italic">{e.org}</span>
+        <span className="font-mono text-[10px] text-[#77727F]"> | {e.period}</span>
+      </p>
+      {e.bullets.length > 0 && (
+        <ul className="mt-[2mm] space-y-[1.3mm]">
+          {e.bullets.map((b) => (
+            <li key={b} className="relative pl-[4mm] text-[11px] leading-[1.45] text-[#2A2730]">
+              <span aria-hidden className="absolute left-[0.6mm] top-[2.1mm] h-[1.3mm] w-[1.3mm] rounded-full" style={{ background: ACCENT }} />
+              {b}
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
   );
 
   return (
-    <div data-cv-ready className="mx-auto min-h-[297mm] w-[210mm] bg-white p-[14mm] text-[10px] leading-snug text-[#14121A]">
-      <header className="flex items-start justify-between gap-6">
-        <div>
-          <h1 className="font-display text-[30px] font-extrabold leading-none tracking-tight">Indy François</h1>
-          <p className="mt-2 font-serif text-[15px] italic text-[#C93A18]">{tr(ui.hero.line1, lang)} {tr(ui.hero.line2, lang)}</p>
-          <p className="mt-2 max-w-[120mm]">{tr(ui.hero.intro, lang)}</p>
-        </div>
-        <ul className="shrink-0 space-y-0.5 text-right font-mono text-[9px]">
-          <li>{SITE.email}</li>
-          <li>{SITE.phone}</li>
-          <li>github.com/indysignerr</li>
-          <li>linkedin.com/in/indy-françois-37a451284</li>
-          <li>indyfrancois.com</li>
-        </ul>
+    <div data-cv-ready className="relative mx-auto h-[297mm] w-[210mm] overflow-hidden bg-white font-display text-[#14121A]">
+      {/* Bandeau et colonne sombre */}
+      <div className="absolute inset-x-0 top-0 h-[42mm]" style={{ background: ACCENT }} />
+      <div className="absolute bottom-0 left-0 top-[42mm] w-[70mm] bg-[#16161E]" />
+
+      {/* Photo, à cheval sur le bandeau et la colonne */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/images/indy-photo.jpg" alt="Indy François" className="absolute left-[9mm] top-[8mm] h-[64mm] w-[52mm] rounded-[2mm] object-cover shadow-[0_2mm_6mm_rgba(0,0,0,0.25)]" style={{ objectPosition: "50% 24%" }} />
+
+      {/* Nom et poste */}
+      <header className="absolute left-[80mm] right-[10mm] top-[9mm]">
+        <h1 className="text-[33px] font-extrabold uppercase leading-none tracking-[0.01em]">Indy François</h1>
+        <p className="mt-[2.6mm] text-[13px] font-semibold uppercase tracking-[0.05em]">{c.role}</p>
+        <p className="mt-[2mm] inline-block rounded-full bg-[#14121A] px-[3mm] py-[0.9mm] font-mono text-[9.5px] text-white">{c.availability}</p>
       </header>
-      <p className="mt-3 rounded bg-[#F2EFE9] px-2 py-1 font-mono text-[9px]">{tr(ui.hero.availability, lang)}</p>
 
-      <H>{lang === "fr" ? "Parcours" : "Journey"}</H>
-      {timeline.map((t, i) => (
-        <div key={i} className="mb-1.5 grid grid-cols-[32mm_1fr] gap-3">
-          <p className="font-mono text-[9px] text-[#5F5B66]">{tr(t.period, lang)}</p>
-          <p><strong>{tr(t.title, lang)}</strong> — {tr(t.sub, lang)}. {tr(t.text, lang)}</p>
-        </div>
-      ))}
+      {/* Colonne sombre */}
+      <aside className="absolute left-0 top-[80mm] w-[70mm] px-[8.5mm] text-[#EDEAE4]">
+        <Side title={c.labels.contact}>
+          {/* Liens cliquables dans le PDF */}
+          <ul className="space-y-[1.5mm] text-[10.6px] leading-snug">
+            <li><a href={`tel:${SITE.phoneHref}`}>{SITE.phone}</a></li>
+            <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+            <li><a href={SITE.url}>indyfrancois.com</a></li>
+            <li className="whitespace-nowrap text-[9.4px] tracking-[-0.01em]"><a href={SITE.linkedin}>linkedin.com/in/indy-françois-37a451284</a></li>
+            <li><a href={SITE.github}>github.com/indysignerr</a></li>
+          </ul>
+        </Side>
+        <Side title={c.labels.profile}>
+          <p className="text-[10.6px] leading-[1.55] text-[#DAD6CF]">{c.profile}</p>
+        </Side>
+        <Side title={c.labels.languages}>
+          <ul className="space-y-[2.6mm]">
+            {c.languages.map((l) => (
+              <li key={l.name} className="text-[10.6px]">
+                <p className="mb-[1.2mm] flex items-baseline justify-between gap-[2mm]">
+                  <span>{l.name}</span>
+                  <span className="font-mono text-[8.8px] text-[#A9A4AE]">{l.level}</span>
+                </p>
+                <span className="relative block h-[1.6mm] rounded-full bg-white/15">
+                  <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${l.value * 100}%`, background: ACCENT }} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Side>
+        <Side title={c.labels.skills}>
+          <ul className="space-y-[1.3mm] text-[10.6px] leading-snug">{c.skills.map((s) => <li key={s}>{s}</li>)}</ul>
+        </Side>
+        <Side title={c.labels.interests}>
+          <ul className="space-y-[1.3mm] text-[10.6px] leading-snug">{c.interests.map((s) => <li key={s}>{s}</li>)}</ul>
+        </Side>
+      </aside>
 
-      <H>{tr(ui.projects.label, lang).replace(/^02 — /, "")}</H>
-      {projects.map((p) => (
-        <div key={p.name} className="mb-1.5">
-          <p><strong>{p.name}</strong> <span className="text-[#5F5B66]">· {p.links.map((l) => l.label).join(", ")}</span></p>
-          <p>{tr(p.text, lang)}</p>
-        </div>
-      ))}
-
-      <H>{tr(ui.skills.label, lang).replace(/^03 — /, "")}</H>
-      <div className="grid grid-cols-3 gap-4">
-        {skills.map((s) => (
-          <div key={s.key}>
-            <p className="font-semibold">{tr(s.title, lang)}</p>
-            <ul className="list-disc pl-3">{tr(s.items, lang).map((i) => <li key={i}>{i}</li>)}</ul>
-          </div>
-        ))}
-      </div>
-      <p className="mt-2">
-        <strong>{tr(ui.skills.languages, lang)} :</strong> {languages.map((l) => `${tr(l.name, lang)} (${tr(l.level, lang)})`).join(" · ")}
-      </p>
-
-      <H>{tr(ui.hobbies.label, lang).replace(/^04 — /, "")}</H>
-      <p>{hobbies.map((h) => `${tr(h.name, lang)} — ${tr(h.text, lang)}`).join(" · ")}</p>
+      {/* Colonne claire */}
+      <main className="absolute left-[70mm] right-0 top-[51mm] px-[10mm]">
+        <Main title={c.labels.experience}>{c.experience.map((e) => <Item key={e.title} e={e} />)}</Main>
+        <Main title={c.labels.project}><Item e={c.project} /></Main>
+        <Main title={c.labels.education}>{c.education.map((e) => <Item key={e.title} e={e} />)}</Main>
+      </main>
     </div>
   );
 }

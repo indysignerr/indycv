@@ -29,8 +29,9 @@ export function Hero() {
       <div>
         <p data-f className="label mb-6">{tr(ui.hero.eyebrow, lang)}</p>
         <h1 className="font-display text-[clamp(2.6rem,8.4vw,6.6rem)] font-extrabold leading-[0.95] tracking-tight">
-          <span className="block overflow-hidden pb-2"><span data-h className="block">{tr(ui.hero.line1, lang)}</span></span>
-          <span className="block overflow-hidden pb-3"><span data-h className="block font-serif font-normal italic text-accent">{tr(ui.hero.line2, lang)}</span></span>
+          {/* « Business, data » puis « & code. » en italique vermillon : le slogan seul, sur deux lignes */}
+          <span className="block overflow-hidden pb-2"><span data-h className="block">{tr(ui.hero.line1, lang).split(" & ")[0]}</span></span>
+          <span className="block overflow-hidden pb-3"><span data-h className="block font-serif font-normal italic text-accent">& {tr(ui.hero.line1, lang).split(" & ")[1]}</span></span>
         </h1>
         <p data-f className="mt-8 max-w-xl text-lg leading-relaxed text-ink/75">{tr(ui.hero.intro, lang)}</p>
         <p data-f className="mt-5 inline-flex items-center gap-2 rounded-full border hairline bg-surface/60 px-4 py-2 font-mono text-xs text-mute">

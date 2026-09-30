@@ -24,7 +24,6 @@ export const ui = {
   hero: {
     eyebrow: b("Mines Paris-PSL × Albert School", "Mines Paris-PSL × Albert School"),
     line1: b("Business, data & code.", "Business, data & code."),
-    line2: b("Un seul cerveau.", "One brain."),
     intro: b(
       "Étudiant en Bachelor Business & Data et fondateur d'Indysigner, je conçois et livre des sites qui vendent, avec l'œil du gestionnaire et la main du développeur.",
       "Business & Data undergraduate and founder of Indysigner. I design and ship websites that sell, with a manager's eye and a developer's hands."
