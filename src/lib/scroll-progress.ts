@@ -45,6 +45,8 @@ export const scroll = {
   walkPhase: 0,
   /** Phases (0..1) des animations de figurants utiles au son (ex. coup droit de l'adversaire). */
   clocks: {} as Record<string, number>,
+  /** Surprise : Indy fait sa danse de victoire jusqu'à cet instant (performance.now(), ms). */
+  celebrateUntil: 0,
   /** État du curseur personnalisé ("" ou "hotspot" quand la souris survole un point cliquable en 3D). */
   cursor: "" as "" | "hotspot",
 };

@@ -281,6 +281,27 @@ export class Mixer {
     this.tone(this.verb, t, { f0: f, dur: 2.5, a: 0.003, peak: 0.03 });
   }
 
+  /** Petits sons des surprises : balle de tennis, ballon, accord de guitare. `at` = instants (s) et volumes relatifs. */
+  sfx(kind: "pock" | "thump" | "strum", at: [number, number][] = [[0, 1]]) {
+    const t0 = this.c.currentTime + 0.01;
+    for (const [dt, v] of at) {
+      const t = t0 + dt;
+      if (kind === "pock") {
+        this.tone(this.bus.ui, t, { f0: 1150, f1: 430, dur: 0.05, peak: 0.07 * v });
+        this.burst(this.bus.ui, t, { type: "bandpass", f: 2600, q: 1.3, dur: 0.03, peak: 0.05 * v });
+      } else if (kind === "thump") {
+        this.tone(this.bus.ui, t, { f0: 160, f1: 62, dur: 0.13, peak: 0.13 * v });
+        this.burst(this.bus.ui, t, { type: "lowpass", f: 900, dur: 0.05, peak: 0.06 * v });
+      } else {
+        // Accord de mi majeur gratté (six cordes, de la plus grave à la plus aiguë)
+        [82.41, 123.47, 164.81, 207.65, 246.94, 329.63].forEach((f, i) => {
+          this.tone(this.bus.ui, t + i * 0.028, { type: "triangle", f0: f, dur: 1.9, a: 0.003, peak: 0.032 * v });
+          this.tone(this.bus.ui, t + i * 0.028, { f0: f * 2, dur: 0.9, a: 0.002, peak: 0.01 * v });
+        });
+      }
+    }
+  }
+
   ui(kind: "open" | "close" | "on") {
     const t = this.c.currentTime + 0.01;
     if (kind === "open") { this.tone(this.bus.ui, t, { f0: 660, f1: 990, dur: 0.08, peak: 0.05 }); this.tone(this.bus.ui, t + 0.05, { f0: 1320, dur: 0.12, peak: 0.02 }); }
@@ -492,6 +513,7 @@ class Ambience {
   }
 
   ui(kind: "open" | "close") { if (this.enabled && this.mixer) this.mixer.ui(kind); }
+  sfx(kind: "pock" | "thump" | "strum", at?: [number, number][]) { if (this.enabled && this.mixer) this.mixer.sfx(kind, at); }
 
   private emit() { this.listeners.forEach((l) => l()); }
 

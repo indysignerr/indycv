@@ -193,7 +193,7 @@ export function StoryCanvas({ onFail }: { onFail: () => void }) {
 
   const onCreated = useCallback((state: RootState) => {
     getState.current = state.get;
-    if (process.env.NODE_ENV !== "production") (window as unknown as { __gl: unknown }).__gl = state.gl;
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __gl: state.gl, __r3f: state.get });
     // La vraie carte graphique est connue : on affine le niveau avant le premier rendu (rien n'est encore compilé)
     const ctx = state.gl.getContext();
     const dbg = ctx.getExtension("WEBGL_debug_renderer_info");

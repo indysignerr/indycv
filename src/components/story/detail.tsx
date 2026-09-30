@@ -129,13 +129,25 @@ export function Badge({ position, rotationY = 0, w = 0.9, title, fg, bg = "#FFFF
 
 /** Horloge murale. */
 export function Clock({ position, rotationY = 0 }: { position: V3; rotationY?: number }) {
+  // Surprise : l'horloge donne la vraie heure
+  const hour = useRef<THREE.Group>(null), minute = useRef<THREE.Group>(null);
+  useEffect(() => {
+    const set = () => {
+      const d = new Date(), m = d.getMinutes() + d.getSeconds() / 60, h = (d.getHours() % 12) + m / 60;
+      if (hour.current) hour.current.rotation.z = -(h / 12) * Math.PI * 2;
+      if (minute.current) minute.current.rotation.z = -(m / 60) * Math.PI * 2;
+    };
+    set();
+    const id = window.setInterval(set, 15000);
+    return () => window.clearInterval(id);
+  }, []);
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.2, 0.2, 0.04, 32]} /><Flat color="#FFFFFF" roughness={0.4} /></mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.005]}><torusGeometry args={[0.2, 0.018, 8, 32]} /><Flat color="#1B1B22" /></mesh>
       {Array.from({ length: 12 }).map((_, i) => <mesh key={i} position={[Math.sin((i / 12) * Math.PI * 2) * 0.16, Math.cos((i / 12) * Math.PI * 2) * 0.16, 0.022]}><boxGeometry args={[0.012, 0.03, 0.005]} /><Flat color="#1B1B22" /></mesh>)}
-      <mesh position={[0.03, 0.04, 0.026]} rotation={[0, 0, -0.7]}><boxGeometry args={[0.014, 0.12, 0.005]} /><Flat color="#1B1B22" /></mesh>
-      <mesh position={[-0.05, 0.02, 0.028]} rotation={[0, 0, 1.2]}><boxGeometry args={[0.01, 0.16, 0.005]} /><Flat color="#C93A18" /></mesh>
+      <group ref={hour} position={[0, 0, 0.026]} userData={{ dynamic: true }}><mesh position={[0, 0.045, 0]}><boxGeometry args={[0.014, 0.11, 0.005]} /><Flat color="#1B1B22" /></mesh></group>
+      <group ref={minute} position={[0, 0, 0.028]} userData={{ dynamic: true }}><mesh position={[0, 0.065, 0]}><boxGeometry args={[0.01, 0.15, 0.005]} /><Flat color="#C93A18" /></mesh></group>
     </group>
   );
 }

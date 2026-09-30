@@ -12,6 +12,7 @@ import { Panels } from "./panels";
 import { Controls } from "./controls";
 import { PortalGlow } from "./portal-glow";
 import { Cursor } from "./cursor";
+import { EasterEggs, EasterToast } from "./easter";
 
 const StoryCanvas = dynamic(() => import("./story-canvas").then((m) => m.StoryCanvas), { ssr: false });
 
@@ -89,6 +90,8 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
       <Controls />
       {story ? <Panels /> : null}
       {story ? <Cursor /> : null}
+      {story ? <EasterEggs /> : null}
+      {story ? <EasterToast /> : null}
       {/* Texte sémantique (SEO, lecteurs d'écran), présent dès la page HTML ; puis longueur de scroll = longueur de l'histoire */}
       <main className="pointer-events-none relative z-10">
         <div className="sr-only">

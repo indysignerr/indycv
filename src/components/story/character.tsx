@@ -9,6 +9,7 @@ import { scroll } from "@/lib/scroll-progress";
 
 export { MODEL_URL as MODEL } from "@/lib/assets";
 import { MODEL_URL as MODEL } from "@/lib/assets";
+import { easter } from "@/lib/easter";
 const FADE = 0.35;
 /**
  * Applique l'écart au bras SANS l'empiler : le mélangeur d'animation ne réécrit un os que si sa valeur animée a changé
@@ -68,13 +69,15 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
-    // Marche / arrêt : fondu entre les deux clips, sans passer par React
-    const clip: Clip = walkingRef.current ? "walk" : "idle";
+    // Marche / arrêt : fondu entre les deux clips, sans passer par React (et danse de la victoire si demandée)
+    const celebrating = !walkingRef.current && performance.now() < scroll.celebrateUntil;
+    const clip: Clip = walkingRef.current ? "walk" : celebrating ? "celebrate" : "idle";
     if (clip !== current.current) {
       const next = actions[clip];
       if (next) {
         const prev = current.current ? actions[current.current] : null;
-        next.reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(FADE).play();
+        next.clampWhenFinished = clip === "celebrate";
+        next.reset().setLoop(clip === "celebrate" ? THREE.LoopOnce : THREE.LoopRepeat, Infinity).fadeIn(FADE).play();
         if (prev && prev !== next) prev.fadeOut(FADE);
         current.current = clip;
       }
@@ -95,14 +98,27 @@ export const Character = memo(function Character({ curve, distanceRef, speedRef,
     if (w) { const d = w.getClip().duration; scroll.walkPhase = (((w.time % d) + d) % d) / d; }
     // Après l'animation (le mélangeur a déjà posé le squelette) : on écarte le haut des bras
     const A = abd.current;
-    A.angle += ((walkingRef.current ? ARM_WALK : ARM_IDLE) - A.angle) * Math.min(1, dt * 4);
+    A.angle += ((walkingRef.current ? ARM_WALK : celebrating ? 0.02 : ARM_IDLE) - A.angle) * Math.min(1, dt * 4);
     A.q.setFromAxisAngle(A.x, -A.angle);
     arms.forEach((a, i) => spreadArm(a, (A.keep[i] ??= newArmPose()), A.q));
   });
 
+  // Surprise : 5 clics sur Indy (zone invisible, jamais dessinée) = danse de la victoire
+  const taps = useRef<number[]>([]);
+  const tap = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation();
+    const now = performance.now();
+    taps.current = [...taps.current.filter((t) => now - t < 2500), now];
+    if (taps.current.length >= 5) {
+      taps.current = [];
+      easter.celebrate({ fr: "Tu as trouvé Indy : danse de la victoire 🎉", en: "You found Indy: victory dance 🎉" });
+    }
+  };
+
   return (
     <group ref={group}>
       <primitive object={scene} />
+      <mesh visible={false} position={[0, 0.9, 0]} onClick={tap}><capsuleGeometry args={[0.32, 1.1, 4, 8]} /></mesh>
     </group>
   );
 });

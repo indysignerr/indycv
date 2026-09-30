@@ -16,6 +16,7 @@ import { Badge, BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD,
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
 import { Label } from "./label";
 import { DYNAMIC, Static } from "./static-merge";
+import { Bouncy, Strummable, foundTennisBall } from "./easter";
 
 const up = new THREE.Vector3(0, 1, 0);
 export const ROOM_W = 11;
@@ -284,7 +285,10 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <CourtBench position={[-6.4, 0, 3.9]} rotationY={Math.PI} />
           <CourtBench position={[-2.6, 0, 3.9]} rotationY={Math.PI} towel="#2A4BD7" />
           <BallBasket position={[-1.2, 0, -2.6]} />
-          {[[-2.2, 1.2], [-6.8, -1.9], [-3.1, -3.4], [-7.9, 2.6], [-1.5, 3.3]].map(([x, z], i) => <TennisBall key={i} position={[x, 0.07, z]} />)}
+          {/* Surprise : un clic fait rebondir une balle ; les 5 trouvées = « jeu, set et match » */}
+          {[[-2.2, 1.2], [-6.8, -1.9], [-3.1, -3.4], [-7.9, 2.6], [-1.5, 3.3]].map(([x, z], i) => (
+            <Bouncy key={i} id={`tennis-${i}`} position={[x, 0, z]} lift={0.07} sound="pock" onFound={foundTennisBall}><TennisBall position={[0, 0, 0]} /></Bouncy>
+          ))}
           <Tree position={[L - 1.2, 0, -len / 2 + 1]} scale={1.3} color={sunset ? "#4C8A5A" : "#5FA86A"} />
           <Tree position={[L - 1.5, 0, len / 2 - 1]} scale={1.1} color={sunset ? "#4C8A5A" : "#6DB57A"} />
         </group>
@@ -302,8 +306,8 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <Figure clip="celebrate" position={[-4.9, 0, -2.3]} rotationY={Math.PI / 2 + 0.35} tint={CLAY_WARM} scale={0.97} offset={0.5} />
           <Figure clip="look-around" position={[-6.3, 0, 2.5]} rotationY={Math.PI / 2 - 0.45} tint={CLAY_COOL} offset={0.3} />
           <Figure clip="sit-idle" position={[-5.47, 0, 5.35]} rotationY={Math.PI} scale={0.98} offset={0.7} />
-          <Football position={[-1.4, 0, 0.9]} />
-          <Football position={[-7.6, 0, -0.4]} r={0.105} />
+          <Bouncy id="foot-0" position={[-1.4, 0, 0.9]} lift={0.11} height={1.2} hit={0.35} sound="thump"><Football position={[0, -0.11, 0]} /></Bouncy>
+          <Bouncy id="foot-1" position={[-7.6, 0, -0.4]} lift={0.105} height={1.2} hit={0.35} sound="thump"><Football position={[0, -0.105, 0]} r={0.105} /></Bouncy>
           {[[-3, -2.8], [-3.8, -2.8], [-4.6, -2.8], [-5.4, -2.8]].map(([x, z], i) => <Cone key={i} position={[x, 0, z]} color={i % 2 ? "#F27E2B" : "#F2C01E"} />)}
           <Tree position={[L - 1.3, 0, len / 2 - 0.5]} scale={1.2} color={sunset ? "#4C8A5A" : "#5FA86A"} />
           <Tree position={[L - 1.1, 0, -len / 2 + 1.2]} scale={1} color={sunset ? "#4C8A5A" : "#6DB57A"} />
@@ -394,10 +398,13 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           {/* Mur marine : placard à Legos + guitare */}
           <LegoShelf position={[L + 0.3, 0, 1.4]} rotation={[0, Math.PI / 2, 0]} />
           <group position={[L + 0.35, 0, 2.8]} rotation={[0, Math.PI / 2, 0.12]}>
-            <mesh position={[0, 0.35, 0]} scale={[0.22, 0.28, 0.06]} castShadow><sphereGeometry args={[1, 16, 12]} /><Flat color="#B5652E" roughness={0.4} /></mesh>
-            <mesh position={[0, 0.6, 0]} scale={[0.17, 0.2, 0.06]} castShadow><sphereGeometry args={[1, 16, 12]} /><Flat color="#B5652E" roughness={0.4} /></mesh>
-            <mesh position={[0, 1.05, 0]}><boxGeometry args={[0.05, 0.75, 0.03]} /><Flat color="#3A2A1E" /></mesh>
-            <mesh position={[0, 0.45, 0.062]}><circleGeometry args={[0.06, 16]} /><Flat color="#1B1B22" /></mesh>
+            {/* Surprise : un clic gratte un accord */}
+            <Strummable>
+              <mesh position={[0, 0.35, 0]} scale={[0.22, 0.28, 0.06]} castShadow><sphereGeometry args={[1, 16, 12]} /><Flat color="#B5652E" roughness={0.4} /></mesh>
+              <mesh position={[0, 0.6, 0]} scale={[0.17, 0.2, 0.06]} castShadow><sphereGeometry args={[1, 16, 12]} /><Flat color="#B5652E" roughness={0.4} /></mesh>
+              <mesh position={[0, 1.05, 0]}><boxGeometry args={[0.05, 0.75, 0.03]} /><Flat color="#3A2A1E" /></mesh>
+              <mesh position={[0, 0.45, 0.062]}><circleGeometry args={[0.06, 16]} /><Flat color="#1B1B22" /></mesh>
+            </Strummable>
           </group>
           {/* Mur de sortie : fenêtre, grand lit double, tables de nuit */}
           <Window position={[-4.6, 1.95, F - 0.04]} rotationY={Math.PI} w={1.9} h={1.2} sunset={sunset} beam={false} />
