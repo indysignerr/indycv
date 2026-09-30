@@ -12,10 +12,7 @@ import { Flat } from "./materials";
 import { Building, DOOR_W, X0, X1 } from "./building";
 import { CLAY_COOL, CLAY_WARM, Figure, Racket } from "./figures";
 import { Bed, Laptop, LegoShelf, TennisBall, Tree } from "./props";
-import {
-  Badge, BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout,
-  Football, GoalHD, Lockers, Monitor, PipelineBoard, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens,
-} from "./detail";
+import { Badge, BallBasket, Baseboard, Beanbag, BinderShelf, Blob, ChalkboardHD, Clock, CornerFlag, Cone, CourtBench, CourtFence, CeilingPanel, DeskClutter, Dugout, Football, GoalHD, Lockers, Monitor, PipelineBoard, PitchHD, Plant, Poster, Printer, Radiator, Seat, Table, TennisCourtHD, TexMat, UmpireChair, WallAO, WaterCooler, Whiteboard, Window, screens, DeskFlag } from "./detail";
 import { carpetTex, clayTex, concreteTex, plasterTex, tileTex, woodTex } from "./textures";
 import { Label } from "./label";
 
@@ -323,6 +320,8 @@ function Contents({ chapter, palette, sunset, len, wid }: { chapter: Chapter; pa
           <Table position={[L + 1.2, 0, 1.6]} rotationY={Math.PI / 2} w={1.5} d={0.75} top={sunset ? "#9C7C58" : "#B99468"} />
           <Seat position={[L + 0.6, 0, 1.6]} rotationY={Math.PI / 2} color="#1E2F55" />
           <DeskClutter position={[L + 1.2, 0.76, 1.6]} rotationY={Math.PI / 2} seed={2} />
+          {/* Section européenne : le drapeau de l'échange Erasmus en Norvège (point lumineux juste au-dessus) */}
+          <DeskFlag position={[L + 1.45, 0.76, 2.28]} rotationY={Math.PI / 2} />
           {/* Tables d'élèves : 3 rangées × 2, face au tableau */}
           {[-6.2, -4.5, -2.8].map((x, r) => [-1.7, 1.7].map((z, c) => (
             <group key={`${r}${c}`}>

@@ -10,6 +10,15 @@ export const SITE = {
   linkedin: "https://www.linkedin.com/in/indy-françois-37a451284",
 };
 
+/**
+ * CV à télécharger. Changer `v` à chaque nouvelle version du PDF : le domaine demande aux navigateurs de garder
+ * les PDF 4 h en mémoire, une nouvelle adresse garantit que tout le monde reçoit la dernière version.
+ */
+export const cvFile = (lang: "fr" | "en") => ({
+  href: `/cv-indy-francois-${lang}.pdf?v=4`,
+  name: lang === "fr" ? "CV-Indy-Francois.pdf" : "CV-Indy-Francois-EN.pdf",
+});
+
 export type Bi<T = string> = { fr: T; en: T };
 const b = <T = string>(fr: T, en: T): Bi<T> => ({ fr, en });
 

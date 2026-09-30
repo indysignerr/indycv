@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Flat } from "./materials";
 import { Label } from "./label";
 import {
-  badgeTex, beamTex, blobTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, pipelineTex, plasterTex, posterTex, spreadsheetTex, woodTex,
+  badgeTex, beamTex, blobTex, norwayFlagTex, chalkboardTex, clayTex, codeTex, dashboardTex, edgeTex, grassTex, meshAlpha, pipelineTex, plasterTex, posterTex, spreadsheetTex, woodTex,
 } from "./textures";
 
 type V3 = [number, number, number];
@@ -274,6 +274,18 @@ export function CourtBench({ position, rotationY = 0, towel = "#C93A18" }: { pos
       <mesh position={[0.35, 0.62, 0]} castShadow><cylinderGeometry args={[0.035, 0.035, 0.24, 12]} /><Flat color="#9CC8E8" roughness={0.3} /></mesh>
       <mesh position={[0.5, 0.52, 0]} castShadow><boxGeometry args={[0.55, 0.12, 0.22]} /><Flat color="#1E2F55" /></mesh>
       <Blob position={[0, 0, 0]} size={[2, 0.8]} opacity={0.35} />
+    </group>
+  );
+}
+
+/** Petit drapeau de bureau (Norvège : l'échange Erasmus du lycée). Le drapeau part du mât vers -X local. */
+export function DeskFlag({ position, rotationY = 0 }: { position: V3; rotationY?: number }) {
+  const t = useMemo(() => norwayFlagTex(), []);
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, 0.012, 0]} castShadow><cylinderGeometry args={[0.045, 0.055, 0.024, 16]} /><Flat color="#2A2A2E" roughness={0.5} /></mesh>
+      <mesh position={[0, 0.26, 0]} castShadow><cylinderGeometry args={[0.007, 0.007, 0.5, 8]} /><Flat color="#B8B4AB" roughness={0.4} /></mesh>
+      <mesh position={[0.155, 0.39, 0]} castShadow><planeGeometry args={[0.3, 0.218]} /><meshStandardMaterial map={t} side={THREE.DoubleSide} roughness={0.85} /></mesh>
     </group>
   );
 }

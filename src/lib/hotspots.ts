@@ -28,7 +28,12 @@ export const hotspots: Hotspot[] = [
   {
     id: "lycee-board", chapter: "lycee", position: [-9.3, 1.6, 0],
     kicker: b("Lycée Simone Veil", "Lycée Simone Veil"), title: b("Bac maths-physique", "Maths & physics baccalaureate"),
-    lines: b(["Spécialités mathématiques et physique-chimie.", "Le goût des modèles, des démonstrations propres et des résultats qu'on peut vérifier.", "Ensuite : une année de BUT GEA à l'IUT de Nice (gestion, comptabilité, droit)."], ["Mathematics and physics-chemistry majors.", "A taste for models, clean proofs and results you can check.", "Then: one year of BUT GEA at IUT Nice (management, accounting, law)."]),
+    lines: b(["Spécialités mathématiques et physique-chimie.", "Le goût des modèles, des démonstrations propres et des résultats qu'on peut vérifier.", "Ensuite : une année de BUT GEA à l'IUT de Nice (gestion, comptabilité, droit), 3e de la promotion."], ["Mathematics and physics-chemistry majors.", "A taste for models, clean proofs and results you can check.", "Then: one year of BUT GEA at IUT Nice (management, accounting, law), ranked 3rd in my class."]),
+  },
+  {
+    id: "lycee-erasmus", chapter: "lycee", position: [-8.15, 1.42, 2.1],
+    kicker: b("Lycée Simone Veil · Section européenne", "Lycée Simone Veil · European section"), title: b("Échange Erasmus en Norvège", "Erasmus exchange in Norway"),
+    lines: b(["Bac en section européenne : plus d'heures de langue et une matière enseignée en langue étrangère.", "Un échange Erasmus en Norvège : vivre et étudier dans une autre langue, dans un autre système scolaire.", "L'international, déjà : aujourd'hui, mon bachelor se fait sur trois campus, Milan, Paris puis Madrid."], ["Baccalaureate in the European section: extra language hours and a subject taught in a foreign language.", "An Erasmus exchange in Norway: living and studying in another language, in another school system.", "International from the start: today my bachelor runs across three campuses, Milan, Paris, then Madrid."]),
   },
   {
     id: "concertae-pc", chapter: "concertae", position: [-3.8, 1.55, 1.6],

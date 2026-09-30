@@ -7,7 +7,7 @@ import { hotspots } from "@/lib/hotspots";
 import { useApp } from "@/components/providers";
 import { scroll, INTRO_VH, END_VH, TOTAL_VH } from "@/lib/scroll-progress";
 import { chapters, PATH_LENGTH, storyUi, t } from "@/lib/story";
-import { SITE } from "@/lib/content";
+import { SITE, cvFile } from "@/lib/content";
 import { switchView } from "@/lib/view";
 import { ambience } from "@/lib/ambience";
 
@@ -222,7 +222,7 @@ export function Panels() {
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-4 max-w-xl font-serif text-xl italic text-mute sm:mt-6">{t(storyUi.endText, lang)}</motion.p>
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-6 flex flex-wrap gap-3 sm:mt-10">
                 <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} /> {SITE.email}</a>
-                <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost"><Download size={18} /> {t(storyUi.cv, lang)}</a>
+                <a href={cvFile(lang).href} download={cvFile(lang).name} className="btn-ghost"><Download size={18} /> {t(storyUi.cv, lang)}</a>
                 <button type="button" onClick={() => scroll.lenis ? scroll.lenis.scrollTo(0, { immediate: true }) : window.scrollTo({ top: 0 })} className="btn-ghost"><RotateCcw size={18} /> {t(storyUi.replay, lang)}</button>
               </motion.div>
               <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mt-5 flex flex-wrap gap-x-5 font-mono text-xs text-mute sm:mt-8">

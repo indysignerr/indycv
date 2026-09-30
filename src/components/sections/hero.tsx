@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ArrowDown, Download, Mail } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Counter } from "@/components/ui/counter";
-import { SITE, stats, tr, ui } from "@/lib/content";
+import { SITE, stats, tr, ui, cvFile } from "@/lib/content";
 
 export function Hero() {
   const { lang } = useApp();
@@ -40,7 +40,7 @@ export function Hero() {
         </p>
         <div data-f className="mt-8 flex flex-wrap gap-3">
           <a href={`mailto:${SITE.email}`} className="btn-primary"><Mail size={18} />{tr(ui.hero.cta, lang)}</a>
-          <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost"><Download size={18} />{tr(ui.hero.cv, lang)}</a>
+          <a href={cvFile(lang).href} download={cvFile(lang).name} className="btn-ghost"><Download size={18} />{tr(ui.hero.cv, lang)}</a>
         </div>
       </div>
 

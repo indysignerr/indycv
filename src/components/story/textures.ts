@@ -388,6 +388,15 @@ export const posterTex = (bg: string, fg: string, title: string, sub = "") =>
   }, { repeat: [1, 1] });
 
 /** Ombre de contact douce (dégradé radial) : à poser sous les meubles. */
+/** Drapeau norvégien (croix scandinave, proportions officielles 22 × 16). */
+export const norwayFlagTex = () =>
+  make("flag-no", 256, (g, s) => {
+    const ux = s / 22, uy = s / 16;
+    g.fillStyle = "#BA0C2F"; g.fillRect(0, 0, s, s);
+    g.fillStyle = "#FFFFFF"; g.fillRect(6 * ux, 0, 4 * ux, s); g.fillRect(0, 6 * uy, s, 4 * uy);
+    g.fillStyle = "#00205B"; g.fillRect(7 * ux, 0, 2 * ux, s); g.fillRect(0, 7 * uy, s, 2 * uy);
+  });
+
 export const blobTex = () =>
   make("blob", 128, (g, s) => {
     const grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);

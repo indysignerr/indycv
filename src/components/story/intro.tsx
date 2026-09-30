@@ -6,7 +6,7 @@ import { useApp } from "@/components/providers";
 import { scroll } from "@/lib/scroll-progress";
 import { storyUi, t } from "@/lib/story";
 import { ambience } from "@/lib/ambience";
-import { SITE, ui } from "@/lib/content";
+import { SITE, ui, cvFile } from "@/lib/content";
 import { switchView } from "@/lib/view";
 import { useLoading } from "@/lib/loading";
 
@@ -51,7 +51,7 @@ export function Intro() {
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-mute">{t(storyUi.introWho, lang)}</p>
         <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
           <a href={`mailto:${SITE.email}`} className="btn-primary pointer-events-auto"><Mail size={18} /> {t(storyUi.write, lang)}</a>
-          <a href={`/cv-indy-francois-${lang}.pdf`} download className="btn-ghost pointer-events-auto"><Download size={18} /> {t(storyUi.cv, lang)}</a>
+          <a href={cvFile(lang).href} download={cvFile(lang).name} className="btn-ghost pointer-events-auto"><Download size={18} /> {t(storyUi.cv, lang)}</a>
           <button type="button" onClick={() => ambience.toggle()} aria-pressed={sound} className="btn-ghost pointer-events-auto">
             {sound ? <Volume2 size={18} /> : <VolumeX size={18} />} {t(sound ? ui.sound.off : ui.sound.on, lang)}
           </button>
