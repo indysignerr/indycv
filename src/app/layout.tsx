@@ -59,7 +59,7 @@ const jsonLd = {
 };
 
 // Applique le thème avant le premier rendu (pas de flash)
-const themeScript = `try{var t=localStorage.getItem("theme");document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}`;
+const themeScript = `try{var t=localStorage.getItem("theme");document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}try{if(new URLSearchParams(location.search).has("simple")||localStorage.getItem("view")==="simple"||matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.dataset.view="simple"}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

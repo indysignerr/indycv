@@ -77,18 +77,20 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
   }, [mode, ready]);
 
   if (mode === "fallback") return <>{fallback}</>;
-  if (mode === "unknown") return <div className="min-h-screen" />;
+  const story = mode === "story";
 
+  // L'accueil et la pastille langue/son/thème sont dans la page HTML dès le premier affichage, avant même le
+  // JavaScript (plus d'écran vide au chargement) ; ils gardent leur place dans l'arbre et ne se redessinent pas.
   return (
     <>
-      <Guard onFail={fail}><StoryCanvas onFail={fail} /></Guard>
-      <PortalGlow />
+      {story ? <Guard onFail={fail}><StoryCanvas onFail={fail} /></Guard> : null}
+      {story ? <PortalGlow /> : null}
       <Intro />
-      <Panels />
       <Controls />
-      <Cursor />
+      {story ? <Panels /> : null}
+      {story ? <Cursor /> : null}
       {/* Longueur de scroll = longueur de l'histoire (texte sémantique pour SEO / lecteurs d'écran) */}
-      <main className="pointer-events-none relative z-10">
+      {story ? <main className="pointer-events-none relative z-10">
         <div className="sr-only">
           <h1>Indy François — Business, data & code.</h1>
           {chapters.map((c) => (
@@ -96,7 +98,7 @@ export function Story({ fallback }: { fallback: React.ReactNode }) {
           ))}
         </div>
         <div aria-hidden style={{ height: `${TOTAL_VH}vh` }} />
-      </main>
+      </main> : null}
     </>
   );
 }

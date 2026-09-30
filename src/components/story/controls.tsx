@@ -29,6 +29,7 @@ export function Controls() {
 
   return (
     <div
+      data-story-chrome
       className={`pointer-events-auto fixed right-4 top-3 z-40 flex items-center gap-1 rounded-full border px-1 backdrop-blur-md transition-colors duration-500 sm:right-8 sm:top-5 ${
         cover ? "border-ink/10 bg-surface/70 text-ink" : "border-white/10 bg-[rgba(14,14,20,0.5)] text-white"
       }`}

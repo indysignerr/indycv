@@ -169,6 +169,11 @@ html.story-locked body {
     radial-gradient(70vw 60vh at 88% 8%, var(--mesh-a), transparent 70%),
     radial-gradient(60vw 60vh at 0% 100%, var(--mesh-b), transparent 70%);
 }
+/* Version simple demandée : l'accueil 3D (rendu dans la page HTML) ne s'affiche pas le temps que la page classique arrive */
+html[data-view="simple"] .story-cover:not(.story-cover--end),
+html[data-view="simple"] [data-story-chrome] {
+  display: none;
+}
 .story-cover--end {
   background-image:
     radial-gradient(70vw 60vh at 10% 5%, var(--mesh-a), transparent 70%),
