@@ -15,7 +15,7 @@ export const SITE = {
  * les PDF 4 h en mémoire, une nouvelle adresse garantit que tout le monde reçoit la dernière version.
  */
 export const cvFile = (lang: "fr" | "en") => ({
-  href: `/cv-indy-francois-${lang}.pdf?v=4`,
+  href: `/cv-indy-francois-${lang}.pdf?v=5`,
   name: lang === "fr" ? "CV-Indy-Francois.pdf" : "CV-Indy-Francois-EN.pdf",
 });
 

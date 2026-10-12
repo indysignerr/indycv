@@ -8,9 +8,9 @@ import { cv } from "@/lib/cv";
  * CV A4 (une page), rendu à /cv/?lang=fr|en puis converti en PDF (scripts/build-cv-pdf.mjs).
  * Mise en page : bandeau avec nom et poste, colonne sombre (photo, contact, profil, langues, compétences, loisirs),
  * colonne claire (expériences, projet, formation) avec repères de section à cheval sur les deux colonnes.
- * Couleurs du site : vermillon #FF5A36, encre #14121A, colonne #16161E.
+ * Couleurs du modèle choisi par Indy : ocre #E8B064 (bandeau, repères), bleu nuit #262B3A (colonne), encre #14121A.
  */
-const ACCENT = "#FF5A36";
+const ACCENT = "#E8B064";
 
 export function PrintCv() {
   const [lang, setLang] = useState<Lang>("fr");
@@ -28,15 +28,15 @@ export function PrintCv() {
     </section>
   );
   const Main = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <section className="relative mb-[8mm]">
+    <section className="relative mb-[5mm]">
       {/* Repère à cheval sur la frontière des deux colonnes */}
       <span aria-hidden className="absolute left-[-12.2mm] top-[0.8mm] h-[4.4mm] w-[4.4mm] rounded-full border-[1.6px] border-white" style={{ background: ACCENT }} />
-      <h2 className="mb-[3.6mm] font-display text-[16px] font-bold uppercase tracking-[0.06em]">{title}</h2>
+      <h2 className="mb-[2.8mm] font-display text-[16px] font-bold uppercase tracking-[0.06em]">{title}</h2>
       {children}
     </section>
   );
   const Item = ({ e }: { e: (typeof c.experience)[number] }) => (
-    <article className="mb-[4.8mm] break-inside-avoid">
+    <article className="mb-[3.6mm] break-inside-avoid">
       <h3 className="font-display text-[14px] font-bold leading-tight">
         {e.title}
         {e.badge && (
@@ -48,7 +48,7 @@ export function PrintCv() {
         <span className="font-mono text-[10px] text-[#77727F]"> | {e.period}</span>
       </p>
       {e.bullets.length > 0 && (
-        <ul className="mt-[2mm] space-y-[1.3mm]">
+        <ul className="mt-[1.6mm] space-y-[1mm]">
           {e.bullets.map((b) => (
             <li key={b} className="relative pl-[4mm] text-[11px] leading-[1.45] text-[#2A2730]">
               <span aria-hidden className="absolute left-[0.6mm] top-[2.1mm] h-[1.3mm] w-[1.3mm] rounded-full" style={{ background: ACCENT }} />
@@ -64,7 +64,7 @@ export function PrintCv() {
     <div data-cv-ready className="relative mx-auto h-[297mm] w-[210mm] overflow-hidden bg-white font-display text-[#14121A]">
       {/* Bandeau et colonne sombre */}
       <div className="absolute inset-x-0 top-0 h-[42mm]" style={{ background: ACCENT }} />
-      <div className="absolute bottom-0 left-0 top-[42mm] w-[70mm] bg-[#16161E]" />
+      <div className="absolute bottom-0 left-0 top-[42mm] w-[70mm] bg-[#262B3A]" />
 
       {/* Photo, à cheval sur le bandeau et la colonne */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -116,9 +116,9 @@ export function PrintCv() {
       </aside>
 
       {/* Colonne claire */}
-      <main className="absolute left-[70mm] right-0 top-[51mm] px-[10mm]">
+      <main className="absolute left-[70mm] right-0 top-[49mm] px-[10mm]">
         <Main title={c.labels.experience}>{c.experience.map((e) => <Item key={e.title} e={e} />)}</Main>
-        <Main title={c.labels.project}><Item e={c.project} /></Main>
+        <Main title={c.labels.projects}>{c.projects.map((e) => <Item key={e.title} e={e} />)}</Main>
         <Main title={c.labels.education}>{c.education.map((e) => <Item key={e.title} e={e} />)}</Main>
       </main>
     </div>

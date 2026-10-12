@@ -9,20 +9,20 @@ type Entry = { title: string; org: string; period: string; bullets: string[]; /*
 export type Cv = {
   role: string;
   availability: string;
-  labels: { contact: string; profile: string; languages: string; skills: string; interests: string; experience: string; project: string; education: string };
+  labels: { contact: string; profile: string; languages: string; skills: string; interests: string; experience: string; projects: string; education: string };
   profile: string;
   languages: { name: string; level: string; value: number }[];
   skills: string[];
   interests: string[];
   experience: Entry[];
-  project: Entry;
+  projects: Entry[];
   education: Entry[];
 };
 
 const fr: Cv = {
   role: "Étudiant Business & Data · Fondateur d'Indysigner",
   availability: "Stage d'environ 6 semaines · dès le 5 juin 2027",
-  labels: { contact: "Contact", profile: "Profil", languages: "Langues", skills: "Compétences", interests: "Centres d'intérêt", experience: "Expériences professionnelles", project: "Projet personnel", education: "Formation" },
+  labels: { contact: "Contact", profile: "Profil", languages: "Langues", skills: "Compétences", interests: "Centres d'intérêt", experience: "Expériences professionnelles", projects: "Projets", education: "Formation" },
   profile:
     "Étudiant en Bachelor Business & Data à Albert School × Mines Paris-PSL et fondateur d'Indysigner, studio web. Un an d'alternance en cabinet comptable et trois sites clients en ligne : je relie la lecture des chiffres, la data et le code.",
   languages: [
@@ -45,10 +45,9 @@ const fr: Cv = {
       org: "Indysigner, Sophia Antipolis",
       period: "Avril 2026 – aujourd'hui",
       bullets: [
-        "Création d'un studio web indépendant : sites sur mesure pour TPE, du cadrage à la mise en ligne (design, code, SEO).",
-        "3 sites clients en ligne : L'Ovive (restaurant, carte modifiable par le gérant), Manika.LAB (e-commerce B2B, 226 produits, 10 marques), Nayuma Tea (boutique de thés avec espace pro).",
-        "Système de prospection automatisé : sourcing, e-mails rédigés avec l'IA et validés à la main, envoi et suivi par n8n.",
-        "Relation client de bout en bout : cadrage, devis, livraison et prise en main par le client.",
+        "Studio web indépendant : sites sur mesure pour TPE, du cadrage et du devis à la mise en ligne (design, code, SEO).",
+        "3 sites clients en ligne : L'Ovive (restaurant, carte modifiable par le gérant), Manika.LAB, Nayuma Tea (thés, espace pro).",
+        "Prospection automatisée : sourcing, e-mails rédigés avec l'IA et validés à la main, envoi et suivi par n8n.",
       ],
     },
     {
@@ -62,16 +61,32 @@ const fr: Cv = {
       ],
     },
   ],
-  project: {
-    title: "CV interactif en 3D",
-    org: "indyfrancois.com",
-    period: "2026",
-    bullets: [
-      "Mon parcours raconté en 3D : on fait défiler l'histoire, un personnage traverse les lieux qui m'ont formé ; points cliquables, version FR/EN.",
-      "Pensé pour tourner partout : préparation en arrière-plan, modèle 3D allégé de 60 %, version simplifiée automatique sur les appareils modestes.",
-      "Next.js · Three.js / React Three Fiber · Blender · Cloudflare Pages",
-    ],
-  },
+  projects: [
+    {
+      title: "Encore · Business Deep Dive",
+      org: "Albert School × Bain & Company",
+      period: "Sept. 2026",
+      bullets: [
+        "Marketplace de musique live (lieux ↔ artistes, lancement à Milan) : étude de marché, business plan sur 3 ans et pitch, en équipe de 3 avec des consultants Bain.",
+        "Prototype fonctionnel en plus : paiement en séquestre (Stripe Connect), avis réservés aux prestations payées. Next.js · Supabase.",
+      ],
+    },
+    {
+      title: "Manika.LAB · E-commerce B2B",
+      org: "manikalab.com",
+      period: "Depuis juil. 2026",
+      bullets: [
+        "Distributeur de cosmétiques capillaires : 226 produits, 10 marques, Shopify headless, nuancier filtrable et commande rapide par packs.",
+        "Compte pro vérifié par SIRET, relances Klaviyo, conformité RGPD.",
+      ],
+    },
+    {
+      title: "CV interactif en 3D",
+      org: "indyfrancois.com",
+      period: "2026",
+      bullets: ["Mon parcours en histoire 3D au défilement, fluide sur tous les appareils (modèle allégé de 60 %, version simple automatique). Next.js · Three.js · Blender."],
+    },
+  ],
   education: [
     {
       title: "Bachelor Business & Data",
@@ -84,7 +99,7 @@ const fr: Cv = {
       org: "IUT de Nice",
       period: "2025 – 2026",
       badge: "3e de promo",
-      bullets: ["Gestion des entreprises et des administrations : classé 3e de la promotion, en alternance chez Concertae."],
+      bullets: ["Gestion, comptabilité et droit, en alternance chez Concertae."],
     },
     { title: "Bac général · maths et physique", org: "Lycée Simone Veil", period: "2025", badge: "Échange Erasmus en Norvège", bullets: [] },
   ],
@@ -93,7 +108,7 @@ const fr: Cv = {
 const en: Cv = {
   role: "Business & Data student · Founder of Indysigner",
   availability: "~6-week internship · from 5 June 2027",
-  labels: { contact: "Contact", profile: "Profile", languages: "Languages", skills: "Skills", interests: "Interests", experience: "Work experience", project: "Personal project", education: "Education" },
+  labels: { contact: "Contact", profile: "Profile", languages: "Languages", skills: "Skills", interests: "Interests", experience: "Work experience", projects: "Projects", education: "Education" },
   profile:
     "Business & Data undergraduate at Albert School × Mines Paris-PSL and founder of Indysigner, a web studio. One year of work-study in an accounting firm and three client websites live: I connect reading the numbers, data and code.",
   languages: [
@@ -116,10 +131,9 @@ const en: Cv = {
       org: "Indysigner, Sophia Antipolis",
       period: "April 2026 – present",
       bullets: [
-        "Started an independent web studio: custom websites for small businesses, from scoping to launch (design, code, SEO).",
-        "3 client websites live: L'Ovive (restaurant, menu editable by the owner), Manika.LAB (B2B e-commerce, 226 products, 10 brands), Nayuma Tea (tea shop with a pro area).",
-        "Automated prospecting system: sourcing, AI-drafted emails validated by hand, sending and follow-up with n8n.",
-        "End-to-end client relationship: scoping, quotes, delivery and client onboarding.",
+        "Independent web studio: custom websites for small businesses, from scoping and quotes to launch (design, code, SEO).",
+        "3 client websites live: L'Ovive (restaurant, menu editable by the owner), Manika.LAB, Nayuma Tea (teas, pro area).",
+        "Automated prospecting: sourcing, AI-drafted emails validated by hand, sending and follow-up with n8n.",
       ],
     },
     {
@@ -133,16 +147,32 @@ const en: Cv = {
       ],
     },
   ],
-  project: {
-    title: "Interactive 3D CV",
-    org: "indyfrancois.com",
-    period: "2026",
-    bullets: [
-      "My journey as a 3D story: you scroll and a character walks through the places that shaped me; clickable points, FR/EN.",
-      "Built to run everywhere: loading behind the intro, 3D model 60% lighter, automatic simple version on modest devices.",
-      "Next.js · Three.js / React Three Fiber · Blender · Cloudflare Pages",
-    ],
-  },
+  projects: [
+    {
+      title: "Encore · Business Deep Dive",
+      org: "Albert School × Bain & Company",
+      period: "Sept 2026",
+      bullets: [
+        "Live-music marketplace (venues ↔ artists, launching in Milan): market study, 3-year business plan and pitch, in a team of 3 with Bain consultants.",
+        "Plus a working prototype: escrow payments (Stripe Connect), reviews only for paid gigs. Next.js · Supabase.",
+      ],
+    },
+    {
+      title: "Manika.LAB · B2B e-commerce",
+      org: "manikalab.com",
+      period: "Since July 2026",
+      bullets: [
+        "Hair-cosmetics distributor: 226 products, 10 brands, headless Shopify, filterable shade chart and quick ordering by packs.",
+        "SIRET-verified pro accounts, Klaviyo flows, GDPR compliance.",
+      ],
+    },
+    {
+      title: "Interactive 3D CV",
+      org: "indyfrancois.com",
+      period: "2026",
+      bullets: ["My journey as a scroll-driven 3D story, smooth on every device (model 60% lighter, automatic simple version). Next.js · Three.js · Blender."],
+    },
+  ],
   education: [
     {
       title: "Bachelor in Business & Data",
@@ -155,7 +185,7 @@ const en: Cv = {
       org: "IUT Nice",
       period: "2025 – 2026",
       badge: "Ranked 3rd",
-      bullets: ["Ranked 3rd in my class while working at Concertae: management, accounting and law."],
+      bullets: ["Management, accounting and law, while working at Concertae."],
     },
     { title: "French Baccalauréat · maths and physics", org: "Lycée Simone Veil", period: "2025", badge: "Erasmus exchange in Norway", bullets: [] },
   ],
